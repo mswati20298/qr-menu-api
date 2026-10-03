@@ -1,0 +1,54 @@
+# ---- Secrets: never commit ----
+# Local settings hold real keys (Gemini, Razorpay, super admin password, JWT secret).
+# Copy appsettings.Development.example.json to appsettings.Development.json and fill it in,
+# or use `dotnet user-secrets` / environment variables.
+appsettings.Development.json
+appsettings.*.local.json
+appsettings.Local.json
+appsettings.Production.json
+appsettings.Staging.json
+secrets.json
+*.env
+.env*
+*.pfx
+*.p12
+*.pem
+*.key
+
+# ---- User uploads (restaurant photos, logos) ----
+**/wwwroot/uploads/
+
+# ---- Build output ----
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+publish/
+*.nupkg
+
+# ---- Tests ----
+TestResults/
+coverage/
+*.coverage
+*.trx
+
+# ---- IDEs ----
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+*.userprefs
+*.sln.docstates
+
+# ---- Archives and backups ----
+*.zip
+*.7z
+*.rar
+*.bak
+
+# ---- OS ----
+.DS_Store
+Thumbs.db

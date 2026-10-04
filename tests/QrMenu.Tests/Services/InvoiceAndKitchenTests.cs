@@ -222,6 +222,22 @@ public class InvoiceAndKitchenTests
     }
 
     [Fact]
+    public async Task KitchenBoard_ShowsOldOpenOrders_ButHidesOldServedOnes()
+    {
+        var db = InMemoryDbFactory.Create();
+        var restaurant = AddRestaurant(db);
+        var oldNew = AddOrder(db, restaurant, "2", 100, OrderStatus.Placed, DateTime.UtcNow.AddHours(-34));
+        var oldPreparing = AddOrder(db, restaurant, "3", 100, OrderStatus.Preparing, DateTime.UtcNow.AddHours(-89));
+        var oldServed = AddOrder(db, restaurant, "5", 100, OrderStatus.Served, DateTime.UtcNow.AddHours(-161));
+        oldServed.UpdatedAt = DateTime.UtcNow.AddHours(-161);
+        await db.SaveChangesAsync();
+
+        var board = await CreateKitchenService(db).GetBoardAsync(restaurant.Id);
+
+        board.Orders.Select(o => o.Id).Should().BeEquivalentTo([oldNew.Id, oldPreparing.Id]);
+    }
+
+    [Fact]
     public async Task KitchenLogin_NeedsTheRightPin()
     {
         var db = InMemoryDbFactory.Create();

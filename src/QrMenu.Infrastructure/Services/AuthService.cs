@@ -1,9 +1,8 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 using QrMenu.Application.Auth;
 using QrMenu.Application.Common.Exceptions;
 using QrMenu.Application.Common.Interfaces;
-using QrMenu.Application.Subscriptions;
+using QrMenu.Application.Platform;
 using QrMenu.Domain.Entities;
 using QrMenu.Infrastructure.Persistence;
 
@@ -13,7 +12,7 @@ public class AuthService(
     AppDbContext db,
     IPasswordHasher passwordHasher,
     IJwtTokenService jwtTokenService,
-    IOptions<SubscriptionSettings> subscriptionOptions) : IAuthService
+    IPlatformSettingsService platformSettings) : IAuthService
 {
     public async Task<AuthResponse> RegisterAsync(RegisterRequest request, CancellationToken ct = default)
     {
@@ -24,7 +23,9 @@ public class AuthService(
         }
 
         var slug = await GenerateUniqueSlugAsync(request.RestaurantName, ct);
-        var trialDays = subscriptionOptions.Value.TrialDays;
+        // Set by the super admin under Settings (falls back to Subscription:TrialDays in configuration).
+        var trialDays = await platformSettings.GetTrialDaysAsync(ct);
+        var now = DateTime.UtcNow;
 
         var restaurant = new Restaurant
         {
@@ -36,10 +37,11 @@ public class AuthService(
             CloseTime = new TimeSpan(23, 0, 0),
             IsActive = true,
             CreatedAt = DateTime.UtcNow,
-            // New restaurants start on a free trial, then must buy a plan; TrialDays <= 0 means free with no end date.
-            Plan = trialDays > 0 ? SubscriptionPlan.Trial : SubscriptionPlan.Free,
-            PlanName = trialDays > 0 ? "Trial" : "Free",
-            PlanExpiresAt = trialDays > 0 ? DateTime.UtcNow.AddDays(trialDays) : null
+            // New restaurants start on a free trial, then must buy a plan. 0 days = no trial: the trial ends
+            // straight away, so the owner can set up the menu but customers cannot order until a plan is bought.
+            Plan = SubscriptionPlan.Trial,
+            PlanName = "Trial",
+            PlanExpiresAt = now.AddDays(Math.Max(0, trialDays))
         };
 
         db.SubscriptionEvents.Add(new SubscriptionEvent

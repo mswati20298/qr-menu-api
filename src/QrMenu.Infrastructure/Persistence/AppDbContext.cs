@@ -23,6 +23,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<PricingPlan> PricingPlans => Set<PricingPlan>();
     public DbSet<PlanPayment> PlanPayments => Set<PlanPayment>();
     public DbSet<Invoice> Invoices => Set<Invoice>();
+    public DbSet<PlatformSettings> PlatformSettings => Set<PlatformSettings>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

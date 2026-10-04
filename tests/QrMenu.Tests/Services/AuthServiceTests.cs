@@ -22,7 +22,8 @@ public class AuthServiceTests
             Audience = "TestAudience",
             ExpiryMinutes = 60
         });
-        return new AuthService(db, new BcryptPasswordHasher(), new JwtTokenService(jwtSettings), Options.Create(new SubscriptionSettings()));
+        return new AuthService(db, new BcryptPasswordHasher(), new JwtTokenService(jwtSettings),
+            new PlatformSettingsService(db, Options.Create(new SubscriptionSettings())));
     }
 
     [Fact]
@@ -51,6 +52,27 @@ public class AuthServiceTests
         restaurant.Plan.Should().Be(QrMenu.Domain.Entities.SubscriptionPlan.Trial);
         restaurant.PlanExpiresAt.Should().BeCloseTo(DateTime.UtcNow.AddDays(3), TimeSpan.FromMinutes(1));
         db.SubscriptionEvents.Should().ContainSingle(e => e.Action == QrMenu.Domain.Entities.SubscriptionAction.TrialStarted);
+    }
+
+    [Theory]
+    [InlineData(2)]
+    [InlineData(0)]
+    public async Task RegisterAsync_UsesTrialDaysSetBySuperAdmin(int trialDays)
+    {
+        var service = CreateService(out var db);
+        await new PlatformSettingsService(db, Options.Create(new SubscriptionSettings()))
+            .UpdateAsync(new QrMenu.Application.Platform.UpdatePlatformSettingsRequest(trialDays), "admin@test.com");
+
+        await service.RegisterAsync(new RegisterRequest(
+            "Saket Rasoi", "Ramesh Gupta", "owner@test.com", "Password1", "919876543210"));
+
+        var restaurant = db.Restaurants.Single();
+        restaurant.Plan.Should().Be(QrMenu.Domain.Entities.SubscriptionPlan.Trial);
+        restaurant.PlanExpiresAt.Should().BeCloseTo(DateTime.UtcNow.AddDays(trialDays), TimeSpan.FromMinutes(1));
+
+        // 0 days = no trial: customers cannot order until a plan is bought.
+        var canOrder = SubscriptionRules.CanTakeOrders(restaurant, graceDays: 7, DateTime.UtcNow.AddSeconds(1));
+        canOrder.Should().Be(trialDays > 0);
     }
 
     [Fact]

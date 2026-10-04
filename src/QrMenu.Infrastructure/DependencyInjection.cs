@@ -9,6 +9,7 @@ using QrMenu.Application.Invoices;
 using QrMenu.Application.Items;
 using QrMenu.Application.Kitchen;
 using QrMenu.Application.Orders;
+using QrMenu.Application.Platform;
 using QrMenu.Application.PublicMenu;
 using QrMenu.Application.Restaurants;
 using QrMenu.Application.ServiceRequests;
@@ -59,6 +60,7 @@ public static class DependencyInjection
         services.AddScoped<IOnlinePaymentService, OnlinePaymentService>();
         services.AddScoped<IInvoiceService, InvoiceService>();
         services.AddScoped<IKitchenService, KitchenService>();
+        services.AddScoped<IPlatformSettingsService, PlatformSettingsService>();
 
         return services;
     }

@@ -19,8 +19,9 @@ public class KitchenService(
     // Hash of a random PIN, checked when the restaurant is unknown so every failure takes the same time.
     private const string DummyHash = "$2b$11$QEhrqcyGU9JYdr6rhd9/.OqiE6pNp2swEm1UYbKYSH0CIrj5rane2";
 
+    // Open orders (New / Preparing) always show, however old: the kitchen must never lose one.
+    // Served orders drop off after a while so the column stays short.
     private static readonly TimeSpan ServedVisibleFor = TimeSpan.FromHours(2);
-    private static readonly TimeSpan OpenOrdersFrom = TimeSpan.FromHours(24);
 
     private DateTime Now => clock.GetUtcNow().UtcDateTime;
 
@@ -59,12 +60,12 @@ public class KitchenService(
             ?? throw new NotFoundException("Restaurant not found.");
 
         var now = Now;
-        var openFrom = now - OpenOrdersFrom;
         var servedFrom = now - ServedVisibleFor;
 
         var orders = await db.Orders.AsNoTracking().Include(o => o.Items)
             .Where(o => o.RestaurantId == restaurantId
-                && (((o.Status == OrderStatus.Placed || o.Status == OrderStatus.Preparing) && o.CreatedAt >= openFrom)
+                && (o.Status == OrderStatus.Placed
+                    || o.Status == OrderStatus.Preparing
                     || (o.Status == OrderStatus.Served && o.UpdatedAt >= servedFrom)))
             .OrderBy(o => o.CreatedAt)
             .Take(200)

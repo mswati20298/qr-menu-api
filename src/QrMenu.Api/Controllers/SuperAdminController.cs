@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using QrMenu.Application.Platform;
 using QrMenu.Application.Subscriptions;
 using QrMenu.Application.SuperAdmins;
 
@@ -14,6 +15,7 @@ public class SuperAdminController(
     ISuperAdminService superAdminService,
     ISubscriptionService subscriptionService,
     IPricingPlanService pricingPlanService,
+    IPlatformSettingsService platformSettingsService,
     ILogger<SuperAdminController> logger) : ControllerBase
 {
     [HttpGet("stats")]
@@ -113,6 +115,22 @@ public class SuperAdminController(
         await pricingPlanService.DeleteAsync(id, ct);
         logger.LogInformation("Super admin {Email} deleted plan {PlanId}", AdminEmail, id);
         return NoContent();
+    }
+
+    // Platform settings (free-trial length for new restaurants).
+
+    [HttpGet("settings")]
+    public async Task<ActionResult<PlatformSettingsDto>> GetSettings(CancellationToken ct)
+    {
+        return Ok(await platformSettingsService.GetAsync(ct));
+    }
+
+    [HttpPut("settings")]
+    public async Task<ActionResult<PlatformSettingsDto>> UpdateSettings(UpdatePlatformSettingsRequest request, CancellationToken ct)
+    {
+        var result = await platformSettingsService.UpdateAsync(request, AdminEmail, ct);
+        logger.LogInformation("Super admin {Email} set the free trial to {TrialDays} days", AdminEmail, result.TrialDays);
+        return Ok(result);
     }
 
     private string AdminEmail => User.FindFirst(ClaimTypes.Email)?.Value ?? "superadmin";

@@ -1,11 +1,33 @@
 using Microsoft.AspNetCore.Mvc;
 using QrMenu.Application.Invoices;
+using QrMenu.Application.Orders;
 
 namespace QrMenu.Api.Controllers;
 
 [Route("api/invoices")]
-public class InvoicesController(IInvoiceService invoiceService) : OwnerControllerBase
+public class InvoicesController(IInvoiceService invoiceService, IOrderService orderService) : OwnerControllerBase
 {
+    /// <summary>
+    /// Counter bill: an order entered by staff, billed at once (and marked paid when PaidWith is given).
+    /// The order goes to the kitchen screen only when SendToKitchen is true.
+    /// </summary>
+    [HttpPost("manual")]
+    public async Task<ActionResult<InvoiceDto>> CreateManual(ManualInvoiceRequest request, CancellationToken ct)
+    {
+        var order = await orderService.CreateStaffOrderAsync(RestaurantId, new StaffOrderRequest(
+            request.TableNumber, request.CustomerName, request.CustomerPhone, request.Note,
+            request.SkipServiceCharge, request.SendToKitchen, request.Items), ct);
+
+        var invoice = await invoiceService.CreateAsync(RestaurantId, new CreateInvoiceRequest(order.Id, null), ct);
+
+        if (request.PaidWith is not null)
+        {
+            invoice = await invoiceService.MarkPaidAsync(RestaurantId, invoice.Id, new MarkInvoicePaidRequest(request.PaidWith, null), ct);
+        }
+
+        return Ok(invoice);
+    }
+
     [HttpGet]
     public async Task<ActionResult<InvoicePageDto>> List(
         [FromQuery] string? search, [FromQuery] int page = 1, [FromQuery] int pageSize = 20, CancellationToken ct = default)

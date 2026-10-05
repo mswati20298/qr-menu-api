@@ -29,7 +29,23 @@ public record OrderDto(
     string? PaymentMethod,
     DateTime? PaidAt,
     Guid? InvoiceId,
-    string? InvoiceNumber);
+    string? InvoiceNumber,
+    // "Qr" (the guest ordered) or "Staff" (entered from the admin panel).
+    string Source = "Qr");
+
+/// <summary>
+/// An order entered by staff (walk-in, phone or counter order). TableNumber null = takeaway.
+/// SendToKitchen: true puts it on the kitchen screen as New; false records it as already served
+/// (for example drinks handed over at the counter).
+/// </summary>
+public record StaffOrderRequest(
+    string? TableNumber,
+    string? CustomerName,
+    string? CustomerPhone,
+    string? Note,
+    bool SkipServiceCharge,
+    bool SendToKitchen,
+    List<OrderItemInput> Items);
 
 public record OrderItemInput(Guid MenuItemId, Guid? VariantId, List<Guid>? AddOnIds, int Qty);
 

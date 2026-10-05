@@ -24,7 +24,51 @@ public class OrderService(AppDbContext db, IOptions<SubscriptionSettings> subscr
                 "ordering_unavailable");
         }
 
-        var menuItemIds = request.Items.Select(i => i.MenuItemId).Distinct().ToList();
+        var order = await BuildOrderAsync(restaurant, request.TableNumber, request.CustomerName, request.CustomerPhone,
+            request.Note, request.SkipServiceCharge, request.Items, OrderStatus.Placed, OrderSource.Qr, ct);
+        return ToDto(order);
+    }
+
+    public async Task<OrderDto> CreateStaffOrderAsync(Guid restaurantId, StaffOrderRequest request, CancellationToken ct = default)
+    {
+        var restaurant = await db.Restaurants.FirstOrDefaultAsync(r => r.Id == restaurantId, ct)
+            ?? throw new NotFoundException("Restaurant not found.");
+
+        // Same rule as guest orders: taking orders and billing are part of the plan.
+        if (!SubscriptionRules.CanTakeOrders(restaurant, subscriptionOptions.Value.GraceDays, DateTime.UtcNow))
+        {
+            throw new ForbiddenException("Your plan has ended. Renew it under My plan to take orders and make bills.", "ordering_unavailable");
+        }
+
+        var table = string.IsNullOrWhiteSpace(request.TableNumber) ? null : request.TableNumber.Trim();
+        var order = await BuildOrderAsync(
+            restaurant, table, Clean(request.CustomerName), Clean(request.CustomerPhone), Clean(request.Note),
+            request.SkipServiceCharge, request.Items,
+            // Not for the kitchen = already handed over at the counter.
+            request.SendToKitchen ? OrderStatus.Placed : OrderStatus.Served,
+            OrderSource.Staff, ct);
+        return ToDto(order);
+    }
+
+    private static string? Clean(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
+    /// <summary>
+    /// Prices an order from the menu (sizes, add-ons, service charge, GST) and saves it. Shared by guest and
+    /// staff orders so both follow exactly the same rules.
+    /// </summary>
+    private async Task<Order> BuildOrderAsync(
+        Restaurant restaurant,
+        string? tableNumber,
+        string? customerName,
+        string? customerPhone,
+        string? note,
+        bool skipServiceCharge,
+        List<OrderItemInput> items,
+        OrderStatus status,
+        OrderSource source,
+        CancellationToken ct)
+    {
+        var menuItemIds = items.Select(i => i.MenuItemId).Distinct().ToList();
         var menuItems = await db.MenuItems
             .Include(i => i.Category)
             .Include(i => i.Variants)
@@ -35,7 +79,7 @@ public class OrderService(AppDbContext db, IOptions<SubscriptionSettings> subscr
         var orderItems = new List<OrderItem>();
         decimal subtotal = 0;
 
-        foreach (var line in request.Items)
+        foreach (var line in items)
         {
             var menuItem = menuItems.FirstOrDefault(m => m.Id == line.MenuItemId)
                 ?? throw new NotFoundException("One or more menu items could not be found.");
@@ -88,18 +132,18 @@ public class OrderService(AppDbContext db, IOptions<SubscriptionSettings> subscr
             });
         }
 
-        var serviceChargeAmount = restaurant.IsServiceChargeEnabled && !request.SkipServiceCharge
-            ? Math.Round(subtotal * restaurant.ServiceChargePercentage / 100m, 2)
+        var serviceChargeAmount = restaurant.IsServiceChargeEnabled && !skipServiceCharge
+            ? Math.Round(subtotal * restaurant.ServiceChargePercentage / 100m, 2, MidpointRounding.AwayFromZero)
             : 0;
         var gstAmount = restaurant.IsGstEnabled
-            ? Math.Round((subtotal + serviceChargeAmount) * restaurant.GstPercentage / 100m, 2)
+            ? Math.Round((subtotal + serviceChargeAmount) * restaurant.GstPercentage / 100m, 2, MidpointRounding.AwayFromZero)
             : 0;
         var total = subtotal + serviceChargeAmount + gstAmount;
 
         Table? table = null;
-        if (!string.IsNullOrWhiteSpace(request.TableNumber))
+        if (!string.IsNullOrWhiteSpace(tableNumber))
         {
-            table = await db.Tables.FirstOrDefaultAsync(t => t.RestaurantId == restaurant.Id && t.Number == request.TableNumber, ct);
+            table = await db.Tables.FirstOrDefaultAsync(t => t.RestaurantId == restaurant.Id && t.Number == tableNumber, ct);
         }
 
         var order = new Order
@@ -107,11 +151,12 @@ public class OrderService(AppDbContext db, IOptions<SubscriptionSettings> subscr
             Id = Guid.NewGuid(),
             RestaurantId = restaurant.Id,
             TableId = table?.Id,
-            TableNumberSnapshot = request.TableNumber,
-            CustomerName = request.CustomerName,
-            CustomerPhone = request.CustomerPhone,
-            Note = request.Note,
-            Status = OrderStatus.Placed,
+            TableNumberSnapshot = tableNumber,
+            CustomerName = customerName,
+            CustomerPhone = customerPhone,
+            Note = note,
+            Status = status,
+            Source = source,
             Subtotal = subtotal,
             ServiceChargeAmount = serviceChargeAmount,
             GstAmount = gstAmount,
@@ -124,7 +169,7 @@ public class OrderService(AppDbContext db, IOptions<SubscriptionSettings> subscr
         db.Orders.Add(order);
         await db.SaveChangesAsync(ct);
 
-        return ToDto(order);
+        return order;
     }
 
     public async Task<List<OrderDto>> GetOrdersByPhoneAsync(string slug, string phone, CancellationToken ct = default)
@@ -312,5 +357,5 @@ public class OrderService(AppDbContext db, IOptions<SubscriptionSettings> subscr
             i.LineTotal
         )).ToList(),
         o.PaymentStatus.ToString(), o.PaymentReference, o.PaymentMethod?.ToString(), o.PaidAt,
-        o.InvoiceId, o.Invoice?.Number);
+        o.InvoiceId, o.Invoice?.Number, o.Source.ToString());
 }

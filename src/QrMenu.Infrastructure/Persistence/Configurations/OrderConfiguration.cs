@@ -21,6 +21,7 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
         builder.Property(o => o.Total).HasColumnType("decimal(10,2)");
         builder.Property(o => o.CreatedAt).HasDefaultValueSql("SYSUTCDATETIME()");
         builder.Property(o => o.PaymentStatus).HasConversion<string>().HasMaxLength(20);
+        builder.Property(o => o.Source).HasConversion<string>().HasMaxLength(10);
         builder.Property(o => o.PaymentReference).HasMaxLength(50);
         builder.Property(o => o.PaymentMethod).HasConversion<string>().HasMaxLength(20);
 

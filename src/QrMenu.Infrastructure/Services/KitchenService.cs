@@ -116,5 +116,6 @@ public class KitchenService(
             string.IsNullOrEmpty(i.AddOnsJson)
                 ? []
                 : (JsonSerializer.Deserialize<List<OrderItemAddOnDto>>(i.AddOnsJson) ?? []).Select(a => a.Name).ToList(),
-            i.Qty)).ToList());
+            i.Qty)).ToList(),
+        o.Source.ToString());
 }

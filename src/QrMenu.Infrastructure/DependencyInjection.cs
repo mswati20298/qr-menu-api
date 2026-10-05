@@ -41,6 +41,7 @@ public static class DependencyInjection
         services.AddScoped<IPasswordHasher, BcryptPasswordHasher>();
         services.AddScoped<IJwtTokenService, JwtTokenService>();
         services.AddScoped<IFileStorageService, LocalFileStorageService>();
+        services.AddSingleton<IImageOptimizer, ImageOptimizer>();
         services.AddScoped<IQrPdfService, QrCardPdfService>();
         services.AddScoped<IInvoicePdfService, InvoicePdfService>();
         services.AddHttpClient<IMenuScanService, GeminiMenuScanService>(client => client.Timeout = TimeSpan.FromSeconds(120));

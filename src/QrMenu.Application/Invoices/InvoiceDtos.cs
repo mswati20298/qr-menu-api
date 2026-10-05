@@ -45,3 +45,17 @@ public record CreateInvoiceRequest(Guid? OrderId, string? TableNumber);
 
 /// <summary>Method: "Cash", "Upi", "Card" or "Other". Marks every order on the invoice as paid.</summary>
 public record MarkInvoicePaidRequest(string Method, string? Reference);
+
+/// <summary>
+/// Counter bill: staff picks dishes from the menu and gets an invoice straight away.
+/// PaidWith "Cash", "Upi", "Card" or "Other" marks it paid; null leaves it unpaid.
+/// </summary>
+public record ManualInvoiceRequest(
+    string? TableNumber,
+    string? CustomerName,
+    string? CustomerPhone,
+    string? Note,
+    bool SkipServiceCharge,
+    bool SendToKitchen,
+    List<QrMenu.Application.Orders.OrderItemInput> Items,
+    string? PaidWith);

@@ -13,4 +13,7 @@ public interface IOrderService
     Task<OrderDto> GetForOwnerAsync(Guid restaurantId, Guid orderId, CancellationToken ct = default);
     Task<OrderDto> UpdateStatusAsync(Guid restaurantId, Guid orderId, string status, CancellationToken ct = default);
     Task<OrderDto> UpdatePaymentAsync(Guid restaurantId, Guid orderId, UpdatePaymentRequest request, CancellationToken ct = default);
+
+    /// <summary>Order entered by staff from the admin panel. Same pricing rules as a guest order.</summary>
+    Task<OrderDto> CreateStaffOrderAsync(Guid restaurantId, StaffOrderRequest request, CancellationToken ct = default);
 }

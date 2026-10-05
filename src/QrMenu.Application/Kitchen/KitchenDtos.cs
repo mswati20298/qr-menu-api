@@ -15,7 +15,9 @@ public record KitchenOrderDto(
     string Status,
     DateTime CreatedAt,
     DateTime UpdatedAt,
-    List<KitchenOrderItemDto> Items);
+    List<KitchenOrderItemDto> Items,
+    // "Qr" (guest) or "Staff" (entered at the counter).
+    string Source);
 
 /// <summary>New and Preparing orders, plus orders served in the last 2 hours.</summary>
 public record KitchenBoardDto(string RestaurantName, DateTime ServerTime, List<KitchenOrderDto> Orders);

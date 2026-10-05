@@ -22,6 +22,14 @@ public class OrdersController(IOrderService orderService) : OwnerControllerBase
         return Ok(result);
     }
 
+    /// <summary>Staff adds an order (to a table or as takeaway) without billing it yet.</summary>
+    [HttpPost]
+    public async Task<ActionResult<OrderDto>> CreateStaffOrder(StaffOrderRequest request, CancellationToken ct)
+    {
+        var result = await orderService.CreateStaffOrderAsync(RestaurantId, request, ct);
+        return Ok(result);
+    }
+
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<OrderDto>> Get(Guid id, CancellationToken ct)
     {

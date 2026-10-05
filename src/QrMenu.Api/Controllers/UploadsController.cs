@@ -4,17 +4,20 @@ using QrMenu.Application.Common.Interfaces;
 namespace QrMenu.Api.Controllers;
 
 [Route("api/uploads")]
-public class UploadsController(IFileStorageService fileStorageService) : OwnerControllerBase
+public class UploadsController(IFileStorageService fileStorageService, IImageOptimizer imageOptimizer) : OwnerControllerBase
 {
     private static readonly HashSet<string> AllowedContentTypes = new(StringComparer.OrdinalIgnoreCase)
     {
         "image/jpeg", "image/png", "image/webp"
     };
 
-    private const long MaxFileSizeBytes = 5 * 1024 * 1024;
+    // Phone camera photos are often 5–12 MB; they are scaled down before saving, so accept up to 15 MB in.
+    private const long MaxFileSizeBytes = 15 * 1024 * 1024;
 
+    /// <summary>purpose: "item" (default), "background" or "logo"; decides how large the saved image is.</summary>
     [HttpPost("image")]
-    public async Task<IActionResult> UploadImage(IFormFile file, CancellationToken ct)
+    [RequestSizeLimit(16 * 1024 * 1024)]
+    public async Task<IActionResult> UploadImage(IFormFile file, [FromQuery] string? purpose, CancellationToken ct)
     {
         if (file.Length == 0)
         {
@@ -23,7 +26,7 @@ public class UploadsController(IFileStorageService fileStorageService) : OwnerCo
 
         if (file.Length > MaxFileSizeBytes)
         {
-            return BadRequest(new { message = "File exceeds the 5 MB size limit." });
+            return BadRequest(new { message = "File exceeds the 15 MB size limit." });
         }
 
         if (!AllowedContentTypes.Contains(file.ContentType))
@@ -31,9 +34,20 @@ public class UploadsController(IFileStorageService fileStorageService) : OwnerCo
             return BadRequest(new { message = "Only JPEG, PNG, or WEBP images are allowed." });
         }
 
-        await using var stream = file.OpenReadStream();
-        var url = await fileStorageService.SaveAsync(stream, file.FileName, file.ContentType, ct);
+        var imagePurpose = purpose?.ToLowerInvariant() switch
+        {
+            "background" => ImagePurpose.Background,
+            "logo" => ImagePurpose.Logo,
+            _ => ImagePurpose.Item
+        };
 
-        return Ok(new { url });
+        // Check, rotate, strip hidden data and shrink before anything is stored.
+        await using var stream = new MemoryStream();
+        await file.CopyToAsync(stream, ct);
+        stream.Position = 0;
+        var image = await imageOptimizer.OptimizeAsync(stream, imagePurpose, ct);
+
+        var url = await fileStorageService.SaveAsync(image.Content, image.Extension, ct);
+        return Ok(new { url, width = image.Width, height = image.Height, bytes = image.Content.Length });
     }
 }

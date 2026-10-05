@@ -7,18 +7,14 @@ public class LocalFileStorageService(IWebHostEnvironment env) : IFileStorageServ
 {
     private const string UploadsFolder = "uploads";
 
-    public async Task<string> SaveAsync(Stream content, string fileName, string contentType, CancellationToken ct = default)
+    public async Task<string> SaveAsync(byte[] content, string extension, CancellationToken ct = default)
     {
         var webRoot = env.WebRootPath ?? Path.Combine(env.ContentRootPath, "wwwroot");
         var uploadsPath = Path.Combine(webRoot, UploadsFolder);
         Directory.CreateDirectory(uploadsPath);
 
-        var extension = Path.GetExtension(fileName);
         var safeName = $"{Guid.NewGuid()}{extension}";
-        var fullPath = Path.Combine(uploadsPath, safeName);
-
-        await using var fileStream = new FileStream(fullPath, FileMode.Create);
-        await content.CopyToAsync(fileStream, ct);
+        await File.WriteAllBytesAsync(Path.Combine(uploadsPath, safeName), content, ct);
 
         return $"/{UploadsFolder}/{safeName}";
     }

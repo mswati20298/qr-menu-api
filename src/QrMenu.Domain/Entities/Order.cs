@@ -10,6 +10,7 @@ public class Order
     public string? CustomerPhone { get; set; }
     public string? Note { get; set; }
     public OrderStatus Status { get; set; } = OrderStatus.Placed;
+    public OrderSource Source { get; set; } = OrderSource.Qr;
     public decimal Subtotal { get; set; }
     public decimal ServiceChargeAmount { get; set; }
     public decimal GstAmount { get; set; }

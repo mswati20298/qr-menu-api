@@ -50,12 +50,14 @@ Put the sales page at `landing/index.html`.
 ./deploy.sh
 ```
 
-Pulls both repos, rebuilds, restarts. Database migrations run when each API starts. Logs:
+Pulls both repos, rebuilds, restarts. With the cron job below this runs by itself within ~2 minutes of a
+push to `main` in either repo (`auto-deploy.sh`; log: `/var/log/qrenvo-autodeploy.log`). Database migrations run when each API starts. Logs:
 `docker compose logs -f api-prod`.
 
 ## 5. Daily jobs (`crontab -e` as root)
 
 ```
+*/2 * * * * /opt/qrenvo/qr-menu-api/deploy/auto-deploy.sh >> /var/log/qrenvo-autodeploy.log 2>&1
 30 2 * * * /opt/qrenvo/qr-menu-api/deploy/backup.sh >> /var/log/qrenvo-backup.log 2>&1
 0 4 * * *  /opt/qrenvo/qr-menu-api/deploy/reset-demo.sh >> /var/log/qrenvo-demo.log 2>&1
 ```

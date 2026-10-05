@@ -69,3 +69,10 @@ Copy `deploy/backups/` off the server too. Restore: `./restore.sh backups/QrMenu
 New restaurants get their slug as an address automatically (`saket-rasoi.qrenvo.com`) when it is free and
 not reserved (`app`, `demo`, `admin`, …). Owners can change it under **Settings → Menu web address**; after a
 change, reprint the QR cards. `app.qrenvo.com/m/<slug>` keeps working too.
+
+## Troubleshooting
+
+- **`<domain>` shows "Parked Domain … Hostinger":** the Cloudflare A record for `<domain>` still points to
+  the registrar's parking IP. Edit it to the server IP (`*` alone covers only subdomains).
+- **Auto-deploy did nothing:** `tail -50 /var/log/qrenvo-autodeploy.log`. A failed build leaves the old
+  version running.

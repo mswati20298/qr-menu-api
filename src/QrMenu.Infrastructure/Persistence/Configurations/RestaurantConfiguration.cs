@@ -13,6 +13,8 @@ public class RestaurantConfiguration : IEntityTypeConfiguration<Restaurant>
         builder.Property(r => r.Name).HasMaxLength(200).IsRequired();
         builder.Property(r => r.Slug).HasMaxLength(100).IsRequired();
         builder.HasIndex(r => r.Slug).IsUnique();
+        builder.Property(r => r.Subdomain).HasMaxLength(30);
+        builder.HasIndex(r => r.Subdomain).IsUnique().HasFilter("[Subdomain] IS NOT NULL");
         builder.Property(r => r.Tagline).HasMaxLength(300);
         builder.Property(r => r.Address).HasMaxLength(500);
         builder.Property(r => r.Phone).HasMaxLength(20);

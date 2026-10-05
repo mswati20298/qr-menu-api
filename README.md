@@ -27,7 +27,10 @@ tenant-isolation-check.mjs  End-to-end check that one restaurant can never reach
    ```bash
    dotnet run --project src/QrMenu.Api
    ```
-   Migrations are applied and demo data is seeded on startup. Swagger: http://localhost:5176/swagger
+   Migrations are applied on startup; the sample restaurant is seeded only when `Seed:DemoData` is true
+   (set in the Development example). Swagger (Development only): http://localhost:5176/swagger
+
+Deploying Prod + Demo: see [deploy/README.md](deploy/README.md).
 4. **Tests:** `dotnet test`
 
 ## Security notes

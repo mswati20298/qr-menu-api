@@ -1,4 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using QrMenu.Application.Common;
 using QrMenu.Application.Common.Exceptions;
 using QrMenu.Application.Common.Interfaces;
 using QrMenu.Application.Restaurants;
@@ -7,8 +9,10 @@ using QrMenu.Infrastructure.Persistence;
 
 namespace QrMenu.Infrastructure.Services;
 
-public class RestaurantService(AppDbContext db, IPasswordHasher passwordHasher) : IRestaurantService
+public class RestaurantService(AppDbContext db, IPasswordHasher passwordHasher, IOptions<SiteSettings> siteOptions) : IRestaurantService
 {
+    private readonly SiteSettings _site = siteOptions.Value;
+
     public async Task<RestaurantDto> GetAsync(Guid restaurantId, CancellationToken ct = default)
     {
         var restaurant = await db.Restaurants.FindAsync([restaurantId], ct)
@@ -58,6 +62,50 @@ public class RestaurantService(AppDbContext db, IPasswordHasher passwordHasher) 
 
         await db.SaveChangesAsync(ct);
         return ToDto(restaurant);
+    }
+
+    public async Task<RestaurantDto> SetSubdomainAsync(Guid restaurantId, SetSubdomainRequest request, CancellationToken ct = default)
+    {
+        if (!_site.SubdomainsEnabled)
+        {
+            throw new ConflictException("Own web addresses are not available here.");
+        }
+
+        var restaurant = await db.Restaurants.FindAsync([restaurantId], ct)
+            ?? throw new NotFoundException("Restaurant not found.");
+
+        if (string.IsNullOrWhiteSpace(request.Subdomain))
+        {
+            restaurant.Subdomain = null;
+        }
+        else
+        {
+            var subdomain = SubdomainRules.Normalize(request.Subdomain);
+            var problem = SubdomainRules.Problem(subdomain);
+            if (problem is not null)
+            {
+                throw new ConflictException(problem);
+            }
+
+            if (await db.Restaurants.AnyAsync(r => r.Subdomain == subdomain && r.Id != restaurantId, ct))
+            {
+                throw new ConflictException($"{subdomain}.{_site.RootDomain} is already taken. Please choose another.");
+            }
+
+            restaurant.Subdomain = subdomain;
+        }
+
+        await db.SaveChangesAsync(ct);
+        return ToDto(restaurant);
+    }
+
+    public async Task<string?> FindSlugBySubdomainAsync(string subdomain, CancellationToken ct = default)
+    {
+        var name = SubdomainRules.Normalize(subdomain);
+        return await db.Restaurants.AsNoTracking()
+            .Where(r => r.Subdomain == name && r.IsActive)
+            .Select(r => r.Slug)
+            .FirstOrDefaultAsync(ct);
     }
 
     public async Task<RestaurantDto> SetKitchenPinAsync(Guid restaurantId, SetKitchenPinRequest request, CancellationToken ct = default)
@@ -193,10 +241,12 @@ public class RestaurantService(AppDbContext db, IPasswordHasher passwordHasher) 
             scanStats, revenueLast7Days, revenueLast30Days, topSellingItems, recentOrders);
     }
 
-    private static RestaurantDto ToDto(Restaurant r) => new(
+    private RestaurantDto ToDto(Restaurant r) => new(
         r.Id, r.Name, r.Slug, r.Tagline, r.Address, r.Phone, r.WhatsAppNumber,
         r.OpenTime.ToString(@"hh\:mm"), r.CloseTime.ToString(@"hh\:mm"), r.LogoUrl, r.CoverImageUrl, r.IsActive,
         r.IsGstEnabled, r.GstPercentage, r.IsServiceChargeEnabled, r.ServiceChargePercentage,
         r.ShowWelcomeMessage, r.WelcomeMessage, r.ThemeColor,
-        r.GstNumber, r.InvoicePrefix, r.UpiId, r.UpiPayeeName, r.KitchenPinHash is not null);
+        r.GstNumber, r.InvoicePrefix, r.UpiId, r.UpiPayeeName, r.KitchenPinHash is not null,
+        r.Subdomain, MenuLinks.MenuUrl(_site, r.Slug, r.Subdomain), _site.SubdomainsEnabled,
+        _site.SubdomainsEnabled ? _site.RootDomain : null);
 }

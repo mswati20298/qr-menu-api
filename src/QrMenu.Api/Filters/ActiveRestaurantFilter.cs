@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.EntityFrameworkCore;
 using QrMenu.Application.Common.Exceptions;
@@ -36,6 +37,22 @@ public class ActiveRestaurantFilter(AppDbContext db) : IAsyncActionFilter
                 && (!restaurant.HasKitchenPin || user.FindFirst("kitchenVersion")?.Value != restaurant.KitchenPinVersion.ToString()))
             {
                 throw new UnauthorizedAppException("The kitchen PIN was changed. Please sign in again.");
+            }
+
+            // Owner tokens: refused once the password has been changed or reset since the token was issued.
+            if (!user.HasClaim("kitchen", "true")
+                && Guid.TryParse(user.FindFirst(ClaimTypes.NameIdentifier)?.Value, out var userId))
+            {
+                var passwordVersion = await db.Users
+                    .AsNoTracking()
+                    .Where(u => u.Id == userId && u.RestaurantId == restaurantId)
+                    .Select(u => (int?)u.PasswordVersion)
+                    .FirstOrDefaultAsync(context.HttpContext.RequestAborted);
+
+                if (passwordVersion is null || (user.FindFirst("pwdv")?.Value ?? "0") != passwordVersion.Value.ToString())
+                {
+                    throw new UnauthorizedAppException("Your password was changed. Please sign in again.");
+                }
             }
         }
 

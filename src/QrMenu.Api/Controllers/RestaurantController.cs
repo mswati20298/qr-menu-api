@@ -54,6 +54,13 @@ public class RestaurantController(
         return Ok(await restaurantService.SetKitchenPinAsync(RestaurantId, request, ct));
     }
 
+    /// <summary>Sets (or with an empty value, removes) the restaurant's own address, e.g. saket.qrenvo.com.</summary>
+    [HttpPut("subdomain")]
+    public async Task<ActionResult<RestaurantDto>> SetSubdomain(SetSubdomainRequest request, CancellationToken ct)
+    {
+        return Ok(await restaurantService.SetSubdomainAsync(RestaurantId, request, ct));
+    }
+
     [HttpGet("scan-stats")]
     public async Task<ActionResult<List<ScanStatsDto>>> GetScanStats([FromQuery] int days = 7, CancellationToken ct = default)
     {

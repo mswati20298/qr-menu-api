@@ -45,6 +45,15 @@ public class SuperAdminController(
         return Ok(result);
     }
 
+    [HttpPost("restaurants/{id:guid}/reset-password")]
+    public async Task<ActionResult<ResetOwnerPasswordResponse>> ResetOwnerPassword(Guid id, CancellationToken ct)
+    {
+        var result = await superAdminService.ResetOwnerPasswordAsync(id, ct);
+        logger.LogInformation("Super admin {Email} reset the owner password of restaurant {RestaurantId}",
+            User.FindFirst(ClaimTypes.Email)?.Value, id);
+        return Ok(result);
+    }
+
     [HttpGet("restaurants/{id:guid}/subscription")]
     public async Task<ActionResult<SubscriptionDetailsDto>> GetSubscription(Guid id, CancellationToken ct)
     {

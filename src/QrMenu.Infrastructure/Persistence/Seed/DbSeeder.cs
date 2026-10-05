@@ -5,11 +5,11 @@ namespace QrMenu.Infrastructure.Persistence.Seed;
 
 public static class DbSeeder
 {
-    public static async Task SeedAsync(AppDbContext db)
+    public static async Task SeedAsync(AppDbContext db, bool demoData)
     {
         await db.Database.MigrateAsync();
 
-        if (await db.Restaurants.AnyAsync())
+        if (!demoData || await db.Restaurants.AnyAsync())
         {
             return;
         }
@@ -19,6 +19,7 @@ public static class DbSeeder
             Id = Guid.NewGuid(),
             Name = "Saket Rasoi",
             Slug = "saket-rasoi",
+            Subdomain = "saket-rasoi",
             Tagline = "Ghar jaisa khaana, dil se pakaya",
             Address = "12, Saket District Centre, New Delhi",
             Phone = "011-29851234",

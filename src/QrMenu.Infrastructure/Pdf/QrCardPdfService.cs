@@ -13,9 +13,9 @@ public class QrCardPdfService : IQrPdfService
         QuestPDF.Settings.License = LicenseType.Community;
     }
 
-    public byte[] GenerateTableQrPdf(string restaurantName, string slug, List<string> tableNumbers, string baseUrl)
+    public byte[] GenerateTableQrPdf(string restaurantName, List<(string TableNumber, string Url)> tables)
     {
-        var cards = tableNumbers.Select(number => (TableNumber: number, QrPng: GeneratePng(BuildUrl(baseUrl, slug, number)))).ToList();
+        var cards = tables.Select(t => (t.TableNumber, QrPng: GeneratePng(t.Url))).ToList();
 
         var document = QuestPDF.Fluent.Document.Create(container =>
         {
@@ -59,12 +59,7 @@ public class QrCardPdfService : IQrPdfService
         return document.GeneratePdf();
     }
 
-    public byte[] GenerateTableQrPng(string slug, string tableNumber, string baseUrl)
-    {
-        return GeneratePng(BuildUrl(baseUrl, slug, tableNumber));
-    }
-
-    private static string BuildUrl(string baseUrl, string slug, string tableNumber) => $"{baseUrl}/m/{slug}?t={tableNumber}";
+    public byte[] GenerateTableQrPng(string url) => GeneratePng(url);
 
     private static byte[] GeneratePng(string url)
     {

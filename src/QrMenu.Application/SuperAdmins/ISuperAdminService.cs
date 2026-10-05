@@ -12,4 +12,6 @@ public interface ISuperAdminService
     Task<PagedResult<SuperAdminRestaurantDto>> ListRestaurantsAsync(string? search, string? status, string? plan, int page, int pageSize, CancellationToken ct = default);
 
     Task<SuperAdminRestaurantDto> SetRestaurantStatusAsync(Guid restaurantId, bool isActive, CancellationToken ct = default);
+    /// <summary>Gives the owner a new temporary password (shown once) and signs out all their logins.</summary>
+    Task<ResetOwnerPasswordResponse> ResetOwnerPasswordAsync(Guid restaurantId, CancellationToken ct = default);
 }

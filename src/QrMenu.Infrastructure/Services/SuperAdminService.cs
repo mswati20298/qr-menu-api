@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using QrMenu.Application.Common.Exceptions;
@@ -40,6 +41,26 @@ public class SuperAdminService(
 
         LoginAttemptTracker.Reset(email);
         return new SuperAdminAuthResponse(jwtTokenService.GenerateSuperAdminToken(admin), admin.Name);
+    }
+
+    public async Task<ResetOwnerPasswordResponse> ResetOwnerPasswordAsync(Guid restaurantId, CancellationToken ct = default)
+    {
+        var owner = await db.Users
+            .Where(u => u.RestaurantId == restaurantId)
+            .OrderBy(u => u.CreatedAt)
+            .FirstOrDefaultAsync(ct)
+            ?? throw new NotFoundException("Restaurant owner not found.");
+
+        // No look-alike characters (0/O, 1/l/I), so it can be read out over the phone.
+        const string alphabet = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+        var temporary = RandomNumberGenerator.GetString(alphabet, 10);
+
+        owner.PasswordHash = passwordHasher.Hash(temporary);
+        owner.PasswordVersion++;
+        await db.SaveChangesAsync(ct);
+        LoginAttemptTracker.Reset($"owner:{owner.Email.ToLowerInvariant()}");
+
+        return new ResetOwnerPasswordResponse(owner.Email, temporary);
     }
 
     public async Task<SuperAdminStatsDto> GetStatsAsync(CancellationToken ct = default)

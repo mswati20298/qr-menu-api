@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
+using QrMenu.Application.Common;
 using QrMenu.Application.Common.Exceptions;
 using QrMenu.Application.Common.Interfaces;
 using QrMenu.Application.Restaurants;
@@ -11,8 +13,10 @@ public class QrController(
     IQrPdfService qrPdfService,
     IRestaurantService restaurantService,
     ITableService tableService,
-    IConfiguration configuration) : OwnerControllerBase
+    IOptions<SiteSettings> siteOptions) : OwnerControllerBase
 {
+    private readonly SiteSettings _site = siteOptions.Value;
+
     [HttpGet("{slug}")]
     public async Task<IActionResult> GetQrPdf(string slug, CancellationToken ct)
     {
@@ -30,8 +34,10 @@ public class QrController(
             return BadRequest(new { message = "Add at least one table under Table Management before generating QR cards." });
         }
 
-        var baseUrl = configuration["PublicMenuBaseUrl"] ?? $"{Request.Scheme}://{Request.Host}";
-        var pdfBytes = qrPdfService.GenerateTableQrPdf(restaurant.Name, restaurant.Slug, tableNumbers, baseUrl);
+        var cards = tableNumbers
+            .Select(n => (n, MenuLinks.TableUrl(_site, restaurant.Slug, restaurant.Subdomain, n)))
+            .ToList();
+        var pdfBytes = qrPdfService.GenerateTableQrPdf(restaurant.Name, cards);
 
         return File(pdfBytes, "application/pdf", $"{restaurant.Slug}-qr-cards.pdf");
     }
@@ -45,8 +51,8 @@ public class QrController(
             throw new NotFoundException("Restaurant not found.");
         }
 
-        var baseUrl = configuration["PublicMenuBaseUrl"] ?? $"{Request.Scheme}://{Request.Host}";
-        var pngBytes = qrPdfService.GenerateTableQrPng(restaurant.Slug, tableNumber, baseUrl);
+        var pngBytes = qrPdfService.GenerateTableQrPng(
+            MenuLinks.TableUrl(_site, restaurant.Slug, restaurant.Subdomain, tableNumber));
 
         return File(pngBytes, "image/png");
     }

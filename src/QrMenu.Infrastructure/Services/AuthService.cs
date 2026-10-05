@@ -1,9 +1,13 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using QrMenu.Application.Auth;
+using QrMenu.Application.Common;
 using QrMenu.Application.Common.Exceptions;
 using QrMenu.Application.Common.Interfaces;
 using QrMenu.Application.Platform;
+using QrMenu.Application.Restaurants;
 using QrMenu.Domain.Entities;
+using QrMenu.Infrastructure.Auth;
 using QrMenu.Infrastructure.Persistence;
 
 namespace QrMenu.Infrastructure.Services;
@@ -12,11 +16,16 @@ public class AuthService(
     AppDbContext db,
     IPasswordHasher passwordHasher,
     IJwtTokenService jwtTokenService,
-    IPlatformSettingsService platformSettings) : IAuthService
+    IPlatformSettingsService platformSettings,
+    IOptions<SiteSettings> siteOptions) : IAuthService
 {
+    // Hash of a random password, checked when the email is unknown so both cases take the same time.
+    private const string DummyHash = "$2b$11$QEhrqcyGU9JYdr6rhd9/.OqiE6pNp2swEm1UYbKYSH0CIrj5rane2";
+
     public async Task<AuthResponse> RegisterAsync(RegisterRequest request, CancellationToken ct = default)
     {
-        var emailExists = await db.Users.AnyAsync(u => u.Email == request.Email, ct);
+        var email = request.Email.Trim().ToLowerInvariant();
+        var emailExists = await db.Users.AnyAsync(u => u.Email == email, ct);
         if (emailExists)
         {
             throw new ConflictException("An account with this email already exists.");
@@ -32,6 +41,7 @@ public class AuthService(
             Id = Guid.NewGuid(),
             Name = request.RestaurantName,
             Slug = slug,
+            Subdomain = await PickSubdomainAsync(slug, ct),
             WhatsAppNumber = request.WhatsAppNumber,
             OpenTime = new TimeSpan(9, 0, 0),
             CloseTime = new TimeSpan(23, 0, 0),
@@ -61,7 +71,7 @@ public class AuthService(
             Id = Guid.NewGuid(),
             RestaurantId = restaurant.Id,
             Name = request.OwnerName,
-            Email = request.Email,
+            Email = email,
             PasswordHash = passwordHasher.Hash(request.Password),
             CreatedAt = DateTime.UtcNow
         };
@@ -76,13 +86,24 @@ public class AuthService(
 
     public async Task<AuthResponse> LoginAsync(LoginRequest request, CancellationToken ct = default)
     {
-        var user = await db.Users.Include(u => u.Restaurant)
-            .FirstOrDefaultAsync(u => u.Email == request.Email, ct);
-
-        if (user is null || !passwordHasher.Verify(request.Password, user.PasswordHash))
+        var email = request.Email.Trim().ToLowerInvariant();
+        var lockKey = $"owner:{email}";
+        if (LoginAttemptTracker.IsLocked(lockKey))
         {
+            throw new TooManyAttemptsException("Too many failed attempts. Please try again in a few minutes.");
+        }
+
+        var user = await db.Users.Include(u => u.Restaurant)
+            .FirstOrDefaultAsync(u => u.Email == email, ct);
+        var passwordOk = passwordHasher.Verify(request.Password, user?.PasswordHash ?? DummyHash);
+
+        if (user is null || !passwordOk)
+        {
+            LoginAttemptTracker.RecordFailure(lockKey);
             throw new UnauthorizedAppException("Invalid email or password.");
         }
+
+        LoginAttemptTracker.Reset(lockKey);
 
         if (!user.Restaurant.IsActive)
         {
@@ -91,6 +112,43 @@ public class AuthService(
 
         var token = jwtTokenService.GenerateToken(user);
         return new AuthResponse(token, user.Name, user.RestaurantId, user.Restaurant.Slug, user.Restaurant.Name);
+    }
+
+    public async Task<AuthResponse> ChangePasswordAsync(Guid userId, ChangePasswordRequest request, CancellationToken ct = default)
+    {
+        var user = await db.Users.Include(u => u.Restaurant).FirstOrDefaultAsync(u => u.Id == userId, ct)
+            ?? throw new NotFoundException("Account not found.");
+
+        var lockKey = $"owner-change:{user.Id}";
+        if (LoginAttemptTracker.IsLocked(lockKey))
+        {
+            throw new TooManyAttemptsException("Too many failed attempts. Please try again in a few minutes.");
+        }
+
+        if (!passwordHasher.Verify(request.CurrentPassword, user.PasswordHash))
+        {
+            LoginAttemptTracker.RecordFailure(lockKey);
+            throw new ConflictException("The current password is not correct.");
+        }
+
+        LoginAttemptTracker.Reset(lockKey);
+        user.PasswordHash = passwordHasher.Hash(request.NewPassword);
+        user.PasswordVersion++;
+        await db.SaveChangesAsync(ct);
+
+        var token = jwtTokenService.GenerateToken(user);
+        return new AuthResponse(token, user.Name, user.RestaurantId, user.Restaurant.Slug, user.Restaurant.Name);
+    }
+
+    /// <summary>The slug as the restaurant's own address when it is allowed and still free, otherwise none.</summary>
+    private async Task<string?> PickSubdomainAsync(string slug, CancellationToken ct)
+    {
+        if (!siteOptions.Value.SubdomainsEnabled || SubdomainRules.Problem(slug) is not null)
+        {
+            return null;
+        }
+
+        return await db.Restaurants.AnyAsync(r => r.Subdomain == slug, ct) ? null : slug;
     }
 
     private async Task<string> GenerateUniqueSlugAsync(string restaurantName, CancellationToken ct)

@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using QrMenu.Application.Auth;
 using QrMenu.Application.Backgrounds;
 using QrMenu.Application.Categories;
+using QrMenu.Application.Common;
 using QrMenu.Application.Common.Interfaces;
 using QrMenu.Application.Invoices;
 using QrMenu.Application.Items;
@@ -33,6 +34,7 @@ public static class DependencyInjection
             options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
 
         services.Configure<JwtSettings>(configuration.GetSection("Jwt"));
+        services.Configure<SiteSettings>(configuration.GetSection("Site"));
         services.Configure<SubscriptionSettings>(configuration.GetSection("Subscription"));
         services.AddSingleton(TimeProvider.System);
         services.Configure<RazorpaySettings>(configuration.GetSection("Razorpay"));

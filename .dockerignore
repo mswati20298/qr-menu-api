@@ -1,0 +1,12 @@
+**/bin/
+**/obj/
+**/*.zip
+**/appsettings.Development.json
+**/appsettings.*.local.json
+**/wwwroot/uploads/
+**/*.user
+.git
+.vs
+tests/
+deploy/
+QR Api/

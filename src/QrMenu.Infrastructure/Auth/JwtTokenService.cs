@@ -20,7 +20,9 @@ public class JwtTokenService(IOptions<JwtSettings> settings) : IJwtTokenService
             new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new Claim(ClaimTypes.Email, user.Email),
             new Claim(ClaimTypes.Name, user.Name),
-            new Claim("restaurantId", user.RestaurantId.ToString())
+            new Claim("restaurantId", user.RestaurantId.ToString()),
+            // Goes up when the password changes or is reset, which signs out every old login (ActiveRestaurantFilter).
+            new Claim("pwdv", user.PasswordVersion.ToString())
         };
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_settings.Secret));

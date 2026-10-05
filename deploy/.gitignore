@@ -1,0 +1,9 @@
+# Real secrets and server state: never commit.
+.env
+prod.env
+demo.env
+certs/*
+!certs/.gitkeep
+backups/
+landing/*
+!landing/.gitkeep

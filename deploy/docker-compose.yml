@@ -1,0 +1,100 @@
+# QRenvo on one server: one SQL Server with two separate databases, two copies of the API, and Caddy in front.
+#
+#   app.<domain>, <restaurant>.<domain>  ->  api-prod  (database QrMenuProd, live payments)
+#   demo.<domain>                        ->  api-demo  (database QrMenuDemo, sample data, test payments)
+#   <domain>, www.<domain>               ->  landing page
+#
+# The api and web repos sit side by side:  /opt/qrenvo/qr-menu-api  and  /opt/qrenvo/qr-menu-web
+# Run from this folder:  docker compose up -d --build     (see README.md)
+
+name: qrenvo
+
+x-api: &api
+  build:
+    context: ..
+  restart: unless-stopped
+  depends_on:
+    sqlserver:
+      condition: service_healthy
+  networks: [internal]
+  logging:
+    driver: json-file
+    options: { max-size: "10m", max-file: "5" }
+
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    restart: unless-stopped
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: "Express"
+      MSSQL_SA_PASSWORD: ${SQL_SA_PASSWORD:?Set SQL_SA_PASSWORD in .env}
+      MSSQL_MEMORY_LIMIT_MB: "1536"
+    volumes:
+      - sqldata:/var/opt/mssql
+      - ./backups:/var/opt/mssql/backup
+    networks: [internal]
+    # No ports published: only the APIs on the internal network can reach the database.
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -C -Q 'SELECT 1' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+
+  api-prod:
+    <<: *api
+    env_file: prod.env
+    environment:
+      ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=QrMenuProd;User Id=sa;Password=${SQL_SA_PASSWORD};TrustServerCertificate=True;Encrypt=True"
+      Site__Environment: Prod
+      Site__RootDomain: ${ROOT_DOMAIN:?Set ROOT_DOMAIN in .env}
+      Site__AppUrl: https://app.${ROOT_DOMAIN}
+      CorsOrigins__0: https://app.${ROOT_DOMAIN}
+      Seed__DemoData: "false"
+      ForwardedHeaders__Enabled: "true"
+    volumes:
+      - uploads-prod:/app/wwwroot/uploads
+
+  api-demo:
+    <<: *api
+    env_file: demo.env
+    environment:
+      ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=QrMenuDemo;User Id=sa;Password=${SQL_SA_PASSWORD};TrustServerCertificate=True;Encrypt=True"
+      Site__Environment: Demo
+      # No restaurant subdomains on the demo: every menu is demo.<domain>/m/<slug>.
+      Site__RootDomain: ""
+      Site__AppUrl: https://demo.${ROOT_DOMAIN}
+      CorsOrigins__0: https://demo.${ROOT_DOMAIN}
+      Seed__DemoData: "true"
+      ForwardedHeaders__Enabled: "true"
+    volumes:
+      - uploads-demo:/app/wwwroot/uploads
+
+  web:
+    build:
+      context: ../../qr-menu-web
+    restart: unless-stopped
+    depends_on: [api-prod, api-demo]
+    environment:
+      ROOT_DOMAIN: ${ROOT_DOMAIN}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./certs:/etc/caddy/certs:ro
+      - ./landing:/srv/landing:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    networks: [internal]
+
+networks:
+  internal:
+
+volumes:
+  sqldata:
+  uploads-prod:
+  uploads-demo:
+  caddy-data:
+  caddy-config:

@@ -5,6 +5,8 @@ public class Restaurant
     public Guid Id { get; set; }
     public string Name { get; set; } = string.Empty;
     public string Slug { get; set; } = string.Empty;
+    /// <summary>Own address, e.g. "saket" for saket.qrenvo.com. Null = only the /m/{slug} link. Unique.</summary>
+    public string? Subdomain { get; set; }
     public string? Tagline { get; set; }
     public string? Address { get; set; }
     public string? Phone { get; set; }

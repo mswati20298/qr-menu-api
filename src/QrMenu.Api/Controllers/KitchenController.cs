@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using QrMenu.Api.Filters;
@@ -19,6 +20,7 @@ public class KitchenController(IKitchenService kitchenService) : ControllerBase
         ?? throw new InvalidOperationException("restaurantId claim is missing from the token."));
 
     [AllowAnonymous]
+    [EnableRateLimiting(RateLimits.Auth)]
     [HttpPost("auth/login")]
     public async Task<ActionResult<KitchenAuthResponse>> Login(KitchenLoginRequest request, CancellationToken ct)
     {

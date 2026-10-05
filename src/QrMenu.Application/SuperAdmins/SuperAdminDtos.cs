@@ -37,3 +37,6 @@ public record SuperAdminStatsDto(
     int OrderingStopped);
 
 public record SetRestaurantStatusRequest(bool IsActive);
+
+/// <summary>The temporary password is returned only once and never stored in plain text.</summary>
+public record ResetOwnerPasswordResponse(string OwnerEmail, string TemporaryPassword);

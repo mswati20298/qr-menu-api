@@ -1,9 +1,14 @@
+using System.Net;
 using System.Text;
+using System.Threading.RateLimiting;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using QrMenu.Api;
 using QrMenu.Api.Filters;
 using QrMenu.Api.Middleware;
 using QrMenu.Application.Auth;
@@ -72,6 +77,40 @@ builder.Services.AddCors(options =>
     });
 });
 
+// Behind Cloudflare + Caddy the real client address arrives in X-Forwarded-For (Caddy fills it from
+// CF-Connecting-IP). Needed for per-client rate limits and correct https links.
+var forwardedHeadersEnabled = builder.Configuration.GetValue("ForwardedHeaders:Enabled", false);
+if (forwardedHeadersEnabled)
+{
+    builder.Services.Configure<ForwardedHeadersOptions>(options =>
+    {
+        options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+        // Only the reverse proxy on the private Docker network can reach the API, so trust it.
+        options.KnownNetworks.Clear();
+        options.KnownProxies.Clear();
+        options.ForwardLimit = 1;
+    });
+}
+
+// "auth": sign-in and sign-up (on top of the per-email lockout). "public": customer actions without a login.
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.OnRejected = async (context, ct) =>
+    {
+        context.HttpContext.Response.ContentType = "application/json";
+        await context.HttpContext.Response.WriteAsync(
+            "{\"message\":\"Too many requests. Please wait a minute and try again.\"}", ct);
+    };
+
+    static string ClientKey(HttpContext http) => http.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+
+    options.AddPolicy(RateLimits.Auth, http => RateLimitPartition.GetFixedWindowLimiter(ClientKey(http),
+        _ => new FixedWindowRateLimiterOptions { PermitLimit = 10, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
+    options.AddPolicy(RateLimits.Public, http => RateLimitPartition.GetFixedWindowLimiter(ClientKey(http),
+        _ => new FixedWindowRateLimiterOptions { PermitLimit = 30, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
+});
+
 builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new OpenApiInfo { Title = "QrMenu API", Version = "v1" });
@@ -98,7 +137,8 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    await DbSeeder.SeedAsync(db);
+    // Sample restaurant only where asked for (local development and the Demo deployment), never in Prod.
+    await DbSeeder.SeedAsync(db, builder.Configuration.GetValue("Seed:DemoData", false));
     await SuperAdminSeeder.SeedAsync(
         db,
         builder.Configuration,
@@ -106,8 +146,17 @@ using (var scope = app.Services.CreateScope())
         scope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("SuperAdminSeeder"));
 }
 
-app.UseSwagger();
-app.UseSwaggerUI();
+if (forwardedHeadersEnabled)
+{
+    app.UseForwardedHeaders();
+}
+
+// API explorer only where it is switched on (on by default in Development, off in Demo and Prod).
+if (builder.Configuration.GetValue("Swagger:Enabled", app.Environment.IsDevelopment()))
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
@@ -117,6 +166,8 @@ app.UseStaticFiles();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.UseRateLimiter();
 
 app.MapControllers();
 

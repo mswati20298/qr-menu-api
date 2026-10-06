@@ -34,7 +34,10 @@ services:
       - sqldata:/var/opt/mssql
       - ./backups:/var/opt/mssql/backup
     networks: [internal]
-    # No ports published: only the APIs on the internal network can reach the database.
+    # Reachable only from the server itself (127.0.0.1), never from the internet. To open it in SSMS on
+    # your PC, use an SSH tunnel:  ssh -L 14333:127.0.0.1:14333 root@<server>  then connect to localhost,14333.
+    ports:
+      - "127.0.0.1:14333:1433"
     healthcheck:
       test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -C -Q 'SELECT 1' || exit 1"]
       interval: 10s

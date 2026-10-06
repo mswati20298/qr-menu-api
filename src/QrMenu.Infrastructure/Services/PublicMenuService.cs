@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using QrMenu.Application.Common;
 using QrMenu.Application.Common.Exceptions;
 using QrMenu.Application.PublicMenu;
 using QrMenu.Application.Subscriptions;
@@ -8,7 +9,10 @@ using QrMenu.Infrastructure.Persistence;
 
 namespace QrMenu.Infrastructure.Services;
 
-public class PublicMenuService(AppDbContext db, IOptions<SubscriptionSettings> subscriptionOptions) : IPublicMenuService
+public class PublicMenuService(
+    AppDbContext db,
+    IOptions<SubscriptionSettings> subscriptionOptions,
+    TimeProvider clock) : IPublicMenuService
 {
     public async Task<PublicMenuResponse> GetMenuAsync(string slug, CancellationToken ct = default)
     {
@@ -28,10 +32,8 @@ public class PublicMenuService(AppDbContext db, IOptions<SubscriptionSettings> s
             .ThenBy(b => b.CreatedAt)
             .ToListAsync(ct);
 
-        var now = TimeOnly.FromDateTime(DateTime.Now);
-        var open = TimeOnly.FromTimeSpan(restaurant.OpenTime);
-        var close = TimeOnly.FromTimeSpan(restaurant.CloseTime);
-        var isOpenNow = close > open ? now >= open && now <= close : now >= open || now <= close;
+        // Opening hours are Indian time; the server itself runs in UTC.
+        var isOpenNow = IndianTime.IsOpen(restaurant.OpenTime, restaurant.CloseTime, clock.GetUtcNow().UtcDateTime);
 
         var restaurantDto = new PublicRestaurantDto(
             restaurant.Name, restaurant.Slug, restaurant.Tagline, restaurant.LogoUrl, restaurant.CoverImageUrl,

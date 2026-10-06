@@ -1,4 +1,5 @@
 using System.Globalization;
+using QrMenu.Application.Common;
 using QrMenu.Application.Common.Interfaces;
 using QrMenu.Application.Invoices;
 using QuestPDF.Fluent;
@@ -13,8 +14,7 @@ namespace QrMenu.Infrastructure.Pdf;
 /// </summary>
 public class InvoicePdfService : IInvoicePdfService
 {
-    // Invoices are printed in Indian time, whatever the server's time zone is.
-    private static readonly TimeZoneInfo India = FindIndiaTimeZone();
+    // Indian number format; dates are converted to Indian time with IndianTime, whatever the server's zone.
     private static readonly CultureInfo IndianCulture = CultureInfo.GetCultureInfo("en-IN");
 
     static InvoicePdfService()
@@ -81,7 +81,7 @@ public class InvoicePdfService : IInvoicePdfService
 
     private static void Meta(ColumnDescriptor col, InvoiceDto invoice)
     {
-        var issued = TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(invoice.CreatedAt, DateTimeKind.Utc), India);
+        var issued = IndianTime.FromUtc(invoice.CreatedAt);
 
         col.Item().Row(row =>
         {
@@ -189,20 +189,4 @@ public class InvoicePdfService : IInvoicePdfService
     private static string Money(decimal amount) => amount.ToString("#,##0.00", IndianCulture);
 
     private static string Percent(decimal value) => $"{value.ToString("0.##", IndianCulture)}%";
-
-    private static TimeZoneInfo FindIndiaTimeZone()
-    {
-        foreach (var id in new[] { "Asia/Kolkata", "India Standard Time" })
-        {
-            try
-            {
-                return TimeZoneInfo.FindSystemTimeZoneById(id);
-            }
-            catch (TimeZoneNotFoundException)
-            {
-            }
-        }
-
-        return TimeZoneInfo.CreateCustomTimeZone("IST", TimeSpan.FromMinutes(330), "IST", "IST");
-    }
 }

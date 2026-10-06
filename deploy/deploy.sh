@@ -12,5 +12,7 @@ git -C ../../qr-menu-web pull --ff-only
 
 docker compose build --pull
 docker compose up -d --remove-orphans
+# The Caddyfile is mounted, so a change to it alone does not recreate the container: reload it.
+docker compose exec -T web caddy reload --config /etc/caddy/Caddyfile
 docker image prune -f >/dev/null
 docker compose ps

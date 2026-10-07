@@ -3,707 +3,1094 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>QRenvo · QR Menu &amp; Table Ordering for Restaurants</title>
-<meta name="description" content="QR code menu and table ordering for Indian restaurants. Guests order from their phone, the kitchen gets it in seconds, GST bills in one tap and UPI straight to your account. No app, no commission. 7-day money-back guarantee.">
+<title>QRenvo — QR Ordering, Kitchen Screen &amp; GST Billing for Restaurants</title>
+<meta name="description" content="QRenvo helps Indian restaurants manage QR ordering, menus, kitchen orders, UPI payments and GST billing from one simple platform.">
 <link rel="canonical" href="https://qrenvo.com/">
-<meta name="theme-color" content="#1b6b50">
+<meta name="theme-color" content="#06130f">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <link rel="icon" type="image/x-icon" href="/favicon.ico" sizes="16x16 32x32 48x48">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="QRenvo">
 <meta property="og:url" content="https://qrenvo.com/">
-<meta property="og:title" content="QRenvo · QR menu and table ordering for restaurants">
-<meta property="og:description" content="Guests order from the table, your kitchen gets it in seconds. GST bills, UPI to your account, no commission. Plans from ₹833/month, 7-day money-back guarantee.">
+<meta property="og:title" content="QRenvo — QR ordering, kitchen screen and GST billing for restaurants">
+<meta property="og:description" content="QR ordering, menus, kitchen orders, UPI payments and GST billing in one simple platform. Plans from ₹833/month, 7-day money back.">
 <meta property="og:image" content="https://qrenvo.com/og-image.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
+<link rel="preload" as="image" href="/img/hero-food.jpg">
+<noscript><style>.reveal, .reveal-x { opacity: 1 !important; transform: none !important; }</style></noscript>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Manrope:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Manrope:wght@400;500;600;700;800&display=swap">
 <style>
-  /* Layout: one column, picture-first. Every section is icons + a few words; details live on the legal
-     pages and in the FAQ. Brand green, with amber kept for the free-setup offer and the guarantee. */
+  /* Layout: dark restaurant SaaS. Editorial serif headlines over a deep green ground, mint for action,
+     amber only for money-back / offers. Max width 1240px; product mockups are real HTML, not pictures. */
   :root {
-    --bg: #f5f8f6; --surface: #ffffff; --fg: #10261c; --muted: #4f665a; --line: #d7e3dc;
-    --brand: #1b6b50; --brand-deep: #14523d; --brand-soft: #e2f0e8; --on-brand: #ffffff;
-    --amber: #9a5b00; --amber-fill: #f59e0b; --amber-soft: #fdf1dc;
-    --bad: #b42318; --bad-soft: #fde8e6;
-    --paper: #ffffff; --paper-ink: #1d1d1b; --paper-line: #cfcfc8;
+    --bg: #06130f;
+    --bg-2: #081711;
+    --surface: #0b1d16;
+    --surface-2: #0f261d;
+    --line: rgba(66, 211, 160, 0.13);
+    --line-strong: rgba(66, 211, 160, 0.34);
+    --fg: #eaf3ee;
+    --muted: #93aa9f;
+    --faint: #5f776c;
+    --mint: #42d3a0;
+    --mint-deep: #2bb687;
+    --on-mint: #03140d;
+    --gold: #f2b544;
+    --gold-soft: rgba(242, 181, 68, 0.12);
+    --coral: #ff8a76;
     --display: 'Fraunces', Georgia, 'Times New Roman', serif;
     --body: 'Manrope', system-ui, -apple-system, 'Segoe UI', sans-serif;
-    --mono: 'JetBrains Mono', ui-monospace, Consolas, monospace;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      --bg: #0d1713; --surface: #13211b; --fg: #e8f1ec; --muted: #9db3a7; --line: #24372e;
-      --brand: #4fbf93; --brand-deep: #1e7a58; --brand-soft: #173328; --on-brand: #06140e;
-      --amber: #f5b544; --amber-fill: #f59e0b; --amber-soft: #2e2412;
-      --bad: #f8a097; --bad-soft: #3a1714;
-      --paper: #f4f2ec; --paper-ink: #1d1d1b; --paper-line: #c9c6bd;
-      color-scheme: dark;
-    }
-  }
-  :root[data-theme="dark"] {
-    --bg: #0d1713; --surface: #13211b; --fg: #e8f1ec; --muted: #9db3a7; --line: #24372e;
-    --brand: #4fbf93; --brand-deep: #1e7a58; --brand-soft: #173328; --on-brand: #06140e;
-    --amber: #f5b544; --amber-fill: #f59e0b; --amber-soft: #2e2412;
-    --bad: #f8a097; --bad-soft: #3a1714;
-    --paper: #f4f2ec; --paper-ink: #1d1d1b; --paper-line: #c9c6bd;
+    --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+    --radius: 18px;
     color-scheme: dark;
   }
 
   * { box-sizing: border-box; }
   html { scroll-behavior: smooth; }
-  body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 16px; line-height: 1.55; }
-  img { max-width: 100%; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 16px; line-height: 1.55;
+    -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+  img { max-width: 100%; display: block; }
   [hidden] { display: none !important; }
-  .wrap { max-width: 1080px; margin: 0 auto; padding-inline: 20px; padding-block: 0 96px; }
-  h1, h2, h3 { font-family: var(--display); line-height: 1.12; text-wrap: balance; margin: 0; }
-  h2 { font-size: clamp(26px, 3.6vw, 36px); font-weight: 700; }
-  h3 { font-size: 18px; font-weight: 700; }
+  a { color: inherit; }
+  h1, h2, h3 { font-family: var(--display); font-weight: 600; line-height: 1.08; margin: 0; text-wrap: balance; letter-spacing: -0.01em; }
+  h2 { font-size: clamp(30px, 4vw, 46px); }
+  h3 { font-size: 18px; }
   p { margin: 0; }
-  section { margin-top: 84px; scroll-margin-top: 80px; }
-  .head { display: grid; gap: 8px; justify-items: center; text-align: center; margin-bottom: 30px; }
-  .eyebrow { font-size: 12.5px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--brand); }
-  .muted { color: var(--muted); }
-  .fine { font-size: 13.5px; color: var(--muted); text-align: center; margin-top: 16px; }
+  .container { width: 100%; max-width: 1240px; margin-inline: auto; padding-inline: 24px; }
+  section { padding-block: 92px; scroll-margin-top: 72px; }
+  .eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: var(--mint); }
+  .eyebrow::before { content: ''; width: 18px; height: 1.5px; background: currentColor; opacity: 0.7; }
+  .lede { color: var(--muted); font-size: 17px; max-width: 46ch; }
+  .head { display: grid; gap: 14px; margin-bottom: 44px; }
+  .head.center { justify-items: center; text-align: center; }
+  .head.center .lede { margin-inline: auto; }
+  .accent { color: var(--mint); font-style: italic; }
+  .sample { font-size: 12px; color: var(--faint); }
 
-  .ic { width: 24px; height: 24px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
-  .badge-ic { width: 52px; height: 52px; display: grid; place-items: center; border-radius: 14px; background: var(--brand-soft); color: var(--brand); flex: none; }
-  .badge-ic .ic { width: 26px; height: 26px; }
+  .ic { width: 22px; height: 22px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 
   /* Buttons */
-  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 50px; padding: 0 22px;
-    border-radius: 12px; border: 0; background: var(--brand); color: var(--on-brand); font: inherit; font-weight: 800;
-    font-size: 16px; text-decoration: none; cursor: pointer; }
-  .btn:hover { background: var(--brand-deep); color: #fff; }
-  .btn.ghost { background: transparent; color: var(--fg); border: 1px solid var(--line); }
-  .btn.ghost:hover { background: var(--surface); color: var(--fg); }
-  .btn.small { min-height: 40px; padding: 0 16px; font-size: 14.5px; border-radius: 10px; }
-  .btn:focus-visible, summary:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible { outline: 3px solid var(--amber-fill); outline-offset: 3px; }
+  .btn { position: relative; overflow: hidden; display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+    min-height: 48px; padding: 0 22px; border-radius: 12px; border: 1px solid transparent; font: inherit; font-weight: 800;
+    font-size: 15.5px; text-decoration: none; cursor: pointer; transition: transform 0.25s var(--ease), filter 0.25s var(--ease), background-color 0.25s, border-color 0.25s; }
+  .btn-primary { background: var(--mint); color: var(--on-mint); box-shadow: 0 8px 26px rgba(66, 211, 160, 0.22); }
+  .btn-primary:hover { filter: brightness(1.07); transform: translateY(-1px) scale(1.02); }
+  .btn-ghost { background: rgba(255, 255, 255, 0.02); color: var(--fg); border-color: var(--line-strong); }
+  .btn-ghost:hover { border-color: var(--mint); transform: translateY(-1px) scale(1.02); }
+  .btn-sm { min-height: 40px; padding: 0 16px; font-size: 14.5px; border-radius: 10px; }
+  .btn .ic { width: 18px; height: 18px; transition: transform 0.25s var(--ease); }
+  .btn:hover .ic.arrow { transform: translateX(3px); }
+  .btn:focus-visible, a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+  .ripple { position: absolute; border-radius: 50%; transform: scale(0); background: rgba(255, 255, 255, 0.35); pointer-events: none; animation: ripple 0.6s var(--ease) forwards; }
+  @keyframes ripple { to { transform: scale(4); opacity: 0; } }
 
-  /* Header */
-  .top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; margin-inline: -20px; padding: 12px 20px;
-    display: flex; align-items: center; justify-content: space-between; gap: 12px;
-    background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
-  .brand { display: flex; align-items: center; gap: 10px; font-family: var(--display); font-size: 22px; font-weight: 700; color: var(--fg); text-decoration: none; }
-  .brand svg { width: 34px; height: 34px; flex: none; }
-  .top nav { display: flex; align-items: center; gap: 18px; font-size: 14.5px; font-weight: 700; }
-  .top nav a:not(.btn) { color: var(--muted); text-decoration: none; }
-  .top nav a { white-space: nowrap; }
-  @media (max-width: 420px) { .top nav { gap: 12px; } .top .btn.small { padding: 0 12px; font-size: 14px; } .brand { font-size: 20px; } }
-  .top nav a:not(.btn):hover { color: var(--fg); }
+  /* Navbar */
+  .nav { position: fixed; inset: 0 0 auto 0; z-index: 50; padding-top: env(safe-area-inset-top, 0px); border-bottom: 1px solid transparent;
+    transition: background-color 0.3s, border-color 0.3s, backdrop-filter 0.3s; animation: nav-in 0.6s var(--ease) both; }
+  .nav.scrolled { background: rgba(6, 19, 15, 0.78); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-bottom-color: var(--line); }
+  .nav-inner { display: flex; align-items: center; gap: 28px; height: 68px; }
+  .brand { display: inline-flex; align-items: center; gap: 10px; font-family: var(--display); font-size: 22px; font-weight: 700; text-decoration: none; }
+  .brand svg { width: 34px; height: 34px; }
+  .nav-links { display: flex; align-items: center; gap: 26px; margin-left: auto; font-size: 14.5px; font-weight: 600; }
+  .nav-links a { color: var(--muted); text-decoration: none; transition: color 0.2s; }
+  .nav-links a:hover { color: var(--fg); }
+  .nav-cta { display: flex; align-items: center; gap: 16px; }
+  .nav-cta .login { font-size: 14.5px; font-weight: 700; text-decoration: none; color: var(--fg); }
+  .burger { display: none; width: 44px; height: 44px; border-radius: 10px; border: 1px solid var(--line-strong); background: transparent; color: var(--fg); cursor: pointer; place-items: center; }
+  .mobile-menu { display: none; }
+  @keyframes nav-in { from { opacity: 0; transform: translateY(-15px); } }
 
   /* Hero */
-  .hero { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr); gap: 44px; align-items: center; margin-top: 40px; }
-  .hero h1 { font-size: clamp(36px, 5.4vw, 58px); letter-spacing: -0.01em; }
-  .hero h1 em { font-style: italic; color: var(--brand); }
-  .hero .lead { margin-top: 14px; font-size: 18.5px; color: var(--muted); }
-  .offer-pill { display: inline-flex; align-items: center; gap: 8px; margin-bottom: 16px; padding: 6px 12px; border-radius: 999px;
-    background: var(--amber-soft); color: var(--amber); font-weight: 800; font-size: 13.5px; text-decoration: none; }
-  .cta-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 24px; }
-  .hero-price { margin-top: 12px; font-size: 14.5px; color: var(--muted); }
+  .hero { position: relative; padding-top: 128px; padding-bottom: 96px; overflow: hidden; isolation: isolate; }
+  .hero-bg { position: absolute; inset: 0; z-index: -2; background: url('/img/hero-food.jpg') right center / cover no-repeat; opacity: 0.55;
+    animation: drift 40s ease-in-out infinite alternate; transform-origin: 70% 50%; }
+  .hero::before { content: ''; position: absolute; inset: 0; z-index: -1;
+    background: linear-gradient(90deg, var(--bg) 0%, rgba(6, 19, 15, 0.94) 38%, rgba(6, 19, 15, 0.7) 70%, rgba(6, 19, 15, 0.82) 100%),
+      linear-gradient(0deg, var(--bg) 0%, transparent 30%), radial-gradient(60% 50% at 20% 30%, rgba(66, 211, 160, 0.08), transparent 70%); }
+  @keyframes drift { from { transform: scale(1.06) translateX(0); } to { transform: scale(1) translateX(-1.5%); } }
+  .hero-grid { display: grid; grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr); gap: 48px; align-items: center; }
+  .pill { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line-strong);
+    background: rgba(66, 211, 160, 0.06); font-size: 11.5px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--mint); }
+  .pill .ic { width: 14px; height: 14px; }
+  .hero h1 { margin-top: 20px; font-size: clamp(44px, 6.4vw, 78px); line-height: 1.02; }
+  .hero h1 span { display: block; }
+  .hero .lede { margin-top: 22px; font-size: 18.5px; }
+  .hero-ctas { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 32px; }
+  .trust { display: flex; flex-wrap: wrap; gap: 12px 24px; margin-top: 30px; color: var(--muted); font-size: 14px; font-weight: 600; }
+  .trust span { display: inline-flex; align-items: center; gap: 8px; }
+  .trust .ic { width: 18px; height: 18px; color: var(--mint); }
+  .trust .gold { color: var(--gold); }
+  .trust .gold .ic { color: var(--gold); }
+  .hero-price { margin-top: 18px; font-size: 14px; color: var(--muted); }
   .hero-price b { color: var(--fg); }
-  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
-  .chip { display: inline-flex; align-items: center; gap: 7px; padding: 7px 12px; border-radius: 999px; background: var(--surface);
-    border: 1px solid var(--line); font-size: 14px; font-weight: 700; }
-  .chip .ic { width: 18px; height: 18px; color: var(--brand); }
-  .chip.gold { background: var(--amber-soft); border-color: color-mix(in srgb, var(--amber-fill) 45%, transparent); color: var(--amber); }
-  .chip.gold .ic { color: var(--amber); }
 
-  /* The 80 mm bill */
-  .bill-stage { display: flex; justify-content: center; }
-  .bill { width: 100%; max-width: 290px; padding: 22px 20px 26px; background: var(--paper); color: var(--paper-ink); font-family: var(--mono);
-    font-size: 12.5px; line-height: 1.55; box-shadow: 0 18px 40px rgba(8, 30, 20, 0.18); transform: rotate(-1.6deg);
-    -webkit-mask: radial-gradient(circle 6px at 50% 100%, transparent 98%, #000) 0 0 / 14px 100% repeat-x;
-            mask: radial-gradient(circle 6px at 50% 100%, transparent 98%, #000) 0 0 / 14px 100% repeat-x; }
-  .bill .c { text-align: center; }
-  .bill .name { font-weight: 600; font-size: 15px; }
-  .bill hr { border: 0; border-top: 1px dashed var(--paper-line); margin: 10px 0; }
-  .bill .row { display: flex; justify-content: space-between; gap: 10px; font-variant-numeric: tabular-nums; }
-  .bill .total { font-weight: 600; font-size: 14.5px; }
-  .bill .paid { margin-top: 10px; text-align: center; font-weight: 600; letter-spacing: 0.2em; }
-  .bill-note { margin-top: 16px; text-align: center; font-size: 13px; color: var(--muted); }
+  /* Load-in sequence */
+  .ld { animation: rise 0.7s var(--ease) both; }
+  .ld-1 { animation-delay: 0.12s; } .ld-2 { animation-delay: 0.22s; } .ld-3 { animation-delay: 0.32s; } .ld-4 { animation-delay: 0.42s; }
+  .ld-mock { animation: mock-in 0.9s var(--ease) 0.3s both; }
+  @keyframes rise { from { opacity: 0; transform: translateY(25px); } }
+  @keyframes mock-in { from { opacity: 0; transform: scale(0.96); } }
 
-  /* Guarantee strip */
-  .guarantee { margin-top: 56px; display: flex; align-items: center; gap: 20px; padding: 20px 24px; border-radius: 18px;
-    background: var(--amber-soft); border: 2px solid var(--amber-fill); }
-  .seal { width: 76px; height: 76px; flex: none; display: grid; place-items: center; border-radius: 50%; background: var(--amber-fill);
-    color: #3a2300; font-family: var(--display); text-align: center; line-height: 1; box-shadow: 0 0 0 6px color-mix(in srgb, var(--amber-fill) 25%, transparent); }
-  .seal b { display: block; font-size: 30px; }
-  .seal span { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; font-family: var(--body); }
-  .guarantee h2 { font-size: clamp(22px, 2.8vw, 28px); color: var(--fg); }
-  .guarantee p { margin-top: 4px; color: var(--muted); }
-  .guarantee a { color: var(--amber); font-weight: 800; white-space: nowrap; }
-  .guarantee .text { flex: 1; min-width: 0; }
+  /* Product mockups (container-query sized, never overflow) */
+  .stage { position: relative; container-type: inline-size; }
+  .laptop { position: relative; border-radius: 3.2cqw 3.2cqw 0 0; padding: 1.6cqw 1.6cqw 0; background: linear-gradient(#1a2a24, #101b17);
+    border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 40px 90px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(66, 211, 160, 0.06); }
+  .laptop::after { content: ''; display: block; height: 2.2cqw; margin: 0 -6cqw; border-radius: 0 0 2cqw 2cqw;
+    background: linear-gradient(#2a3a33, #121c18); position: relative; top: 0; }
+  .screen { border-radius: 1.4cqw 1.4cqw 0 0; overflow: hidden; background: #071410; border: 1px solid rgba(66, 211, 160, 0.1); }
+  .dash { display: grid; grid-template-columns: 19% 1fr; font-size: 1.45cqw; line-height: 1.35; min-height: 46cqw; }
+  .dash-side { padding: 2.2cqw 1.6cqw; border-right: 1px solid var(--line); display: grid; align-content: start; gap: 0.6cqw; }
+  .dash-brand { display: flex; align-items: center; gap: 0.8cqw; font-weight: 800; font-size: 1.7cqw; margin-bottom: 1.4cqw; }
+  .dash-brand i { width: 2.4cqw; height: 2.4cqw; border-radius: 0.6cqw; background: var(--mint); display: block; }
+  .dash-side a { display: flex; align-items: center; gap: 0.8cqw; padding: 0.7cqw 0.9cqw; border-radius: 0.8cqw; color: var(--muted); text-decoration: none; }
+  .dash-side a .ic { width: 1.7cqw; height: 1.7cqw; }
+  .dash-side a.on { background: rgba(66, 211, 160, 0.14); color: var(--mint); font-weight: 700; }
+  .dash-side .badge { margin-left: auto; font-size: 1.1cqw; padding: 0 0.6cqw; border-radius: 99px; background: var(--mint); color: var(--on-mint); font-weight: 800; }
+  .dash-main { padding: 2.2cqw; display: grid; gap: 1.6cqw; align-content: start; }
+  .dash-top { display: flex; align-items: center; justify-content: space-between; }
+  .dash-top b { font-family: var(--display); font-size: 2.4cqw; }
+  .dash-top span { font-size: 1.2cqw; color: var(--muted); padding: 0.4cqw 1cqw; border: 1px solid var(--line); border-radius: 0.8cqw; }
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.2cqw; }
+  .kpi { padding: 1.3cqw; border-radius: 1.1cqw; background: var(--surface); border: 1px solid var(--line); }
+  .kpi small { display: block; color: var(--muted); font-size: 1.15cqw; }
+  .kpi b { display: block; font-size: 2.3cqw; margin-top: 0.3cqw; font-variant-numeric: tabular-nums; }
+  .kpi em { font-style: normal; font-size: 1.1cqw; color: var(--mint); font-weight: 700; }
+  .dash-row { display: grid; grid-template-columns: 1.25fr 1fr; gap: 1.2cqw; }
+  .panel { padding: 1.4cqw; border-radius: 1.1cqw; background: var(--surface); border: 1px solid var(--line); }
+  .panel-h { display: flex; justify-content: space-between; font-weight: 700; margin-bottom: 0.8cqw; }
+  .panel-h span { color: var(--muted); font-weight: 600; font-size: 1.1cqw; }
+  .chart { width: 100%; height: auto; display: block; overflow: visible; }
+  .chart .grid { stroke: rgba(255, 255, 255, 0.05); stroke-width: 1; }
+  .chart .area { fill: url(#gArea); opacity: 0; transition: opacity 1s var(--ease) 0.5s; }
+  .chart .line { fill: none; stroke: var(--mint); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round;
+    stroke-dasharray: 1000; stroke-dashoffset: 1000; transition: stroke-dashoffset 1.6s var(--ease); }
+  .chart .dot { fill: var(--mint); opacity: 0; transition: opacity 0.4s 1.4s; }
+  .chart .axis { fill: var(--faint); font-size: 9px; font-family: var(--body); }
+  .in .chart .line, .chart.in .line { stroke-dashoffset: 0; }
+  .in .chart .area, .chart.in .area { opacity: 1; }
+  .in .chart .dot, .chart.in .dot { opacity: 1; }
+  .orders { display: grid; gap: 0.75cqw; }
+  .order { display: grid; grid-template-columns: 2.8cqw 1fr auto; align-items: center; gap: 0.9cqw; }
+  .order img { width: 2.8cqw; height: 2.8cqw; border-radius: 50%; object-fit: cover; }
+  .order b { display: block; font-size: 1.25cqw; }
+  .order small { color: var(--muted); font-size: 1.05cqw; }
+  .st { font-size: 1cqw; font-weight: 800; padding: 0.25cqw 0.8cqw; border-radius: 99px; }
+  .st.new { background: rgba(66, 211, 160, 0.16); color: var(--mint); }
+  .st.prep { background: rgba(242, 181, 68, 0.16); color: var(--gold); }
+  .st.done { background: rgba(255, 255, 255, 0.08); color: var(--muted); }
+  .st.paid { background: rgba(66, 211, 160, 0.3); color: #c9fbe6; }
 
-  /* Steps: a real sequence */
-  .flow { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; list-style: none; padding: 0; margin: 0; counter-reset: s; }
-  .flow li { position: relative; display: grid; justify-items: center; gap: 10px; text-align: center; padding: 22px 12px; border-radius: 16px;
-    background: var(--surface); border: 1px solid var(--line); }
-  .flow li::before { counter-increment: s; content: counter(s); position: absolute; top: 10px; left: 12px; font-weight: 800; font-size: 13px; color: var(--muted); }
-  .flow li:not(:last-child)::after { content: '→'; position: absolute; right: -14px; top: 50%; transform: translate(50%, -50%); z-index: 1;
-    width: 26px; height: 26px; display: grid; place-items: center; border-radius: 50%; background: var(--brand); color: var(--on-brand); font-weight: 800; font-size: 14px; }
-  .flow p { font-size: 14.5px; color: var(--muted); }
+  .phone { position: absolute; width: 27%; right: -3%; bottom: -8%; border-radius: 4.4cqw; padding: 1.1cqw; background: #0d1512;
+    border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 30px 70px rgba(0, 0, 0, 0.6); }
+  .phone-screen { border-radius: 3.4cqw; overflow: hidden; background: #08130f; font-size: 1.45cqw; display: grid; }
+  .ph-top { padding: 2.4cqw 1.8cqw 1.2cqw; display: grid; gap: 0.3cqw; }
+  .ph-top b { font-family: var(--display); font-size: 2cqw; }
+  .ph-top small { color: var(--muted); font-size: 1.1cqw; }
+  .ph-chips { display: flex; gap: 0.6cqw; padding: 0 1.8cqw 1cqw; }
+  .ph-chips span { font-size: 1.05cqw; padding: 0.3cqw 0.9cqw; border-radius: 99px; border: 1px solid var(--line); color: var(--muted); }
+  .ph-chips span.on { background: var(--mint); color: var(--on-mint); border-color: transparent; font-weight: 800; }
+  .ph-dish { margin: 0 1.8cqw; border-radius: 1.6cqw; overflow: hidden; background: var(--surface); border: 1px solid var(--line); }
+  .ph-dish img { width: 100%; height: auto; aspect-ratio: 4 / 3; object-fit: cover; }
+  .ph-dish div { padding: 1.1cqw 1.2cqw 1.3cqw; display: grid; gap: 0.3cqw; }
+  .ph-dish b { font-size: 1.4cqw; }
+  .ph-dish .row { display: flex; justify-content: space-between; align-items: center; }
+  .ph-dish .add { font-size: 1.05cqw; font-weight: 800; padding: 0.35cqw 1cqw; border-radius: 99px; background: var(--mint); color: var(--on-mint); }
+  .veg { display: inline-block; width: 1.2cqw; height: 1.2cqw; border: 1.5px solid #22c55e; border-radius: 0.25cqw; position: relative; vertical-align: -0.1em; margin-right: 0.4cqw; }
+  .veg::after { content: ''; position: absolute; inset: 22%; border-radius: 50%; background: #22c55e; }
+  .ph-cart { margin: 1.4cqw 1.8cqw 2cqw; padding: 1cqw 1.2cqw; border-radius: 1.2cqw; background: var(--mint); color: var(--on-mint); font-weight: 800; font-size: 1.15cqw; display: flex; justify-content: space-between; }
 
-  /* Before / after */
-  .swap { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-  .swap div { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 10px; padding: 14px 16px; border-radius: 14px;
-    background: var(--surface); border: 1px solid var(--line); font-size: 15px; font-weight: 700; }
-  .swap .old { color: var(--bad); display: flex; gap: 8px; align-items: center; }
-  .swap .new { color: var(--fg); display: flex; gap: 8px; align-items: center; }
-  .swap .new .ic { color: var(--brand); }
-  .swap .old .ic, .swap .new .ic { width: 20px; height: 20px; }
-  .swap .arrow { color: var(--muted); }
+  .toast { position: absolute; top: -4%; right: -2%; width: 34%; display: flex; gap: 1.2cqw; align-items: flex-start; padding: 1.5cqw 1.7cqw; border-radius: 1.6cqw;
+    background: rgba(13, 32, 25, 0.88); border: 1px solid var(--line-strong); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45); font-size: 1.35cqw; animation: toast-in 0.7s var(--ease) 1.3s both; }
+  .toast .tick { width: 3cqw; height: 3cqw; flex: none; border-radius: 50%; background: var(--mint); color: var(--on-mint); display: grid; place-items: center; }
+  .toast .tick .ic { width: 1.8cqw; height: 1.8cqw; stroke-width: 3; }
+  .toast b { display: block; font-size: 1.5cqw; }
+  .toast span { color: var(--muted); font-size: 1.15cqw; }
+  @keyframes toast-in { from { opacity: 0; transform: translateX(30px); } }
+  .stage-note { margin-top: 64px; text-align: right; }
 
-  /* Feature tiles */
-  .tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
-  .tile { display: grid; gap: 10px; align-content: start; padding: 20px 18px; border-radius: 16px; background: var(--surface); border: 1px solid var(--line); }
-  .tile p { font-size: 14px; color: var(--muted); }
-  .tile .who { font-size: 11.5px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--brand); }
+  /* Scroll reveal */
+  .reveal { opacity: 0; transform: translateY(25px); transition: opacity 0.65s var(--ease), transform 0.65s var(--ease); transition-delay: calc(var(--i, 0) * 70ms); }
+  .reveal.in { opacity: 1; transform: none; }
+  .reveal-x { opacity: 0; transform: translateX(-28px); transition: opacity 0.6s var(--ease), transform 0.6s var(--ease); transition-delay: calc(var(--i, 0) * 90ms); }
+  .reveal-x.in { opacity: 1; transform: none; }
 
-  /* Big numbers */
-  .numbers { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
-  .numbers div { display: grid; gap: 2px; justify-items: center; text-align: center; padding: 20px 10px; border-radius: 16px; background: var(--brand-soft); }
-  .numbers strong { font-family: var(--display); font-size: 36px; line-height: 1.05; color: var(--brand); font-variant-numeric: tabular-nums; }
-  .numbers span { font-size: 14px; font-weight: 700; }
+  /* Cards */
+  .card { position: relative; border-radius: var(--radius); background: linear-gradient(180deg, var(--surface-2), var(--surface)); border: 1px solid var(--line);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03), 0 10px 30px rgba(0, 0, 0, 0.25); }
+  .icon-box { width: 48px; height: 48px; border-radius: 14px; display: grid; place-items: center; background: rgba(66, 211, 160, 0.1);
+    border: 1px solid var(--line); color: var(--mint); transition: transform 0.3s var(--ease); flex: none; }
+  .icon-box .ic { width: 24px; height: 24px; }
 
-  /* Plans */
-  .plans { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; align-items: stretch; }
-  .plan { position: relative; display: flex; flex-direction: column; gap: 12px; padding: 26px 22px 22px; border-radius: 18px; border: 1px solid var(--line); background: var(--surface); }
-  .plan.best { border: 2px solid var(--brand); box-shadow: 0 14px 34px rgba(20, 82, 61, 0.16); }
-  .plan .tag { position: absolute; top: -13px; left: 22px; padding: 4px 12px; border-radius: 999px; background: var(--brand); color: var(--on-brand); font-size: 12px; font-weight: 800; letter-spacing: 0.06em; }
-  .amount { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
-  .amount strong { font-family: var(--display); font-size: 42px; line-height: 1; font-variant-numeric: tabular-nums; }
-  .amount span { color: var(--muted); }
-  .amount .was { font-size: 18px; text-decoration: line-through; text-decoration-thickness: 2px; }
-  .per { font-size: 14.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
-  .ticks { margin: 0; padding: 0; list-style: none; display: grid; gap: 7px; font-size: 15px; }
-  .ticks li { display: flex; gap: 8px; align-items: center; }
-  .ticks .ic { width: 18px; height: 18px; color: var(--brand); }
-  .ticks li.gold { color: var(--amber); font-weight: 800; }
-  .ticks li.gold .ic { color: var(--amber); }
-  .save { align-self: flex-start; padding: 4px 10px; border-radius: 8px; background: var(--brand-soft); color: var(--brand); font-weight: 800; font-size: 13.5px; }
+  /* Features */
+  .feat-wrap { display: grid; grid-template-columns: minmax(0, 0.8fr) minmax(0, 2.2fr); gap: 48px; align-items: start; }
+  .feat-wrap .head { margin: 0; position: sticky; top: 110px; }
+  .features { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+  .feature { padding: 22px 20px; display: grid; gap: 10px; align-content: start; transition: transform 0.3s var(--ease), border-color 0.3s, box-shadow 0.3s, opacity 0.65s var(--ease); }
+  .feature:hover { transform: translateY(-5px) scale(1.01); border-color: var(--line-strong); box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(66, 211, 160, 0.08), 0 0 28px rgba(66, 211, 160, 0.08); }
+  .feature:hover .icon-box { transform: scale(1.05); }
+  .feature .cat { font-size: 11px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--mint); margin-top: 6px; }
+  .feature p { color: var(--muted); font-size: 14px; }
+
+  /* How it works */
+  .steps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; list-style: none; margin: 0; padding: 0; counter-reset: s; }
+  .step { padding: 24px 22px; display: grid; gap: 12px; align-content: start; }
+  .step::before { counter-increment: s; content: '0' counter(s); font-family: var(--display); font-size: 15px; color: var(--faint); }
+  .step p { color: var(--muted); font-size: 14.5px; }
+  .step:not(:last-child)::after { content: ''; position: absolute; top: 50%; right: -12px; width: 8px; height: 8px; border-top: 2px solid var(--line-strong); border-right: 2px solid var(--line-strong); transform: translate(50%, -50%) rotate(45deg); }
+
+  /* Problem -> solution */
+  .ps { display: grid; gap: 12px; max-width: 900px; margin-inline: auto; }
+  .ps-row { display: grid; grid-template-columns: 1fr 40px 1fr; align-items: center; gap: 12px; }
+  .ps-row > div { display: flex; align-items: center; gap: 12px; padding: 18px 20px; border-radius: 14px; font-weight: 700; font-size: 16px; }
+  .ps-old { background: rgba(255, 138, 118, 0.06); border: 1px solid rgba(255, 138, 118, 0.18); color: var(--coral); }
+  .ps-new { background: rgba(66, 211, 160, 0.06); border: 1px solid var(--line-strong); }
+  .ps-new .ic { color: var(--mint); }
+  .ps-arrow { color: var(--faint); justify-self: center; }
+
+  /* Showcase */
+  .show { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 28px; align-items: stretch; }
+  .board { container-type: inline-size; padding: 2.2cqw; display: grid; gap: 2cqw; font-size: 1.9cqw; }
+  .board-top { display: flex; align-items: center; justify-content: space-between; gap: 2cqw; }
+  .board-top b { font-family: var(--display); font-size: 3.2cqw; }
+  .board-top span { color: var(--muted); font-size: 1.6cqw; }
+  .cols { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.6cqw; }
+  .col { border-radius: 1.6cqw; background: rgba(0, 0, 0, 0.18); border: 1px solid var(--line); padding: 1.4cqw; display: grid; gap: 1.2cqw; align-content: start; }
+  .col-h { display: flex; justify-content: space-between; font-weight: 800; font-size: 1.7cqw; }
+  .col-h i { font-style: normal; color: var(--muted); }
+  .ticket { border-radius: 1.3cqw; background: var(--surface-2); border: 1px solid var(--line); padding: 1.3cqw; display: grid; gap: 0.6cqw; font-size: 1.55cqw; }
+  .ticket .t-top { display: flex; justify-content: space-between; font-weight: 800; }
+  .ticket .t-top span { color: var(--muted); font-weight: 600; }
+  .ticket ul { margin: 0; padding: 0; list-style: none; color: var(--muted); display: grid; gap: 0.2cqw; }
+  .ticket .t-btn { margin-top: 0.4cqw; text-align: center; padding: 0.7cqw; border-radius: 0.9cqw; font-weight: 800; font-size: 1.45cqw; background: var(--mint); color: var(--on-mint); }
+  .ticket.late { border-color: rgba(242, 181, 68, 0.55); }
+  .ticket .late-tag { color: var(--gold); font-weight: 800; }
+  .ticket.served .t-btn { background: transparent; border: 1px solid var(--line-strong); color: var(--muted); }
+  .pulse { width: 1.2cqw; height: 1.2cqw; border-radius: 50%; background: var(--mint); display: inline-block; box-shadow: 0 0 0 0 rgba(66, 211, 160, 0.5); animation: pulse 2.4s infinite; }
+  @keyframes pulse { 70% { box-shadow: 0 0 0 1.4cqw rgba(66, 211, 160, 0); } 100% { box-shadow: 0 0 0 0 rgba(66, 211, 160, 0); } }
+
+  .anywhere { padding: 32px 28px 0; display: grid; gap: 14px; overflow: hidden; background: radial-gradient(80% 60% at 70% 100%, rgba(66, 211, 160, 0.16), transparent 70%), linear-gradient(180deg, var(--surface-2), var(--surface)); }
+  .anywhere h3 { font-size: clamp(26px, 2.6vw, 32px); }
+  .anywhere p { color: var(--muted); }
+  .chips2 { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chips2 span { display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; border-radius: 10px; border: 1px solid var(--line-strong); font-size: 13.5px; font-weight: 700; }
+  .chips2 .ic { width: 16px; height: 16px; color: var(--mint); }
+  .owner-phone { container-type: inline-size; justify-self: center; width: min(100%, 290px); margin-top: 10px; border-radius: 34px 34px 0 0; padding: 10px 10px 0; background: #0d1512; border: 1px solid rgba(255, 255, 255, 0.1); border-bottom: 0; }
+  .op { border-radius: 26px 26px 0 0; background: #08130f; padding: 7cqw 6cqw 6cqw; display: grid; gap: 4.5cqw; font-size: 4.6cqw; }
+  .op-top { display: flex; justify-content: space-between; color: var(--muted); font-size: 4cqw; }
+  .op-big small { color: var(--muted); font-size: 4cqw; }
+  .op-big b { display: block; font-family: var(--display); font-size: 11cqw; line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .op-big em { font-style: normal; color: var(--mint); font-weight: 800; font-size: 4cqw; }
+  .op-bars { display: flex; align-items: flex-end; gap: 2.2cqw; height: 22cqw; }
+  .op-bars i { flex: 1; border-radius: 1.4cqw 1.4cqw 0 0; background: linear-gradient(var(--mint), rgba(66, 211, 160, 0.25)); transform: scaleY(0); transform-origin: bottom; transition: transform 0.9s var(--ease); transition-delay: calc(var(--i) * 60ms); }
+  .in .op-bars i { transform: scaleY(1); }
+  .op-list { display: grid; gap: 3cqw; }
+  .op-list div { display: grid; grid-template-columns: 9cqw 1fr auto; gap: 3cqw; align-items: center; }
+  .op-list img { width: 9cqw; height: 9cqw; border-radius: 50%; object-fit: cover; }
+  .op-list b { display: block; font-size: 4.2cqw; }
+  .op-list small { color: var(--muted); font-size: 3.5cqw; }
+  .op-list .st { font-size: 3.2cqw; padding: 0.8cqw 2.4cqw; }
+
+  /* Pricing */
+  .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-bottom: 40px; }
+  .stat { padding: 20px 14px; text-align: center; display: grid; gap: 4px; }
+  .stat b { font-family: var(--display); font-size: clamp(30px, 3.4vw, 40px); color: var(--mint); line-height: 1.05; font-variant-numeric: tabular-nums; }
+  .stat > span { color: var(--muted); font-size: 14px; font-weight: 700; }
+  .stat.gold b { color: var(--gold); }
+  .plans { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; align-items: stretch; }
+  .plan { padding: 30px 26px 26px; display: flex; flex-direction: column; gap: 14px; transition: transform 0.3s var(--ease), border-color 0.3s, opacity 0.65s var(--ease); }
+  .plan:hover { transform: translateY(-5px); border-color: var(--line-strong); }
+  .plan.best { border-color: transparent; background: linear-gradient(180deg, #11301f, #0b1d16) padding-box,
+      linear-gradient(140deg, var(--mint), rgba(66, 211, 160, 0.15) 40%, rgba(242, 181, 68, 0.5)) border-box;
+    border: 1.5px solid transparent; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35), 0 0 50px rgba(66, 211, 160, 0.1); }
+  .plan.best::before { content: ''; position: absolute; inset: -1px; border-radius: inherit; pointer-events: none; box-shadow: 0 0 34px rgba(66, 211, 160, 0.16); animation: glow 5s ease-in-out infinite; }
+  @keyframes glow { 50% { box-shadow: 0 0 52px rgba(66, 211, 160, 0.26); } }
+  .tag { position: absolute; top: -13px; left: 50%; transform: translateX(-50%); white-space: nowrap; padding: 5px 14px; border-radius: 99px; background: var(--mint); color: var(--on-mint); font-size: 11.5px; font-weight: 800; letter-spacing: 0.08em; }
+  .plan h3 { font-family: var(--body); font-size: 15px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+  .price { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+  .price b { font-family: var(--display); font-size: 48px; line-height: 1; font-variant-numeric: tabular-nums; }
+  .price span { color: var(--muted); }
+  .price s { color: var(--faint); font-size: 18px; text-decoration-thickness: 2px; }
+  .per { color: var(--muted); font-size: 14.5px; }
+  .save { align-self: flex-start; padding: 4px 10px; border-radius: 8px; background: rgba(66, 211, 160, 0.12); color: var(--mint); font-weight: 800; font-size: 13px; }
+  .ticks { list-style: none; margin: 4px 0 0; padding: 0; display: grid; gap: 10px; font-size: 15px; }
+  .ticks li { display: flex; align-items: center; gap: 10px; }
+  .ticks .ic { width: 18px; height: 18px; color: var(--mint); }
+  .ticks .gold { color: var(--gold); font-weight: 800; }
+  .ticks .gold .ic { color: var(--gold); }
   .plan .btn { margin-top: auto; width: 100%; }
-
-  /* Free setup offer */
-  .offer { margin-top: 20px; display: flex; align-items: center; justify-content: space-between; gap: 18px; flex-wrap: wrap;
-    padding: 18px 22px; border-radius: 16px; background: var(--amber-soft); border: 1px solid color-mix(in srgb, var(--amber-fill) 45%, transparent); }
-  .offer h3 { color: var(--amber); }
-  .offer p { font-size: 14.5px; color: var(--muted); }
-  .spots { display: flex; align-items: center; gap: 10px; font-weight: 800; color: var(--amber); font-variant-numeric: tabular-nums; }
+  .guarantee { margin-top: 28px; display: flex; align-items: center; gap: 22px; padding: 22px 26px; border-radius: var(--radius);
+    background: linear-gradient(90deg, rgba(242, 181, 68, 0.12), rgba(242, 181, 68, 0.04)); border: 1px solid rgba(242, 181, 68, 0.4); }
+  .seal { width: 72px; height: 72px; flex: none; border-radius: 50%; display: grid; place-items: center; text-align: center; line-height: 1;
+    background: var(--gold); color: #2b1a00; box-shadow: 0 0 0 6px rgba(242, 181, 68, 0.16); }
+  .seal b { display: block; font-family: var(--display); font-size: 28px; }
+  .seal span { font-size: 10px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; }
+  .guarantee h3 { font-size: 22px; }
+  .guarantee p { color: var(--muted); font-size: 15px; margin-top: 4px; }
+  .guarantee a { margin-left: auto; color: var(--gold); font-weight: 800; text-decoration: none; white-space: nowrap; }
+  .offer { margin-top: 16px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 24px; border-radius: var(--radius); border: 1px dashed var(--line-strong); }
+  .offer b { font-size: 16px; }
+  .offer p { color: var(--muted); font-size: 14px; }
+  .spots { display: flex; align-items: center; gap: 12px; font-weight: 800; color: var(--gold); font-variant-numeric: tabular-nums; }
   .dots { display: flex; gap: 6px; }
-  .dot { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--amber-fill); }
-  .dot.taken { background: var(--amber-fill); }
+  .dot { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--gold); }
+  .dot.taken { background: var(--gold); }
 
-  /* Setup + QR add-ons */
-  .mini { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
-  .mini > div { position: relative; display: grid; gap: 8px; justify-items: center; text-align: center; padding: 18px 12px; border-radius: 14px;
-    background: var(--surface); border: 1px solid var(--line); }
-  .mini h3 { font-size: 16px; }
-  .mini p { font-size: 13.5px; color: var(--muted); }
-  .mini .price { font-family: var(--display); font-size: 24px; font-weight: 700; font-variant-numeric: tabular-nums; }
-  .mini .price small { font-family: var(--body); font-size: 13px; color: var(--muted); font-weight: 600; }
-  .mini .pick { border: 2px solid var(--brand); }
-  .mini .pick-tag { position: absolute; top: -11px; padding: 2px 10px; border-radius: 999px; background: var(--brand); color: var(--on-brand); font-size: 11px; font-weight: 800; letter-spacing: 0.06em; }
-  .sub-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin: 34px 0 14px; }
+  /* QR options */
+  .qr-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 10px; margin: 64px 0 20px; }
+  .qr-head h3 { font-size: 26px; }
+  .qr-head p { color: var(--muted); }
+  .qr { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+  .qr .card { padding: 24px 18px; display: grid; justify-items: center; text-align: center; gap: 10px; transition: transform 0.3s var(--ease), border-color 0.3s, opacity 0.65s var(--ease); }
+  .qr .card:hover { transform: translateY(-5px); border-color: var(--line-strong); }
+  .qr .pick { border-color: var(--mint); }
+  .qr .pick .tag { top: -12px; }
+  .qr .amt { font-family: var(--display); font-size: 28px; font-variant-numeric: tabular-nums; }
+  .qr .amt small { font-family: var(--body); font-size: 13px; color: var(--muted); }
+  .qr p { color: var(--muted); font-size: 13.5px; }
 
   /* Cost bars */
-  .bars { display: grid; gap: 14px; padding: 22px; border-radius: 18px; background: var(--surface); border: 1px solid var(--line); }
-  .bar-row { display: grid; grid-template-columns: 170px minmax(0, 1fr) 150px; align-items: center; gap: 14px; font-size: 15px; font-weight: 700; }
-  .bar-track { height: 16px; border-radius: 999px; background: color-mix(in srgb, var(--line) 60%, transparent); overflow: hidden; }
-  .bar-fill { height: 100%; border-radius: 999px; background: var(--muted); }
-  .bar-row.us .bar-fill { background: var(--brand); }
-  .bar-row.us { color: var(--brand); }
-  .bar-row .val { text-align: right; font-variant-numeric: tabular-nums; }
+  .bars { padding: 30px; display: grid; gap: 22px; max-width: 900px; margin-inline: auto; }
+  .bar { display: grid; grid-template-columns: 160px minmax(0, 1fr) 140px; align-items: center; gap: 18px; font-weight: 700; }
+  .track { height: 14px; border-radius: 99px; background: rgba(255, 255, 255, 0.05); overflow: hidden; }
+  .fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, #5a6f66, #7c8f86); transform: scaleX(0); transform-origin: left; transition: transform 1.2s var(--ease); transition-delay: calc(var(--i, 0) * 150ms); }
+  .bar.us { color: var(--mint); }
+  .bar.us .fill { background: linear-gradient(90deg, var(--mint-deep), var(--mint)); }
+  .in .fill { transform: scaleX(1); }
+  .bar .val { text-align: right; font-variant-numeric: tabular-nums; }
+  .disclaimer { text-align: center; color: var(--faint); font-size: 13px; margin-top: 16px; }
 
-  /* What you need */
-  .needs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
-  .needs div { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 14px; background: var(--surface); border: 1px solid var(--line); font-weight: 700; font-size: 15px; }
-  .needs small { display: block; font-weight: 600; color: var(--muted); font-size: 12.5px; }
+  /* Requirements */
+  .needs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+  .need { padding: 22px 20px; display: flex; gap: 14px; align-items: center; transition: transform 0.3s var(--ease), opacity 0.65s var(--ease); }
+  .need:hover { transform: translateY(-4px); }
+  .need b { display: block; }
+  .need small { color: var(--muted); font-size: 13.5px; }
+
+  /* Founding restaurants (instead of invented testimonials) */
+  .founding { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 32px; align-items: center; padding: 40px; overflow: hidden;
+    background: radial-gradient(60% 80% at 100% 0%, rgba(242, 181, 68, 0.1), transparent 70%), linear-gradient(180deg, var(--surface-2), var(--surface)); }
+  .founding h2 { font-size: clamp(28px, 3.4vw, 40px); }
+  .founding p { color: var(--muted); margin-top: 12px; max-width: 48ch; }
+  .perks { display: grid; gap: 12px; list-style: none; margin: 0; padding: 0; }
+  .perks li { display: flex; align-items: center; gap: 14px; padding: 14px 16px; border-radius: 14px; background: rgba(0, 0, 0, 0.2); border: 1px solid var(--line); font-weight: 700; }
+  .perks .icon-box { width: 40px; height: 40px; border-radius: 12px; }
+  .perks .icon-box .ic { width: 20px; height: 20px; }
 
   /* FAQ */
-  .faq { display: grid; gap: 10px; max-width: 760px; margin-inline: auto; }
-  details { border: 1px solid var(--line); border-radius: 12px; background: var(--surface); padding: 0 18px; }
-  summary { cursor: pointer; padding: 15px 0; font-weight: 700; list-style: none; display: flex; justify-content: space-between; gap: 12px; }
-  summary::-webkit-details-marker { display: none; }
-  summary::after { content: '+'; color: var(--brand); font-size: 20px; line-height: 1; }
-  details[open] summary::after { content: '–'; }
-  details p { padding-bottom: 15px; color: var(--muted); }
+  .faq { display: grid; gap: 12px; max-width: 820px; margin-inline: auto; }
+  .qa { overflow: hidden; }
+  .qa button { width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 20px 22px; min-height: 56px;
+    background: none; border: 0; color: var(--fg); font: inherit; font-weight: 700; font-size: 16.5px; text-align: left; cursor: pointer; border-radius: var(--radius); }
+  .qa .plus { width: 28px; height: 28px; flex: none; border-radius: 50%; border: 1px solid var(--line-strong); display: grid; place-items: center; color: var(--mint); transition: transform 0.33s var(--ease); }
+  .qa[data-open] .plus { transform: rotate(45deg); }
+  .qa .ans { display: grid; grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows 0.33s var(--ease), opacity 0.33s var(--ease); }
+  .qa[data-open] .ans { grid-template-rows: 1fr; opacity: 1; }
+  .qa .ans > div { overflow: hidden; }
+  .qa .ans p { padding: 0 22px 20px; color: var(--muted); }
+  .qa .ans a { color: var(--mint); font-weight: 700; }
 
-  /* Lead */
-  .lead-card { margin-top: 84px; display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: 32px; padding: 32px; border-radius: 20px;
-    background: var(--surface); border: 1px solid var(--line); scroll-margin-top: 80px; }
-  .lead-card .sub { margin-top: 8px; color: var(--muted); }
-  .lead-steps { margin: 18px 0 0; padding: 0; list-style: none; display: grid; gap: 10px; }
-  .lead-steps li { display: flex; align-items: center; gap: 12px; font-weight: 700; }
-  .lead-steps .badge-ic { width: 40px; height: 40px; border-radius: 12px; }
-  .lead-steps .badge-ic .ic { width: 20px; height: 20px; }
-  .contact-line { margin-top: 18px; display: inline-flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 10px; background: var(--brand-soft); font-weight: 800; font-variant-numeric: tabular-nums; }
-  .contact-line button { border: 0; background: var(--surface); color: var(--brand); font: inherit; font-size: 13px; font-weight: 800; padding: 4px 10px; border-radius: 8px; cursor: pointer; }
-  .self-signup { margin-top: 14px; font-size: 14.5px; color: var(--muted); }
-  .self-signup a { color: var(--brand); font-weight: 800; }
-  form.lead { display: grid; gap: 12px; }
-  .field { display: grid; gap: 6px; }
+  /* Trial form */
+  .trial { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: 40px; padding: 44px; scroll-margin-top: 90px;
+    background: radial-gradient(70% 90% at 0% 0%, rgba(66, 211, 160, 0.14), transparent 60%), linear-gradient(180deg, #0f2a1f, #0b1d16); border-color: var(--line-strong); }
+  .trial h2 { font-size: clamp(30px, 3.6vw, 44px); }
+  .trial .sub { color: var(--muted); margin-top: 12px; font-size: 17px; }
+  .t-steps { list-style: none; margin: 28px 0 0; padding: 0; display: grid; gap: 14px; }
+  .t-steps li { display: flex; align-items: center; gap: 14px; font-weight: 700; }
+  .t-steps .icon-box { width: 42px; height: 42px; border-radius: 12px; }
+  .call { margin-top: 26px; display: inline-flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 12px; background: rgba(0, 0, 0, 0.22); border: 1px solid var(--line); font-weight: 800; font-variant-numeric: tabular-nums; }
+  .call button { border: 0; background: rgba(66, 211, 160, 0.14); color: var(--mint); font: inherit; font-size: 13px; font-weight: 800; padding: 6px 12px; border-radius: 8px; cursor: pointer; min-height: 32px; }
+  .self { margin-top: 14px; color: var(--muted); font-size: 14.5px; }
+  .self a { color: var(--mint); font-weight: 800; text-decoration: none; }
+  form.lead { display: grid; gap: 14px; }
+  .field { display: grid; gap: 7px; }
   .field label { font-size: 14px; font-weight: 700; }
-  .field input, .field select { min-height: 46px; padding: 0 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--fg); font: inherit; font-size: 15.5px; }
-  .field-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-  .form-actions { display: flex; flex-wrap: wrap; gap: 10px; }
-  .form-actions .btn { flex: 1 1 200px; }
-  .form-note { font-size: 13px; color: var(--muted); }
-  .form-out { display: grid; gap: 8px; padding: 12px; border-radius: 10px; background: var(--brand-soft); font-size: 14px; white-space: pre-wrap; }
-  .error-text { color: var(--bad); font-size: 13px; }
+  .field input, .field select { min-height: 48px; padding: 0 14px; border-radius: 12px; border: 1px solid var(--line-strong); background: rgba(0, 0, 0, 0.25);
+    color: var(--fg); font: inherit; font-size: 15.5px; transition: border-color 0.2s, box-shadow 0.2s; }
+  .field input:focus, .field select:focus { outline: none; border-color: var(--mint); box-shadow: 0 0 0 3px rgba(66, 211, 160, 0.18); }
+  .field input[aria-invalid="true"] { border-color: var(--coral); }
+  .row2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+  .actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 4px; }
+  .actions .btn { flex: 1 1 200px; }
+  .note { font-size: 13px; color: var(--muted); }
+  .err { color: var(--coral); font-size: 13.5px; }
+  .out { padding: 14px; border-radius: 12px; background: rgba(0, 0, 0, 0.25); border: 1px solid var(--line); font-size: 14px; white-space: pre-wrap; }
 
   /* Footer */
-  .site-footer { margin-top: 56px; padding-top: 28px; border-top: 1px solid var(--line); font-size: 14px; color: var(--muted); }
-  .site-footer__cols { display: grid; grid-template-columns: minmax(0, 1.4fr) repeat(2, minmax(0, 1fr)); gap: 24px; }
-  .site-footer nav { display: grid; align-content: start; gap: 8px; }
-  .site-footer a { color: var(--fg); text-decoration: none; }
-  .site-footer a:hover { color: var(--brand); }
-  .site-footer__brand { font-family: var(--display); font-size: 20px; font-weight: 700; color: var(--fg); margin-bottom: 6px; }
-  .site-footer__title { font-size: 12.5px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
-  .site-footer__fine { margin-top: 24px; font-size: 12.5px; }
+  footer { padding-block: 56px 40px; border-top: 1px solid var(--line); color: var(--muted); font-size: 14.5px; }
+  .foot { display: grid; grid-template-columns: minmax(0, 1.4fr) repeat(2, minmax(0, 0.6fr)); gap: 32px; }
+  .foot nav { display: grid; gap: 10px; align-content: start; }
+  .foot nav p { font-size: 12px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--fg); margin-bottom: 4px; }
+  .foot a { text-decoration: none; transition: color 0.2s; }
+  .foot a:hover { color: var(--mint); }
+  .foot .about p { margin-top: 12px; max-width: 36ch; }
+  .copy { margin-top: 40px; font-size: 13px; color: var(--faint); }
 
-  /* Sticky CTA on phones */
-  .mobile-cta { position: fixed; left: 0; right: 0; bottom: 0; z-index: 6; display: none; gap: 10px; align-items: center;
-    padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px)); background: var(--surface); border-top: 1px solid var(--line);
-    box-shadow: 0 -8px 24px rgba(8, 30, 20, 0.12); }
-  .mobile-cta .txt { flex: 1; min-width: 0; font-size: 13.5px; line-height: 1.3; }
-  .mobile-cta .txt b { display: block; font-size: 15px; }
+  /* Phone CTA bar */
+  .m-cta { position: fixed; inset: auto 0 0 0; z-index: 40; display: none; align-items: center; gap: 12px; padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px));
+    background: rgba(8, 23, 17, 0.94); backdrop-filter: blur(12px); border-top: 1px solid var(--line); }
+  .m-cta .txt { flex: 1; font-size: 13px; line-height: 1.3; color: var(--muted); }
+  .m-cta .txt b { display: block; color: var(--fg); font-size: 15px; }
 
-  @media (max-width: 960px) {
-    .tiles, .mini, .needs, .numbers { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .flow { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 28px; }
-    .flow li:nth-child(2)::after { display: none; }
+  /* Responsive */
+  @media (max-width: 1100px) {
+    .feat-wrap { grid-template-columns: minmax(0, 1fr); gap: 32px; }
+    .feat-wrap .head { position: static; }
   }
-  @media (max-width: 900px) {
+  @media (max-width: 980px) {
+    .nav-links, .nav-cta .login, .nav-cta .btn { display: none; }
+    .burger { display: grid; margin-left: auto; }
+    .mobile-menu { display: grid; position: fixed; inset: calc(68px + env(safe-area-inset-top, 0px)) 0 auto 0; z-index: 49; padding: 12px 20px 22px; gap: 4px;
+      background: rgba(6, 19, 15, 0.97); backdrop-filter: blur(14px); border-bottom: 1px solid var(--line);
+      transform: translateY(-12px); opacity: 0; visibility: hidden; transition: transform 0.3s var(--ease), opacity 0.3s var(--ease), visibility 0s 0.3s; }
+    .mobile-menu.open { transform: none; opacity: 1; visibility: visible; transition: transform 0.3s var(--ease), opacity 0.3s var(--ease); }
+    .mobile-menu a:not(.btn) { padding: 13px 4px; font-weight: 700; text-decoration: none; border-bottom: 1px solid var(--line); min-height: 44px; }
+    .mobile-menu .btn { margin-top: 12px; }
+    .hero-grid { grid-template-columns: minmax(0, 1fr); gap: 56px; }
+    .hero-bg { background-position: center; opacity: 0.35; }
+    .features, .qr, .needs, .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .step:nth-child(2)::after { display: none; }
+    .show, .founding, .trial { grid-template-columns: minmax(0, 1fr); }
     .plans { grid-template-columns: minmax(0, 1fr); max-width: 520px; margin-inline: auto; }
     .plan.best { order: -1; }
   }
-  @media (max-width: 860px) {
-    .hero, .lead-card { grid-template-columns: minmax(0, 1fr); }
-    .bill { transform: none; }
-    .top nav a:not(.btn):not(.nav-login) { display: none; }
-    .swap { grid-template-columns: minmax(0, 1fr); }
-    .bar-row { grid-template-columns: 120px minmax(0, 1fr) 110px; font-size: 14px; }
-  }
-  @media (max-width: 620px) {
-    section { margin-top: 64px; }
+  @media (max-width: 640px) {
+    section { padding-block: 68px; }
+    .container { padding-inline: 18px; }
+    .hero { padding-top: 104px; padding-bottom: 72px; }
+    .features, .qr, .needs { grid-template-columns: minmax(0, 1fr); }
+    .steps { grid-template-columns: minmax(0, 1fr); }
+    .step::after { display: none; }
+    .ps-row { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+    .ps-arrow { transform: rotate(90deg); }
+    .bar { grid-template-columns: minmax(0, 1fr) auto; gap: 8px 12px; }
+    .bar .track { grid-column: 1 / -1; grid-row: 2; }
     .guarantee { flex-direction: column; text-align: center; }
-    .flow li::after { display: none !important; }
-    .field-row, .site-footer__cols { grid-template-columns: minmax(0, 1fr); }
-    .tiles, .needs, .mini { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-    .tile { padding: 14px 12px; gap: 6px; }
-    .tile .who { display: none; }
-    .tile h3 { font-size: 15.5px; }
-    .tile p, .mini p { font-size: 13px; }
-    .badge-ic { width: 42px; height: 42px; border-radius: 12px; }
-    .badge-ic .ic { width: 22px; height: 22px; }
-    .needs div { flex-direction: column; text-align: center; padding: 12px 8px; gap: 8px; font-size: 14px; }
-    .flow { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-    .flow li { padding: 16px 8px; }
-    .numbers strong { font-size: 28px; }
-    .swap div { grid-template-columns: minmax(0, 1fr); gap: 4px; }
-    .swap .arrow { display: none; }
-    .bar-row { grid-template-columns: minmax(0, 1fr) auto; }
-    .bar-row .bar-track { grid-column: 1 / -1; grid-row: 2; }
-    .lead-card { padding: 22px; }
-    .mobile-cta { display: flex; }
-    .wrap { padding-block-end: 120px; }
+    .guarantee a { margin: 0; }
+    .founding, .trial { padding: 26px 20px; }
+    .row2, .foot { grid-template-columns: minmax(0, 1fr); }
+    .phone { width: 31%; right: -1%; }
+    .toast { width: 52%; right: 0; top: -9%; font-size: 2cqw; }
+    .toast b { font-size: 2.3cqw; } .toast span { font-size: 1.8cqw; }
+    .m-cta { display: flex; }
+    footer { padding-bottom: 110px; }
   }
-  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.2s !important; transition-delay: 0s !important; }
+    .hero-bg { animation: none; }
+    .reveal, .reveal-x { transform: none; }
+    .feature:hover, .plan:hover, .qr .card:hover, .need:hover, .btn:hover { transform: none; }
+  }
 </style>
 </head>
 <body>
 
-<!-- Icon set (stroke icons, coloured with currentColor) -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="gArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#42d3a0" stop-opacity="0.35"/><stop offset="1" stop-color="#42d3a0" stop-opacity="0"/></linearGradient>
+  </defs>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5"/><path d="M10 8.5v7l5.5-3.5z"/></symbol>
+  <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22z"/></symbol>
+  <symbol id="i-percent" viewBox="0 0 24 24"><path d="M19 5 5 19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></symbol>
+  <symbol id="i-layers" viewBox="0 0 24 24"><path d="M12 3 2 8l10 5 10-5z"/><path d="m2 13 10 5 10-5"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 9a6 6 0 0 1 12 0c0 6 2.5 8 2.5 8h-17S6 15 6 9"/><path d="M10.2 20.5a2 2 0 0 0 3.6 0"/></symbol>
+  <symbol id="i-rupee" viewBox="0 0 24 24"><path d="M6 4h12M6 9h12M6 14l8 7M6 14h3c6 0 6-10 0-10"/></symbol>
+  <symbol id="i-monitor" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></symbol>
+  <symbol id="i-bill" viewBox="0 0 24 24"><path d="M5 2v20l2-1.2L9 22l2-1.2 2 1.2 2-1.2 2 1.2 2-1.2V2l-2 1.2L15 2l-2 1.2L11 2 9 3.2 7 2z"/><path d="M9 8h6M9 12h6M9 16h4"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M8 17v-4M13 17V8M18 17v-7"/></symbol>
+  <symbol id="i-camera" viewBox="0 0 24 24"><path d="M3 8a2 2 0 0 1 2-2h2l1.5-2h7L17 6h2a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><circle cx="12" cy="13" r="3.5"/></symbol>
   <symbol id="i-qr" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM20 14v.01M14 20h.01M17 20h4v-3"/></symbol>
   <symbol id="i-cart" viewBox="0 0 24 24"><circle cx="9" cy="20" r="1.3"/><circle cx="18" cy="20" r="1.3"/><path d="M2 3h2.5l2.4 11.4a2 2 0 0 0 2 1.6h8.6a2 2 0 0 0 2-1.5L21 7H5.3"/></symbol>
   <symbol id="i-chef" viewBox="0 0 24 24"><path d="M7 21h10v-4.5c1.7-.6 3-2.2 3-4.2a4.5 4.5 0 0 0-5.2-4.4 4.5 4.5 0 0 0-5.6 0A4.5 4.5 0 0 0 4 12.3c0 2 1.3 3.6 3 4.2z"/><path d="M7 17.5h10"/></symbol>
-  <symbol id="i-bill" viewBox="0 0 24 24"><path d="M5 2v20l2-1.2L9 22l2-1.2 2 1.2 2-1.2 2 1.2 2-1.2V2l-2 1.2L15 2l-2 1.2L11 2 9 3.2 7 2z"/><path d="M9 8h6M9 12h6M9 16h4"/></symbol>
-  <symbol id="i-rupee" viewBox="0 0 24 24"><path d="M6 4h12M6 9h12M6 14l8 7M6 14h3c6 0 6-10 0-10"/></symbol>
-  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 9a6 6 0 0 1 12 0c0 6 2.5 8 2.5 8h-17S6 15 6 9"/><path d="M10.2 20.5a2 2 0 0 0 3.6 0"/></symbol>
-  <symbol id="i-chart" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M8 17v-4M13 17V8M18 17v-7"/></symbol>
-  <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M5 3v3M3.5 4.5h3M19 17v3M17.5 18.5h3"/></symbol>
-  <symbol id="i-monitor" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></symbol>
-  <symbol id="i-phone" viewBox="0 0 24 24"><rect x="6" y="2" width="12" height="20" rx="2.5"/><path d="M11 18h2"/></symbol>
+  <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></symbol>
+  <symbol id="i-table" viewBox="0 0 24 24"><path d="M3 8h18M5 8v12M19 8v12M8 8V5h8v3"/></symbol>
+  <symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></symbol>
   <symbol id="i-wifi" viewBox="0 0 24 24"><path d="M2 8.8a15 15 0 0 1 20 0M5 12.5a10 10 0 0 1 14 0M8.5 16a5 5 0 0 1 7 0"/><path d="M12 19.5h.01"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><rect x="6" y="2" width="12" height="20" rx="2.5"/><path d="M11 18h2"/></symbol>
   <symbol id="i-printer" viewBox="0 0 24 24"><path d="M6 9V3h12v6"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="7" rx="1"/></symbol>
-  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></symbol>
-  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5"/><path d="M12 7v5l3 2"/></symbol>
-  <symbol id="i-layers" viewBox="0 0 24 24"><path d="M12 3 2 8l10 5 10-5z"/><path d="m2 13 10 5 10-5"/></symbol>
-  <symbol id="i-drop" viewBox="0 0 24 24"><path d="M12 21a7 7 0 0 0 7-7c0-4-7-11-7-11S5 10 5 14a7 7 0 0 0 7 7z"/></symbol>
-  <symbol id="i-percent" viewBox="0 0 24 24"><path d="M19 5 5 19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></symbol>
-  <symbol id="i-zap" viewBox="0 0 24 24"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></symbol>
-  <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
-  <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
   <symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5M12 15V3"/></symbol>
   <symbol id="i-sticker" viewBox="0 0 24 24"><path d="M15.5 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8.5z"/><path d="M15 3v6h6"/></symbol>
   <symbol id="i-tent" viewBox="0 0 24 24"><path d="M3 20 12 4l9 16zM12 4v16"/></symbol>
   <symbol id="i-standee" viewBox="0 0 24 24"><rect x="6" y="2" width="12" height="15" rx="1.5"/><path d="M9 22h6M12 17v5"/></symbol>
-  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22z"/></symbol>
-  <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h8M8 17h5"/></symbol>
+  <symbol id="i-zap" viewBox="0 0 24 24"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></symbol>
   <symbol id="i-gift" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13M19 12v9H5v-9"/><path d="M12 8C10.5 4 7 4 7 6s2.5 2 5 2c2.5 0 5 0 5-2s-3.5-2-5 2"/></symbol>
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 11 12 3l9 8v10H3z"/><path d="M9 21v-6h6v6"/></symbol>
+  <symbol id="i-burger" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
 </svg>
 
-<div class="wrap">
-  <header class="top">
-    <a class="brand" href="/" aria-label="QRenvo home">
-      <svg viewBox="0 0 64 64" aria-hidden="true">
-        <defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#218062"/><stop offset="1" stop-color="#14523d"/></linearGradient></defs>
-        <rect width="64" height="64" rx="14" fill="url(#lg)"/>
-        <rect x="13" y="13" width="32" height="32" rx="7" fill="none" stroke="#fff" stroke-width="6"/>
-        <rect x="23" y="23" width="12" height="12" rx="2.5" fill="#fff"/>
-        <path d="M41 41 L51 51" stroke="#f59e0b" stroke-width="7" stroke-linecap="round"/>
-      </svg>
+<!-- Navbar -->
+<header class="nav" id="nav">
+  <div class="container nav-inner">
+    <a class="brand" href="#top" aria-label="QRenvo home">
+      <svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#1b6b50"/><rect x="13" y="13" width="32" height="32" rx="7" fill="none" stroke="#fff" stroke-width="6"/><rect x="23" y="23" width="12" height="12" rx="2.5" fill="#fff"/><path d="M41 41 L51 51" stroke="#f59e0b" stroke-width="7" stroke-linecap="round"/></svg>
       QRenvo
     </a>
-    <nav aria-label="Main">
+    <nav class="nav-links" aria-label="Main">
       <a href="#how">How it works</a>
       <a href="#features">Features</a>
-      <a href="#plans">Pricing</a>
+      <a href="#pricing">Pricing</a>
       <a href="#faq">FAQ</a>
       <a href="https://demo.qrenvo.com/m/saket-rasoi/menu?t=1" target="_blank" rel="noopener">Live demo</a>
-      <a class="nav-login" href="https://app.qrenvo.com/admin/login">Log in</a>
-      <a class="btn small" href="#get-started">Start free trial</a>
     </nav>
-  </header>
+    <div class="nav-cta">
+      <a class="login" href="https://app.qrenvo.com/admin/login">Log in</a>
+      <a class="btn btn-primary btn-sm" href="#trial">Start free trial <svg class="ic arrow"><use href="#i-arrow"/></svg></a>
+    </div>
+    <button class="burger" id="burger" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu"><svg class="ic"><use href="#i-burger"/></svg></button>
+  </div>
+</header>
+<div class="mobile-menu" id="mobile-menu">
+  <a href="#how">How it works</a>
+  <a href="#features">Features</a>
+  <a href="#pricing">Pricing</a>
+  <a href="#faq">FAQ</a>
+  <a href="https://demo.qrenvo.com/m/saket-rasoi/menu?t=1" target="_blank" rel="noopener">Live demo</a>
+  <a href="https://app.qrenvo.com/admin/login">Log in</a>
+  <a class="btn btn-primary" href="#trial">Start free trial</a>
+</div>
 
+<main id="top">
   <!-- Hero -->
-  <div class="hero" id="start">
-    <div>
-      <a class="offer-pill" href="#offer">Free setup for the first <b data-spots-total>5</b> restaurants · <b data-spots-left>5</b> left</a>
-      <h1>Guests order from the table. <em>Your kitchen gets it in seconds.</em></h1>
-      <p class="lead">QR menu, kitchen screen and GST bills. No app, no commission.</p>
-      <div class="cta-row">
-        <a class="btn" href="#get-started">Start 3-day free trial</a>
-        <a class="btn ghost" href="https://demo.qrenvo.com/m/saket-rasoi/menu?t=1" target="_blank" rel="noopener">Try the live demo</a>
-      </div>
-      <p class="hero-price">Plans from <b>₹833/month</b></p>
-      <div class="chips">
-        <span class="chip"><svg class="ic"><use href="#i-phone"/></svg>No app for guests</span>
-        <span class="chip"><svg class="ic"><use href="#i-percent"/></svg>0% commission</span>
-        <span class="chip"><svg class="ic"><use href="#i-zap"/></svg>Live in 1 day</span>
-        <span class="chip gold"><svg class="ic"><use href="#i-shield"/></svg>7-day money back</span>
-      </div>
-    </div>
-
-    <div>
-      <div class="bill-stage">
-        <div class="bill" aria-label="Sample table bill printed from QRenvo">
-          <div class="c name">Saket Rasoi</div>
-          <div class="c">12, Saket, New Delhi</div>
-          <div class="c">GSTIN: 07ABCDE1234F1Z5</div>
-          <div class="c" style="margin-top:6px;font-weight:600">TAX INVOICE</div>
-          <hr>
-          <div class="row"><span>Invoice: SR-0042</span><span>Table 5</span></div>
-          <div class="row"><span>04 Oct 2026</span><span>08:14 PM</span></div>
-          <hr>
-          <div class="row"><span>2× Paneer Tikka</span><span>500.00</span></div>
-          <div class="row"><span>1× Dal Makhani</span><span>280.00</span></div>
-          <div class="row"><span>4× Butter Naan</span><span>240.00</span></div>
-          <div class="row"><span>2× Masala Chaas</span><span>120.00</span></div>
-          <hr>
-          <div class="row"><span>Subtotal</span><span>1,140.00</span></div>
-          <div class="row"><span>CGST (2.5%)</span><span>28.50</span></div>
-          <div class="row"><span>SGST (2.5%)</span><span>28.50</span></div>
-          <div class="row total"><span>Total</span><span>Rs. 1,197.00</span></div>
-          <hr>
-          <div class="paid">PAID · UPI</div>
-          <div class="c" style="margin-top:6px">Thank you! Visit again.</div>
+  <section class="hero">
+    <div class="hero-bg" aria-hidden="true"></div>
+    <div class="container hero-grid">
+      <div>
+        <span class="pill ld"><svg class="ic"><use href="#i-spark"/></svg>AI powered restaurant platform</span>
+        <h1 class="ld ld-1"><span>Great Food.</span><span class="accent">Faster, Smarter.</span></h1>
+        <p class="lede ld ld-2">Take orders, manage menu, handle payments and grow your restaurant — all in one place.</p>
+        <div class="hero-ctas ld ld-3">
+          <a class="btn btn-primary" href="#trial">Start free trial <svg class="ic arrow"><use href="#i-arrow"/></svg></a>
+          <a class="btn btn-ghost" href="https://demo.qrenvo.com/m/saket-rasoi/menu?t=1" target="_blank" rel="noopener"><svg class="ic"><use href="#i-play"/></svg>Live demo</a>
         </div>
+        <div class="trust ld ld-4">
+          <span><svg class="ic"><use href="#i-percent"/></svg>0% commission</span>
+          <span><svg class="ic"><use href="#i-lock"/></svg>Secure payments</span>
+          <span><svg class="ic"><use href="#i-chat"/></svg>WhatsApp support</span>
+          <span class="gold"><svg class="ic"><use href="#i-shield"/></svg>7-day money back</span>
+        </div>
+        <p class="hero-price ld ld-4">3-day free trial · plans from <b>₹833/month</b></p>
       </div>
-      <p class="bill-note">A real QRenvo bill: the whole table on one invoice.</p>
-    </div>
-  </div>
 
-  <!-- Guarantee -->
-  <div class="guarantee" id="guarantee">
-    <div class="seal" aria-hidden="true"><div><b>7</b><span>days</span></div></div>
-    <div class="text">
-      <h2>Not happy? Full refund in 7 days.</h2>
-      <p>Buy your first plan. If QRenvo doesn't work for you within 7 days, we refund every rupee.</p>
-    </div>
-    <a href="/refund.html">See refund policy →</a>
-  </div>
+      <div class="stage ld-mock" aria-label="QRenvo owner dashboard and guest menu, with sample data">
+        <div class="laptop">
+          <div class="screen">
+            <div class="dash">
+              <div class="dash-side">
+                <div class="dash-brand"><i></i>QRenvo</div>
+                <a class="on"><svg class="ic"><use href="#i-grid"/></svg>Dashboard</a>
+                <a><svg class="ic"><use href="#i-bill"/></svg>Orders<span class="badge">6</span></a>
+                <a><svg class="ic"><use href="#i-bill"/></svg>Invoices</a>
+                <a><svg class="ic"><use href="#i-bell"/></svg>Requests</a>
+                <a><svg class="ic"><use href="#i-table"/></svg>Tables</a>
+                <a><svg class="ic"><use href="#i-menu"/></svg>Menu</a>
+                <a><svg class="ic"><use href="#i-qr"/></svg>QR codes</a>
+                <a><svg class="ic"><use href="#i-settings"/></svg>Settings</a>
+              </div>
+              <div class="dash-main">
+                <div class="dash-top"><b>Dashboard</b><span>Today</span></div>
+                <div class="kpis">
+                  <div class="kpi"><small>Orders today</small><b data-count="48">48</b><em>↑ 12%</em></div>
+                  <div class="kpi"><small>Revenue today</small><b data-count="18450" data-prefix="₹">₹18,450</b><em>↑ 18%</em></div>
+                  <div class="kpi"><small>Average order</small><b data-count="384" data-prefix="₹">₹384</b><em>↑ 5%</em></div>
+                  <div class="kpi"><small>Active tables</small><b>6 / 10</b><em>Live</em></div>
+                </div>
+                <div class="dash-row">
+                  <div class="panel">
+                    <div class="panel-h">Sales, last 7 days<span>₹1.1L</span></div>
+                    <svg class="chart" viewBox="0 0 300 120" aria-hidden="true">
+                      <path class="grid" d="M0 30H300M0 60H300M0 90H300"/>
+                      <path class="area" d="M5 92 L50 78 L95 84 L140 58 L185 64 L230 36 L295 22 L295 112 L5 112Z"/>
+                      <path class="line" pathLength="1000" d="M5 92 L50 78 L95 84 L140 58 L185 64 L230 36 L295 22"/>
+                      <circle class="dot" cx="295" cy="22" r="4"/>
+                      <text class="axis" x="5" y="120">Mon</text><text class="axis" x="140" y="120">Thu</text><text class="axis" x="275" y="120">Sun</text>
+                    </svg>
+                  </div>
+                  <div class="panel">
+                    <div class="panel-h">Recent orders<span>View all</span></div>
+                    <div class="orders">
+                      <div class="order"><img src="/img/thumb-paneer-tikka.jpg" alt="" width="48" height="48"><div><b>Table 5</b><small>Paneer Tikka</small></div><span class="st prep">Preparing</span></div>
+                      <div class="order"><img src="/img/thumb-dal-makhani.jpg" alt="" width="48" height="48"><div><b>Takeaway</b><small>Dal Makhani</small></div><span class="st new">New</span></div>
+                      <div class="order"><img src="/img/thumb-butter-naan.jpg" alt="" width="48" height="48"><div><b>Table 2</b><small>Butter Naan ×4</small></div><span class="st done">Served</span></div>
+                      <div class="order"><img src="/img/thumb-gulab-jamun.jpg" alt="" width="48" height="48"><div><b>Table 8</b><small>Gulab Jamun</small></div><span class="st paid">Paid</span></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
 
-  <!-- How it works -->
-  <section id="how" aria-labelledby="how-title">
-    <div class="head">
-      <p class="eyebrow">How it works</p>
-      <h2 id="how-title">Scan. Order. Cook. Bill.</h2>
-    </div>
-    <ol class="flow">
-      <li><span class="badge-ic"><svg class="ic"><use href="#i-qr"/></svg></span><h3>Guest scans</h3><p>QR on the table</p></li>
-      <li><span class="badge-ic"><svg class="ic"><use href="#i-cart"/></svg></span><h3>Guest orders</h3><p>From their own phone</p></li>
-      <li><span class="badge-ic"><svg class="ic"><use href="#i-chef"/></svg></span><h3>Kitchen cooks</h3><p>Order pops up with a sound</p></li>
-      <li><span class="badge-ic"><svg class="ic"><use href="#i-bill"/></svg></span><h3>You bill</h3><p>GST bill, paid by UPI</p></li>
-    </ol>
-  </section>
+        <div class="phone" aria-hidden="true">
+          <div class="phone-screen">
+            <div class="ph-top"><b>Saket Rasoi</b><small>Table 5 · Open now</small></div>
+            <div class="ph-chips"><span class="on">All</span><span>Starters</span><span>Mains</span></div>
+            <div class="ph-dish">
+              <img src="/img/dish-paneer-tikka.jpg" alt="" width="480" height="360">
+              <div><b><span class="veg"></span>Paneer Tikka</b><div class="row"><span>₹240</span><span class="add">Add +</span></div></div>
+            </div>
+            <div class="ph-cart"><span>2 items · ₹470</span><span>View cart ›</span></div>
+          </div>
+        </div>
 
-  <!-- Before / after -->
-  <section aria-labelledby="swap-title">
-    <div class="head">
-      <p class="eyebrow">Rush hour, fixed</p>
-      <h2 id="swap-title">Before and after QRenvo</h2>
-    </div>
-    <div class="swap">
-      <div><span class="old"><svg class="ic"><use href="#i-x"/></svg>10 min wait to order</span><span class="arrow">→</span><span class="new"><svg class="ic"><use href="#i-check"/></svg>Order on sitting down</span></div>
-      <div><span class="old"><svg class="ic"><use href="#i-x"/></svg>Misread paper slips</span><span class="arrow">→</span><span class="new"><svg class="ic"><use href="#i-check"/></svg>Exact order on screen</span></div>
-      <div><span class="old"><svg class="ic"><use href="#i-x"/></svg>Reprint menu for prices</span><span class="arrow">→</span><span class="new"><svg class="ic"><use href="#i-check"/></svg>Change from your phone</span></div>
-      <div><span class="old"><svg class="ic"><use href="#i-x"/></svg>Bills added by hand</span><span class="arrow">→</span><span class="new"><svg class="ic"><use href="#i-check"/></svg>One-tap GST bill</span></div>
+        <div class="toast" role="status">
+          <span class="tick"><svg class="ic"><use href="#i-check"/></svg></span>
+          <div><b>Order placed!</b><span>Table 5 · Paneer Tikka ×2 is in the kitchen</span></div>
+        </div>
+        <p class="sample stage-note">Sample data</p>
+      </div>
     </div>
   </section>
 
   <!-- Features -->
-  <section id="features" aria-labelledby="features-title">
-    <div class="head">
-      <p class="eyebrow">Every plan, every feature</p>
-      <h2 id="features-title">Everything you need</h2>
-    </div>
-    <div class="tiles">
-      <div class="tile"><span class="badge-ic"><svg class="ic"><use href="#i-menu"/></svg></span><span class="who">Guests</span><h3>Photo menu</h3><p>Veg marks, search, categories</p></div>
-      <div class="tile"><span class="badge-ic"><svg class="ic"><use href="#i-layers"/></svg></span><span class="who">Guests</span><h3>Sizes &amp; add-ons</h3><p>Half / full, extra cheese</p></div>
-      <div class="tile"><span class="badge-ic"><svg class="ic"><use href="#i-bell"/></svg></span><span class="who">Guests</span><h3>Waiter, water, bill</h3><p>One tap from the table</p></div>
-      <div class="tile"><span class="badge-ic"><svg class="ic"><use href="#i-rupee"/></svg></span><span class="who">Guests</span><h3>UPI pay</h3><p>Money straight to you</p></div>
-      <div class="tile"><span class="badge-ic"><svg class="ic"><use href="#i-monitor"/></svg></span><span class="who">Kitchen</span><h3>Kitchen screen</h3><p>New → Preparing → Served</p></div>
-      <div class="tile"><span class="badge-ic"><svg class="ic"><use href="#i-bill"/></svg></span><span class="who">Billing</span><h3>GST bills</h3><p>Table or counter, 80 mm / A4</p></div>
-      <div class="tile"><span class="badge-ic"><svg class="ic"><use href="#i-chart"/></svg></span><span class="who">Owner</span><h3>Live sales</h3><p>Today vs yesterday, top items</p></div>
-      <div class="tile"><span class="badge-ic"><svg class="ic"><use href="#i-spark"/></svg></span><span class="who">Owner</span><h3>AI menu upload</h3><p>Photo of your menu → done</p></div>
+  <section id="features">
+    <div class="container feat-wrap">
+      <div class="head reveal">
+        <span class="eyebrow">Why QRenvo</span>
+        <h2>Everything you need</h2>
+        <p class="lede">Powerful features designed to make restaurant management simple and profitable.</p>
+      </div>
+      <div class="features">
+        <article class="card feature reveal"><span class="icon-box"><svg class="ic"><use href="#i-menu"/></svg></span><span class="cat">Guests</span><h3>Photo menu</h3><p>Veg marks, search, categories</p></article>
+        <article class="card feature reveal"><span class="icon-box"><svg class="ic"><use href="#i-layers"/></svg></span><span class="cat">Guests</span><h3>Sizes &amp; add-ons</h3><p>Half / full, extra cheese</p></article>
+        <article class="card feature reveal"><span class="icon-box"><svg class="ic"><use href="#i-bell"/></svg></span><span class="cat">Guests</span><h3>Waiter, water, bill</h3><p>One tap from the table</p></article>
+        <article class="card feature reveal"><span class="icon-box"><svg class="ic"><use href="#i-rupee"/></svg></span><span class="cat">Guests</span><h3>UPI pay</h3><p>Money straight to you</p></article>
+        <article class="card feature reveal"><span class="icon-box"><svg class="ic"><use href="#i-monitor"/></svg></span><span class="cat">Kitchen</span><h3>Kitchen screen</h3><p>Live order tracking</p></article>
+        <article class="card feature reveal"><span class="icon-box"><svg class="ic"><use href="#i-bill"/></svg></span><span class="cat">Billing</span><h3>GST bills</h3><p>Table and counter billing</p></article>
+        <article class="card feature reveal"><span class="icon-box"><svg class="ic"><use href="#i-chart"/></svg></span><span class="cat">Owner</span><h3>Live sales</h3><p>Today vs yesterday, top items</p></article>
+        <article class="card feature reveal"><span class="icon-box"><svg class="ic"><use href="#i-camera"/></svg></span><span class="cat">Owner</span><h3>AI menu upload</h3><p>Your menu from one photo</p></article>
+      </div>
     </div>
   </section>
 
-  <section aria-label="QRenvo in numbers">
-    <div class="numbers">
-      <div><strong>0%</strong><span>commission</span></div>
-      <div><strong>0</strong><span>apps to download</span></div>
-      <div><strong>1 day</strong><span>to go live</span></div>
-      <div><strong>7 days</strong><span>money back</span></div>
+  <!-- How it works -->
+  <section id="how">
+    <div class="container">
+      <div class="head center reveal">
+        <span class="eyebrow">How it works</span>
+        <h2>Scan. Order. Cook. Bill.</h2>
+      </div>
+      <ol class="steps">
+        <li class="card step reveal"><span class="icon-box"><svg class="ic"><use href="#i-qr"/></svg></span><h3>Guest scans</h3><p>Each table has its own QR code.</p></li>
+        <li class="card step reveal"><span class="icon-box"><svg class="ic"><use href="#i-cart"/></svg></span><h3>Guest orders</h3><p>From their own phone, no app.</p></li>
+        <li class="card step reveal"><span class="icon-box"><svg class="ic"><use href="#i-chef"/></svg></span><h3>Kitchen cooks</h3><p>The order pops up with a sound.</p></li>
+        <li class="card step reveal"><span class="icon-box"><svg class="ic"><use href="#i-bill"/></svg></span><h3>You bill</h3><p>GST bill in a tap, paid by UPI.</p></li>
+      </ol>
     </div>
   </section>
 
-  <!-- Plans -->
-  <section id="plans" aria-labelledby="plans-title">
-    <div class="head">
-      <p class="eyebrow">Pricing</p>
-      <h2 id="plans-title">Simple plans. All features.</h2>
-      <p class="muted">3-day free trial · 7-day money back on your first plan</p>
-    </div>
-
-    <div class="plans">
-      <div class="plan">
-        <h3>Monthly</h3>
-        <div class="amount"><strong>₹999</strong><span>/ month</span></div>
-        <p class="per">Pay month by month</p>
-        <ul class="ticks">
-          <li><svg class="ic"><use href="#i-check"/></svg>All features</li>
-          <li><svg class="ic"><use href="#i-check"/></svg>Setup ₹99 (free for first 5)</li>
-          <li class="gold"><svg class="ic"><use href="#i-shield"/></svg>7-day money back</li>
-        </ul>
-        <a class="btn ghost" href="#get-started" data-plan="Monthly">Choose Monthly</a>
+  <!-- Problem -> solution -->
+  <section aria-labelledby="ps-title">
+    <div class="container">
+      <div class="head center reveal">
+        <span class="eyebrow">Rush hour, fixed</span>
+        <h2 id="ps-title">Before and after QRenvo</h2>
       </div>
-
-      <div class="plan">
-        <h3>Half Yearly</h3>
-        <div class="amount"><strong>₹5,649</strong><span>/ 6 months</span></div>
-        <p class="per">≈ ₹942 a month</p>
-        <span class="save">Save ₹345</span>
-        <ul class="ticks">
-          <li><svg class="ic"><use href="#i-check"/></svg>All features</li>
-          <li><svg class="ic"><use href="#i-check"/></svg>Free setup</li>
-          <li class="gold"><svg class="ic"><use href="#i-shield"/></svg>7-day money back</li>
-        </ul>
-        <a class="btn ghost" href="#get-started" data-plan="Half Yearly">Choose Half Yearly</a>
-      </div>
-
-      <div class="plan best">
-        <span class="tag">BEST VALUE · 2 MONTHS FREE</span>
-        <h3>Yearly</h3>
-        <div class="amount"><span class="was">₹11,988</span><strong>₹9,990</strong><span>/ year</span></div>
-        <p class="per">≈ ₹833 a month</p>
-        <span class="save">Save ₹1,998</span>
-        <ul class="ticks">
-          <li><svg class="ic"><use href="#i-check"/></svg>All features</li>
-          <li><svg class="ic"><use href="#i-check"/></svg>Free setup · priority support</li>
-          <li class="gold"><svg class="ic"><use href="#i-shield"/></svg>7-day money back</li>
-        </ul>
-        <a class="btn" href="#get-started" data-plan="Yearly">Choose Yearly</a>
+      <div class="ps">
+        <div class="ps-row reveal-x"><div class="ps-old"><svg class="ic"><use href="#i-x"/></svg>10 min wait to order</div><svg class="ic ps-arrow"><use href="#i-arrow"/></svg><div class="ps-new"><svg class="ic"><use href="#i-check"/></svg>Order on sitting down</div></div>
+        <div class="ps-row reveal-x"><div class="ps-old"><svg class="ic"><use href="#i-x"/></svg>Misread paper slips</div><svg class="ic ps-arrow"><use href="#i-arrow"/></svg><div class="ps-new"><svg class="ic"><use href="#i-check"/></svg>Exact order on screen</div></div>
+        <div class="ps-row reveal-x"><div class="ps-old"><svg class="ic"><use href="#i-x"/></svg>Reprint menu for prices</div><svg class="ic ps-arrow"><use href="#i-arrow"/></svg><div class="ps-new"><svg class="ic"><use href="#i-check"/></svg>Change from your phone</div></div>
+        <div class="ps-row reveal-x"><div class="ps-old"><svg class="ic"><use href="#i-x"/></svg>Bills added by hand</div><svg class="ic ps-arrow"><use href="#i-arrow"/></svg><div class="ps-new"><svg class="ic"><use href="#i-check"/></svg>One-tap GST bill</div></div>
       </div>
     </div>
+  </section>
 
-    <div class="offer" id="offer">
-      <div>
-        <h3>Launch offer: free setup for the first 5 restaurants</h3>
-        <p>We load your menu, set up tables and train your staff.</p>
+  <!-- Product showcase -->
+  <section aria-labelledby="show-title">
+    <div class="container">
+      <div class="head center reveal">
+        <span class="eyebrow">See it working</span>
+        <h2 id="show-title">Your restaurant, live on one screen</h2>
       </div>
-      <div class="spots" aria-label="Free setup spots"><div class="dots" data-dots></div><span><span data-spots-left>5</span> of <span data-spots-total>5</span> left</span></div>
-    </div>
+      <div class="show">
+        <div class="card board reveal" aria-label="Orders board with sample orders">
+          <div class="board-top"><b>Orders</b><span><span class="pulse"></span>&nbsp; Live · new orders ring</span></div>
+          <div class="cols">
+            <div class="col">
+              <div class="col-h">New <i>2</i></div>
+              <div class="ticket"><div class="t-top">Table 3 <span>1 min</span></div><ul><li>2× Hara Bhara Kebab</li><li>1× Masala Chai</li></ul><div class="t-btn">Start preparing</div></div>
+              <div class="ticket"><div class="t-top">Takeaway <span>3 min</span></div><ul><li>1× Dal Makhani</li><li>4× Butter Naan</li></ul><div class="t-btn">Start preparing</div></div>
+            </div>
+            <div class="col">
+              <div class="col-h">Preparing <i>2</i></div>
+              <div class="ticket"><div class="t-top">Table 5 <span>8 min</span></div><ul><li>2× Paneer Tikka</li><li>1× Veg Manchurian</li></ul><div class="t-btn">Mark served</div></div>
+              <div class="ticket late"><div class="t-top">Table 1 <span class="late-tag">19 min</span></div><ul><li>1× Paneer Butter Masala</li></ul><div class="t-btn">Mark served</div></div>
+            </div>
+            <div class="col">
+              <div class="col-h">Served <i>1</i></div>
+              <div class="ticket served"><div class="t-top">Table 2 <span>Paid · UPI</span></div><ul><li>4× Butter Naan</li><li>2× Gulab Jamun</li></ul><div class="t-btn">🧾 SR-0042</div></div>
+            </div>
+          </div>
+          <p class="sample">Sample data</p>
+        </div>
 
-    <div class="sub-head">
-      <h3>Table QR codes</h3>
-      <p class="muted">PDF free with every plan · printed per table</p>
+        <div class="card anywhere reveal">
+          <h3>Manage from anywhere</h3>
+          <p>Sales, orders and menu from your phone. Nothing to install.</p>
+          <div class="chips2"><span><svg class="ic"><use href="#i-phone"/></svg>Works in any browser</span><span><svg class="ic"><use href="#i-home"/></svg>Add to home screen</span></div>
+          <div class="owner-phone" aria-hidden="true">
+            <div class="op">
+              <div class="op-top"><span>Today</span><span>Saket Rasoi</span></div>
+              <div class="op-big"><small>Today's orders</small><b data-count="26">26</b><em>↑ 12% vs yesterday</em></div>
+              <div class="op-bars"><i style="--i:0;height:40%"></i><i style="--i:1;height:62%"></i><i style="--i:2;height:48%"></i><i style="--i:3;height:74%"></i><i style="--i:4;height:58%"></i><i style="--i:5;height:88%"></i><i style="--i:6;height:100%"></i></div>
+              <div class="op-list">
+                <div><img src="/img/thumb-paneer-butter-masala.jpg" alt="" width="48" height="48" loading="lazy"><span><b>Paneer Butter Masala</b><small>Table 1</small></span><span class="st prep">Preparing</span></div>
+                <div><img src="/img/thumb-veg-manchurian.jpg" alt="" width="48" height="48" loading="lazy"><span><b>Veg Manchurian</b><small>Table 5</small></span><span class="st new">New</span></div>
+                <div><img src="/img/thumb-masala-chai.jpg" alt="" width="48" height="48" loading="lazy"><span><b>Masala Chai</b><small>Table 3</small></span><span class="st paid">Paid</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
-    <div class="mini" id="qr-codes">
-      <div><span class="badge-ic"><svg class="ic"><use href="#i-download"/></svg></span><h3>Print yourself</h3><div class="price">Free</div><p>PDF with your logo</p></div>
-      <div><span class="badge-ic"><svg class="ic"><use href="#i-sticker"/></svg></span><h3>Sticker</h3><div class="price">₹30 <small>/ table</small></div><p>Laminated, waterproof</p></div>
-      <div class="pick"><span class="pick-tag">RECOMMENDED</span><span class="badge-ic"><svg class="ic"><use href="#i-tent"/></svg></span><h3>Tent card</h3><div class="price">₹49 <small>/ table</small></div><p>Two-sided, stands up</p></div>
-      <div><span class="badge-ic"><svg class="ic"><use href="#i-standee"/></svg></span><h3>Acrylic standee</h3><div class="price">₹199 <small>/ table</small></div><p>Premium, lasts years</p></div>
+  </section>
+
+  <!-- Pricing -->
+  <section id="pricing">
+    <div class="container">
+      <div class="head center reveal">
+        <span class="eyebrow">Pricing</span>
+        <h2>Simple plans. All features.</h2>
+        <p class="lede">3-day free trial · 7-day money back on your first plan</p>
+      </div>
+
+      <div class="stats">
+        <div class="card stat reveal"><b><span data-count="0">0</span>%</b><span>commission</span></div>
+        <div class="card stat reveal"><b data-count="0">0</b><span>apps to download</span></div>
+        <div class="card stat reveal"><b>1 day</b><span>to go live</span></div>
+        <div class="card stat gold reveal"><b><span data-count="7">7</span> days</b><span>money back</span></div>
+      </div>
+
+      <div class="plans">
+        <article class="card plan reveal">
+          <h3>Monthly</h3>
+          <div class="price"><b>₹999</b><span>/ month</span></div>
+          <p class="per">Pay month by month</p>
+          <ul class="ticks">
+            <li><svg class="ic"><use href="#i-check"/></svg>All features</li>
+            <li><svg class="ic"><use href="#i-check"/></svg>Setup ₹99 (free for first 5)</li>
+            <li class="gold"><svg class="ic"><use href="#i-shield"/></svg>7-day money back</li>
+          </ul>
+          <a class="btn btn-ghost" href="#trial" data-plan="Monthly">Choose Monthly</a>
+        </article>
+        <article class="card plan reveal">
+          <h3>Half Yearly</h3>
+          <div class="price"><b>₹5,649</b><span>/ 6 months</span></div>
+          <p class="per">≈ ₹942 a month</p>
+          <span class="save">Save ₹345</span>
+          <ul class="ticks">
+            <li><svg class="ic"><use href="#i-check"/></svg>All features</li>
+            <li><svg class="ic"><use href="#i-check"/></svg>Free setup</li>
+            <li class="gold"><svg class="ic"><use href="#i-shield"/></svg>7-day money back</li>
+          </ul>
+          <a class="btn btn-ghost" href="#trial" data-plan="Half Yearly">Choose Half Yearly</a>
+        </article>
+        <article class="card plan best reveal">
+          <span class="tag">Best value · 2 months free</span>
+          <h3>Yearly</h3>
+          <div class="price"><s>₹11,988</s><b>₹9,990</b><span>/ year</span></div>
+          <p class="per">≈ ₹833 a month</p>
+          <span class="save">Save ₹1,998</span>
+          <ul class="ticks">
+            <li><svg class="ic"><use href="#i-check"/></svg>All features</li>
+            <li><svg class="ic"><use href="#i-check"/></svg>Free setup · priority support</li>
+            <li class="gold"><svg class="ic"><use href="#i-shield"/></svg>7-day money back</li>
+          </ul>
+          <a class="btn btn-primary" href="#trial" data-plan="Yearly">Choose Yearly <svg class="ic arrow"><use href="#i-arrow"/></svg></a>
+        </article>
+      </div>
+
+      <div class="guarantee reveal">
+        <div class="seal" aria-hidden="true"><div><b>7</b><span>days</span></div></div>
+        <div>
+          <h3>Not happy? Full refund in 7 days.</h3>
+          <p>If QRenvo doesn't work for you within 7 days of your first plan, we refund every rupee.</p>
+        </div>
+        <a href="/refund.html">Refund policy →</a>
+      </div>
+
+      <div class="offer reveal" id="offer">
+        <div><b>Launch offer: free setup for the first 5 restaurants</b><p>We load your menu, set up your tables and train your staff.</p></div>
+        <div class="spots" aria-label="Free setup spots"><div class="dots" data-dots></div><span><span data-spots-left>5</span> of <span data-spots-total>5</span> left</span></div>
+      </div>
+
+      <div class="qr-head reveal"><h3>Table QR codes</h3><p>PDF free with every plan · printed per table</p></div>
+      <div class="qr">
+        <div class="card reveal"><span class="icon-box"><svg class="ic"><use href="#i-download"/></svg></span><h3>Print yourself</h3><div class="amt">Free</div><p>PDF with your logo</p></div>
+        <div class="card reveal"><span class="icon-box"><svg class="ic"><use href="#i-sticker"/></svg></span><h3>Sticker</h3><div class="amt">₹30 <small>/ table</small></div><p>Laminated, waterproof</p></div>
+        <div class="card pick reveal"><span class="tag">Recommended</span><span class="icon-box"><svg class="ic"><use href="#i-tent"/></svg></span><h3>Tent card</h3><div class="amt">₹49 <small>/ table</small></div><p>Two-sided, stands up</p></div>
+        <div class="card reveal"><span class="icon-box"><svg class="ic"><use href="#i-standee"/></svg></span><h3>Acrylic standee</h3><div class="amt">₹199 <small>/ table</small></div><p>Premium, lasts years</p></div>
+      </div>
+      <p class="disclaimer">Prices per outlet, GST extra. Pay online by UPI, card or net banking (Razorpay).</p>
     </div>
-    <p class="fine">Prices per outlet, GST extra. Pay online by UPI, card or net banking (Razorpay).</p>
   </section>
 
   <!-- Cost comparison -->
-  <section aria-labelledby="compare">
-    <div class="head">
-      <p class="eyebrow">Cost per month</p>
-      <h2 id="compare">Less than one day of a waiter's pay</h2>
+  <section aria-labelledby="cost-title">
+    <div class="container">
+      <div class="head center reveal">
+        <span class="eyebrow">Cost per month</span>
+        <h2 id="cost-title">Less than one day of a waiter's pay</h2>
+      </div>
+      <div class="card bars reveal">
+        <div class="bar us"><span>QRenvo</span><div class="track"><div class="fill" style="width:7%;--i:0"></div></div><span class="val">₹833</span></div>
+        <div class="bar"><span>Restaurant POS</span><div class="track"><div class="fill" style="width:29%;--i:1"></div></div><span class="val">₹1,800–3,500</span></div>
+        <div class="bar"><span>Extra waiter</span><div class="track"><div class="fill" style="width:100%;--i:2"></div></div><span class="val">₹12,000+</span></div>
+      </div>
+      <p class="disclaimer">POS and staff costs are typical figures in India and vary by city.</p>
     </div>
-    <div class="bars" role="list">
-      <div class="bar-row us" role="listitem"><span>QRenvo</span><div class="bar-track"><div class="bar-fill" style="width:7%"></div></div><span class="val">₹833</span></div>
-      <div class="bar-row" role="listitem"><span>Restaurant POS</span><div class="bar-track"><div class="bar-fill" style="width:29%"></div></div><span class="val">₹1,800–3,500</span></div>
-      <div class="bar-row" role="listitem"><span>Extra waiter</span><div class="bar-track"><div class="bar-fill" style="width:100%"></div></div><span class="val">₹12,000+</span></div>
-    </div>
-    <p class="fine">POS and staff costs are typical figures in India and vary by city.</p>
   </section>
 
-  <!-- What you need -->
+  <!-- Requirements -->
   <section aria-labelledby="needs-title">
-    <div class="head">
-      <p class="eyebrow">What you need</p>
-      <h2 id="needs-title">You already have it</h2>
+    <div class="container">
+      <div class="head center reveal">
+        <span class="eyebrow">What you need</span>
+        <h2 id="needs-title">You already have it</h2>
+      </div>
+      <div class="needs">
+        <div class="card need reveal"><span class="icon-box"><svg class="ic"><use href="#i-wifi"/></svg></span><div><b>Internet</b><small>Wi-Fi or mobile data</small></div></div>
+        <div class="card need reveal"><span class="icon-box"><svg class="ic"><use href="#i-phone"/></svg></span><div><b>Any phone</b><small>For the kitchen screen</small></div></div>
+        <div class="card need reveal"><span class="icon-box"><svg class="ic"><use href="#i-rupee"/></svg></span><div><b>UPI ID</b><small>For guest payments</small></div></div>
+        <div class="card need reveal"><span class="icon-box"><svg class="ic"><use href="#i-printer"/></svg></span><div><b>Printer</b><small>Optional, 80 mm</small></div></div>
+      </div>
     </div>
-    <div class="needs">
-      <div><span class="badge-ic"><svg class="ic"><use href="#i-wifi"/></svg></span><span>Internet<small>Wi-Fi or mobile data</small></span></div>
-      <div><span class="badge-ic"><svg class="ic"><use href="#i-phone"/></svg></span><span>Any phone<small>For the kitchen screen</small></span></div>
-      <div><span class="badge-ic"><svg class="ic"><use href="#i-rupee"/></svg></span><span>UPI ID<small>For guest payments</small></span></div>
-      <div><span class="badge-ic"><svg class="ic"><use href="#i-printer"/></svg></span><span>Printer<small>Optional, 80 mm</small></span></div>
+  </section>
+
+  <!-- Founding restaurants -->
+  <section aria-labelledby="founding-title">
+    <div class="container">
+      <div class="card founding reveal">
+        <div>
+          <span class="eyebrow" style="color:var(--gold)">Founding restaurants</span>
+          <h2 id="founding-title" style="margin-top:14px">Be one of our first five</h2>
+          <p>We're onboarding our first restaurants now. Join early and we set everything up with you personally.</p>
+        </div>
+        <ul class="perks">
+          <li><span class="icon-box"><svg class="ic"><use href="#i-gift"/></svg></span>Free setup, menu loaded for you</li>
+          <li><span class="icon-box"><svg class="ic"><use href="#i-chat"/></svg></span>A direct WhatsApp line to the founder</li>
+          <li><span class="icon-box"><svg class="ic"><use href="#i-shield"/></svg></span>7-day money back on your first plan</li>
+        </ul>
+      </div>
     </div>
   </section>
 
   <!-- FAQ -->
-  <section id="faq" aria-labelledby="faq-title">
-    <div class="head">
-      <p class="eyebrow">Questions</p>
-      <h2 id="faq-title">Quick answers</h2>
-    </div>
-    <div class="faq">
-      <details><summary>Do guests need an app?</summary><p>No. They scan and the menu opens in their phone's browser.</p></details>
-      <details><summary>Where does the guests' money go?</summary><p>Straight to your UPI account. We take no commission.</p></details>
-      <details><summary>Older guests prefer a waiter.</summary><p>The waiter can place the order from their own phone. It reaches the kitchen the same way.</p></details>
-      <details><summary>Can I change prices during service?</summary><p>Yes, from your phone. Guests see it at once.</p></details>
-      <details><summary>What if I'm not happy?</summary><p>Ask within 7 days of your first plan and we refund it in full. <a href="/refund.html">Refund policy</a></p></details>
-      <details><summary>What happens after the 3-day trial?</summary><p>Pick a plan in "My plan". Until then guests can see the menu but not order.</p></details>
-      <details><summary>Does it work without internet?</summary><p>No. Mobile data on the kitchen phone is enough.</p></details>
+  <section id="faq">
+    <div class="container">
+      <div class="head center reveal">
+        <span class="eyebrow">Questions</span>
+        <h2>Quick answers</h2>
+      </div>
+      <div class="faq" id="faq-list">
+        <div class="card qa reveal"><button type="button" aria-expanded="false">Do guests need an app?<span class="plus" aria-hidden="true">+</span></button><div class="ans"><div><p>No. They scan the QR and the menu opens in their phone's browser.</p></div></div></div>
+        <div class="card qa reveal"><button type="button" aria-expanded="false">Where does the guests' money go?<span class="plus" aria-hidden="true">+</span></button><div class="ans"><div><p>Straight to your own UPI account. We take no commission on orders.</p></div></div></div>
+        <div class="card qa reveal"><button type="button" aria-expanded="false">Older guests prefer a waiter.<span class="plus" aria-hidden="true">+</span></button><div class="ans"><div><p>The waiter can place the order from their own phone. It reaches the kitchen the same way.</p></div></div></div>
+        <div class="card qa reveal"><button type="button" aria-expanded="false">Can I change prices during service?<span class="plus" aria-hidden="true">+</span></button><div class="ans"><div><p>Yes, from your phone. Guests see the new price straight away.</p></div></div></div>
+        <div class="card qa reveal"><button type="button" aria-expanded="false">What if I'm not happy?<span class="plus" aria-hidden="true">+</span></button><div class="ans"><div><p>Ask within 7 days of your first plan and we refund it in full. <a href="/refund.html">Refund policy</a></p></div></div></div>
+        <div class="card qa reveal"><button type="button" aria-expanded="false">What happens after the 3-day trial?<span class="plus" aria-hidden="true">+</span></button><div class="ans"><div><p>Pick a plan under "My plan". Until then guests can see your menu but not order.</p></div></div></div>
+        <div class="card qa reveal"><button type="button" aria-expanded="false">Does it work without internet?<span class="plus" aria-hidden="true">+</span></button><div class="ans"><div><p>No. Mobile data on the kitchen phone is enough.</p></div></div></div>
+      </div>
     </div>
   </section>
 
-  <!-- Action -->
-  <div class="lead-card" id="get-started">
-    <div>
-      <h2>Start your 3-day free trial</h2>
-      <p class="sub">We set it up for you, live the next day.</p>
-      <ol class="lead-steps">
-        <li><span class="badge-ic"><svg class="ic"><use href="#i-chat"/></svg></span>Send the form or call us</li>
-        <li><span class="badge-ic"><svg class="ic"><use href="#i-menu"/></svg></span>Share a photo of your menu</li>
-        <li><span class="badge-ic"><svg class="ic"><use href="#i-zap"/></svg></span>Go live tomorrow</li>
-      </ol>
-      <div class="contact-line"><span id="phone-text">+91 96702 26608</span><button type="button" data-copy="phone-text">Copy</button></div>
-      <p class="self-signup">Or <a href="https://app.qrenvo.com/admin/register">create your account yourself →</a></p>
+  <!-- Trial -->
+  <section aria-labelledby="trial-title" style="padding-top:20px">
+    <div class="container">
+      <div class="card trial reveal" id="trial">
+        <div>
+          <span class="eyebrow">Free trial</span>
+          <h2 id="trial-title" style="margin-top:14px">Start your 3-day free trial</h2>
+          <p class="sub">We set it up for you, live the next day.</p>
+          <ol class="t-steps">
+            <li><span class="icon-box"><svg class="ic"><use href="#i-chat"/></svg></span>Send the form or call us</li>
+            <li><span class="icon-box"><svg class="ic"><use href="#i-camera"/></svg></span>Share a photo of your menu</li>
+            <li><span class="icon-box"><svg class="ic"><use href="#i-zap"/></svg></span>Go live tomorrow</li>
+          </ol>
+          <div class="call"><span id="phone-text">+91 96702 26608</span><button type="button" data-copy="phone-text">Copy</button></div>
+          <p class="self">Or <a href="https://app.qrenvo.com/admin/register">create your account yourself →</a></p>
+        </div>
+
+        <form class="lead" id="lead-form" novalidate>
+          <div class="field"><label for="lf-name">Your name</label><input id="lf-name" name="name" type="text" autocomplete="name" required></div>
+          <div class="field"><label for="lf-restaurant">Restaurant name</label><input id="lf-restaurant" name="restaurant" type="text" required></div>
+          <div class="row2">
+            <div class="field"><label for="lf-city">City</label><input id="lf-city" name="city" type="text" autocomplete="address-level2"></div>
+            <div class="field"><label for="lf-tables">Tables</label><input id="lf-tables" name="tables" type="number" min="1" max="500" inputmode="numeric"></div>
+          </div>
+          <div class="field">
+            <label for="lf-plan">Plan</label>
+            <select id="lf-plan" name="plan"><option>Not sure yet</option><option>Monthly</option><option>Half Yearly</option><option>Yearly</option></select>
+          </div>
+          <p class="err" id="lf-error" role="alert" hidden>Please enter your name and your restaurant's name.</p>
+          <div class="actions">
+            <button class="btn btn-primary" type="submit" id="lf-whatsapp"><svg class="ic"><use href="#i-chat"/></svg>Send on WhatsApp</button>
+            <button class="btn btn-ghost" type="button" id="lf-copy">Copy message</button>
+          </div>
+          <p class="note" id="lf-note">Opens WhatsApp with your details filled in. Nothing is sent until you press send there.</p>
+          <div class="out" id="lf-out" hidden></div>
+        </form>
+      </div>
     </div>
+  </section>
+</main>
 
-    <form class="lead" id="lead-form" novalidate>
-      <div class="field">
-        <label for="lf-name">Your name</label>
-        <input id="lf-name" name="name" type="text" autocomplete="name" required>
-      </div>
-      <div class="field">
-        <label for="lf-restaurant">Restaurant name</label>
-        <input id="lf-restaurant" name="restaurant" type="text" required>
-      </div>
-      <div class="field-row">
-        <div class="field">
-          <label for="lf-city">City</label>
-          <input id="lf-city" name="city" type="text" autocomplete="address-level2">
-        </div>
-        <div class="field">
-          <label for="lf-tables">Tables</label>
-          <input id="lf-tables" name="tables" type="number" min="1" max="500" inputmode="numeric">
-        </div>
-      </div>
-      <div class="field">
-        <label for="lf-plan">Plan</label>
-        <select id="lf-plan" name="plan">
-          <option>Not sure yet</option>
-          <option>Monthly</option>
-          <option>Half Yearly</option>
-          <option>Yearly</option>
-        </select>
-      </div>
-      <p class="error-text" id="lf-error" hidden>Please enter your name and your restaurant's name.</p>
-      <div class="form-actions">
-        <button class="btn" type="submit" id="lf-whatsapp">Send on WhatsApp</button>
-        <button class="btn ghost" type="button" id="lf-copy">Copy message</button>
-      </div>
-      <p class="form-note" id="lf-note">Opens WhatsApp with your details filled in. Nothing is sent until you press send there.</p>
-      <div class="form-out" id="lf-out" hidden></div>
-    </form>
-  </div>
-
-  <footer class="site-footer">
-    <div class="site-footer__cols">
-      <div>
-        <p class="site-footer__brand">QRenvo</p>
+<footer>
+  <div class="container">
+    <div class="foot">
+      <div class="about">
+        <a class="brand" href="#top" aria-label="QRenvo home">
+          <svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#1b6b50"/><rect x="13" y="13" width="32" height="32" rx="7" fill="none" stroke="#fff" stroke-width="6"/><rect x="23" y="23" width="12" height="12" rx="2.5" fill="#fff"/><path d="M41 41 L51 51" stroke="#f59e0b" stroke-width="7" stroke-linecap="round"/></svg>
+          QRenvo
+        </a>
         <p>QR ordering, kitchen screen and GST billing for restaurants in India.</p>
       </div>
       <nav aria-label="Product">
-        <p class="site-footer__title">Product</p>
+        <p>Product</p>
         <a href="#how">How it works</a>
-        <a href="#plans">Pricing</a>
+        <a href="#pricing">Pricing</a>
         <a href="https://demo.qrenvo.com/m/saket-rasoi/menu?t=1" target="_blank" rel="noopener">Live demo</a>
         <a href="https://app.qrenvo.com/admin/login">Log in</a>
         <a href="https://app.qrenvo.com/admin/register">Sign up</a>
       </nav>
-      <nav aria-label="Legal">
-        <p class="site-footer__title">Company</p>
+      <nav aria-label="Company">
+        <p>Company</p>
         <a href="/contact.html">Contact us</a>
         <a href="/privacy.html">Privacy policy</a>
         <a href="/terms.html">Terms of service</a>
         <a href="/refund.html">Refund &amp; cancellation</a>
       </nav>
     </div>
-    <p class="site-footer__fine">© <span data-year>2026</span> QRenvo. All prices in Indian rupees.</p>
-  </footer>
-</div>
+    <p class="copy">© <span data-year>2026</span> QRenvo. All prices in Indian rupees.</p>
+  </div>
+</footer>
 
-<div class="mobile-cta" role="region" aria-label="Start free trial">
+<div class="m-cta" role="region" aria-label="Start free trial">
   <span class="txt"><b>3-day free trial</b>7-day money back</span>
-  <a class="btn small" href="#get-started">Start free</a>
+  <a class="btn btn-primary btn-sm" href="#trial">Start free</a>
 </div>
 
 <script>
-  // ---- Settings to edit ----
-  // WhatsApp number with country code, digits only. Leave '' to hide the WhatsApp button.
-  var WHATSAPP_NUMBER = '919670226608';
-  // Free-setup offer: lower SPOTS_LEFT as restaurants join, so the count stays true.
-  var SPOTS_TOTAL = 5;
+  // ---- Settings ----
+  var WHATSAPP_NUMBER = '919670226608';   // country code + number, digits only; '' hides the WhatsApp button
+  var SPOTS_TOTAL = 5;                    // free-setup offer: lower SPOTS_LEFT as restaurants join
   var SPOTS_LEFT = 5;
+
+  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   document.querySelectorAll('[data-year]').forEach(function (el) { el.textContent = String(new Date().getFullYear()); });
 
+  // Navbar: blur + border after scrolling.
+  var nav = document.getElementById('nav');
+  function onScroll() { nav.classList.toggle('scrolled', window.scrollY > 8); }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+
+  // Mobile menu.
+  var burger = document.getElementById('burger');
+  var menu = document.getElementById('mobile-menu');
+  function setMenu(open) {
+    menu.classList.toggle('open', open);
+    burger.setAttribute('aria-expanded', String(open));
+    burger.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+  }
+  burger.addEventListener('click', function () { setMenu(!menu.classList.contains('open')); });
+  menu.querySelectorAll('a').forEach(function (a) { a.addEventListener('click', function () { setMenu(false); }); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') setMenu(false); });
+
+  // Stagger index for reveal children that sit together in a grid/list.
+  document.querySelectorAll('.features, .steps, .ps, .stats, .plans, .qr, .needs, .faq').forEach(function (group) {
+    Array.prototype.forEach.call(group.children, function (child, i) { child.style.setProperty('--i', String(i)); });
+  });
+
+  // Indian number format for counters.
+  function inr(n) { return Math.round(n).toLocaleString('en-IN'); }
+  function countUp(el) {
+    var target = Number(el.getAttribute('data-count'));
+    var prefix = el.getAttribute('data-prefix') || '';
+    if (reduceMotion || !target) { el.textContent = prefix + inr(target); return; }
+    var start = performance.now(), dur = 1100;
+    function tick(now) {
+      var t = Math.min(1, (now - start) / dur);
+      var eased = 1 - Math.pow(1 - t, 3);
+      el.textContent = prefix + inr(target * eased);
+      if (t < 1) requestAnimationFrame(tick);
+    }
+    el.textContent = prefix + '0';
+    requestAnimationFrame(tick);
+  }
+
+  // Scroll reveal, chart/bar animation and counters.
+  var observed = document.querySelectorAll('.reveal, .reveal-x, .stage, .bars, .anywhere');
+  if ('IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) return;
+        entry.target.classList.add('in');
+        entry.target.querySelectorAll('[data-count]').forEach(countUp);
+        io.unobserve(entry.target);
+      });
+    }, { threshold: 0.18, rootMargin: '0px 0px -40px 0px' });
+    observed.forEach(function (el) { io.observe(el); });
+  } else {
+    observed.forEach(function (el) { el.classList.add('in'); });
+  }
+  // The hero mockup is already on screen: start its chart after the load-in.
+  setTimeout(function () {
+    var stage = document.querySelector('.stage');
+    if (stage && !stage.classList.contains('in')) { stage.classList.add('in'); stage.querySelectorAll('[data-count]').forEach(countUp); }
+  }, 700);
+
+  // Button ripple.
+  document.querySelectorAll('.btn').forEach(function (btn) {
+    btn.addEventListener('pointerdown', function (e) {
+      if (reduceMotion) return;
+      var rect = btn.getBoundingClientRect();
+      var size = Math.max(rect.width, rect.height);
+      var r = document.createElement('span');
+      r.className = 'ripple';
+      r.style.width = r.style.height = size + 'px';
+      r.style.left = (e.clientX - rect.left - size / 2) + 'px';
+      r.style.top = (e.clientY - rect.top - size / 2) + 'px';
+      btn.appendChild(r);
+      setTimeout(function () { r.remove(); }, 650);
+    });
+  });
+
+  // FAQ: one answer open at a time.
+  var qas = document.querySelectorAll('.qa');
+  qas.forEach(function (qa) {
+    var button = qa.querySelector('button');
+    button.addEventListener('click', function () {
+      var opening = !qa.hasAttribute('data-open');
+      qas.forEach(function (other) { other.removeAttribute('data-open'); other.querySelector('button').setAttribute('aria-expanded', 'false'); });
+      if (opening) { qa.setAttribute('data-open', ''); button.setAttribute('aria-expanded', 'true'); }
+    });
+  });
+
+  // Free-setup spots.
   (function () {
     var left = Math.max(0, Math.min(SPOTS_TOTAL, SPOTS_LEFT));
     document.querySelectorAll('[data-spots-left]').forEach(function (el) { el.textContent = String(left); });
     document.querySelectorAll('[data-spots-total]').forEach(function (el) { el.textContent = String(SPOTS_TOTAL); });
     var dots = document.querySelector('[data-dots]');
-    if (dots) {
-      for (var i = 0; i < SPOTS_TOTAL; i++) {
-        var d = document.createElement('span');
-        d.className = 'dot' + (i < SPOTS_TOTAL - left ? ' taken' : '');
-        dots.appendChild(d);
-      }
+    for (var i = 0; dots && i < SPOTS_TOTAL; i++) {
+      var d = document.createElement('span');
+      d.className = 'dot' + (i < SPOTS_TOTAL - left ? ' taken' : '');
+      dots.appendChild(d);
     }
     if (WHATSAPP_NUMBER) {
       document.getElementById('phone-text').textContent = '+' + WHATSAPP_NUMBER.replace(/^(\d{2})(\d{5})(\d+)$/, '$1 $2 $3');
@@ -712,32 +1099,17 @@
 
   // Plan buttons pre-select the plan in the form.
   document.querySelectorAll('[data-plan]').forEach(function (link) {
-    link.addEventListener('click', function () {
-      document.getElementById('lf-plan').value = link.getAttribute('data-plan');
-    });
+    link.addEventListener('click', function () { document.getElementById('lf-plan').value = link.getAttribute('data-plan'); });
   });
 
   function copyText(text, button, onFail) {
-    var done = function () {
-      var old = button.textContent;
-      button.textContent = 'Copied';
-      setTimeout(function () { button.textContent = old; }, 1800);
-    };
-    try {
-      navigator.clipboard.writeText(text).then(done, onFail);
-    } catch (e) {
-      onFail();
-    }
+    var done = function () { var old = button.textContent; button.textContent = 'Copied'; setTimeout(function () { button.textContent = old; }, 1800); };
+    try { navigator.clipboard.writeText(text).then(done, onFail); } catch (e) { onFail(); }
   }
-
   function selectNode(el) {
-    var range = document.createRange();
-    range.selectNodeContents(el);
-    var sel = window.getSelection();
-    sel.removeAllRanges();
-    sel.addRange(range);
+    var range = document.createRange(); range.selectNodeContents(el);
+    var sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range);
   }
-
   document.querySelectorAll('[data-copy]').forEach(function (btn) {
     btn.addEventListener('click', function () {
       var el = document.getElementById(btn.getAttribute('data-copy'));
@@ -745,26 +1117,21 @@
     });
   });
 
-  // Lead form: builds a WhatsApp message. Nothing is stored or sent from this page.
+  // Trial form: builds a WhatsApp message; nothing is stored or sent from this page.
   var form = document.getElementById('lead-form');
   var out = document.getElementById('lf-out');
-  var waButton = document.getElementById('lf-whatsapp');
-  var note = document.getElementById('lf-note');
   if (!WHATSAPP_NUMBER) {
-    waButton.hidden = true;
-    note.textContent = 'Copy the message and send it to us on WhatsApp or SMS.';
+    document.getElementById('lf-whatsapp').hidden = true;
+    document.getElementById('lf-note').textContent = 'Copy the message and send it to us on WhatsApp or SMS.';
   }
-
   function buildMessage() {
     var v = function (id) { return document.getElementById(id).value.trim(); };
-    var name = v('lf-name');
-    var restaurant = v('lf-restaurant');
+    var nameEl = document.getElementById('lf-name'), restEl = document.getElementById('lf-restaurant');
+    var name = v('lf-name'), restaurant = v('lf-restaurant');
     var error = document.getElementById('lf-error');
-    if (!name || !restaurant) {
-      error.hidden = false;
-      (name ? document.getElementById('lf-restaurant') : document.getElementById('lf-name')).focus();
-      return null;
-    }
+    nameEl.setAttribute('aria-invalid', String(!name));
+    restEl.setAttribute('aria-invalid', String(!restaurant));
+    if (!name || !restaurant) { error.hidden = false; (name ? restEl : nameEl).focus(); return null; }
     error.hidden = true;
     var lines = ['Hi QRenvo, I want to start the 3-day free trial.', 'Name: ' + name, 'Restaurant: ' + restaurant];
     if (v('lf-city')) lines.push('City: ' + v('lf-city'));
@@ -772,25 +1139,19 @@
     lines.push('Plan: ' + v('lf-plan'));
     return lines.join('\n');
   }
-
   form.addEventListener('submit', function (event) {
     event.preventDefault();
     var message = buildMessage();
     if (!message || !WHATSAPP_NUMBER) return;
     var link = document.createElement('a');
     link.href = 'https://wa.me/' + WHATSAPP_NUMBER + '?text=' + encodeURIComponent(message);
-    link.target = '_blank';
-    link.rel = 'noopener';
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
+    link.target = '_blank'; link.rel = 'noopener';
+    document.body.appendChild(link); link.click(); link.remove();
   });
-
   document.getElementById('lf-copy').addEventListener('click', function (event) {
     var message = buildMessage();
     if (!message) return;
-    out.textContent = message;
-    out.hidden = false;
+    out.textContent = message; out.hidden = false;
     copyText(message, event.currentTarget, function () { selectNode(out); });
   });
 </script>

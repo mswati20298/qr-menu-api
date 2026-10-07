@@ -1,0 +1,887 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>QRenvo · QR Menu &amp; Table Ordering for Restaurants</title>
+<meta name="description" content="QR code menu and table ordering for Indian restaurants. Guests order from their phone, the kitchen gets it in seconds, GST bills in one tap and UPI straight to your account. No app, no commission.">
+<link rel="canonical" href="https://qrenvo.com/">
+<meta name="theme-color" content="#1b6b50">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="icon" type="image/x-icon" href="/favicon.ico" sizes="16x16 32x32 48x48">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="QRenvo">
+<meta property="og:url" content="https://qrenvo.com/">
+<meta property="og:title" content="QRenvo · QR menu and table ordering for restaurants">
+<meta property="og:description" content="Guests order from the table, your kitchen gets it in seconds. GST bills, UPI to your account, no commission. Plans from ₹833/month.">
+<meta property="og:image" content="https://qrenvo.com/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+  /* Layout: a sales funnel in one column — hook with a real table bill, the owner's pain, how it works,
+     features, three plans, the 5-restaurant offer, objections, then a lead form. Sticky CTA on phones. */
+  :root {
+    --bg: #f5f8f6;
+    --surface: #ffffff;
+    --fg: #10261c;
+    --muted: #4f665a;
+    --line: #d7e3dc;
+    --brand: #1b6b50;
+    --brand-deep: #14523d;
+    --brand-soft: #e2f0e8;
+    --on-brand: #ffffff;
+    --amber: #a86400;
+    --amber-fill: #f59e0b;
+    --amber-soft: #fdf1dc;
+    --bad: #b42318;
+    --bad-soft: #fde8e6;
+    --paper: #ffffff;
+    --paper-ink: #1d1d1b;
+    --paper-line: #cfcfc8;
+    --display: 'Fraunces', Georgia, 'Times New Roman', serif;
+    --body: 'Manrope', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --mono: 'JetBrains Mono', ui-monospace, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0d1713; --surface: #13211b; --fg: #e8f1ec; --muted: #9db3a7; --line: #24372e;
+      --brand: #4fbf93; --brand-deep: #1e7a58; --brand-soft: #173328; --on-brand: #06140e;
+      --amber: #f5b544; --amber-fill: #f59e0b; --amber-soft: #2e2412;
+      --bad: #f8a097; --bad-soft: #3a1714;
+      --paper: #f4f2ec; --paper-ink: #1d1d1b; --paper-line: #c9c6bd;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0d1713; --surface: #13211b; --fg: #e8f1ec; --muted: #9db3a7; --line: #24372e;
+    --brand: #4fbf93; --brand-deep: #1e7a58; --brand-soft: #173328; --on-brand: #06140e;
+    --amber: #f5b544; --amber-fill: #f59e0b; --amber-soft: #2e2412;
+    --bad: #f8a097; --bad-soft: #3a1714;
+    --paper: #f4f2ec; --paper-ink: #1d1d1b; --paper-line: #c9c6bd;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 16px; line-height: 1.6; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding-inline: 20px; padding-block: 0 96px; }
+  h1, h2, h3 { font-family: var(--display); line-height: 1.15; text-wrap: balance; margin: 0; }
+  h2 { font-size: clamp(26px, 3.6vw, 38px); font-weight: 600; }
+  h3 { font-size: 19px; font-weight: 600; }
+  p { margin: 0; }
+  .eyebrow { font-size: 12.5px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--brand); }
+  .muted { color: var(--muted); }
+  section { margin-top: 80px; scroll-margin-top: 80px; }
+  .section-head { display: grid; gap: 10px; max-width: 660px; margin-bottom: 28px; }
+  .section-head.center { margin-inline: auto; text-align: center; }
+
+  /* Buttons */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 50px; padding: 0 22px;
+    border-radius: 12px; border: 0; background: var(--brand); color: var(--on-brand);
+    font: inherit; font-weight: 800; font-size: 16px; text-decoration: none; cursor: pointer;
+  }
+  .btn:hover { background: var(--brand-deep); color: #ffffff; }
+  .btn.ghost { background: transparent; color: var(--fg); border: 1px solid var(--line); }
+  .btn.ghost:hover { background: var(--surface); color: var(--fg); }
+  .btn.small { min-height: 40px; padding: 0 16px; font-size: 14.5px; border-radius: 10px; }
+  .btn:focus-visible, summary:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid var(--amber-fill); outline-offset: 3px; }
+
+  /* Sticky header */
+  .top {
+    position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; margin-inline: -20px; padding: 12px 20px;
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--line);
+  }
+  .brand { display: flex; align-items: center; gap: 10px; font-family: var(--display); font-size: 22px; font-weight: 700; color: var(--fg); text-decoration: none; }
+  .brand svg { width: 34px; height: 34px; flex-shrink: 0; }
+  .top nav { display: flex; align-items: center; gap: 18px; font-size: 14.5px; font-weight: 600; }
+  .top nav a:not(.btn) { color: var(--muted); text-decoration: none; }
+  .top nav a:not(.btn):hover { color: var(--fg); }
+
+  /* Hero */
+  .hero { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr); gap: 48px; align-items: center; margin-top: 44px; }
+  .hero h1 { font-size: clamp(36px, 5.6vw, 60px); font-weight: 700; letter-spacing: -0.01em; }
+  .hero h1 em { font-style: italic; color: var(--brand); }
+  .hero .lead { margin-top: 18px; font-size: 18.5px; color: var(--muted); max-width: 34em; }
+  .cta-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 26px; }
+  .trust { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 18px; font-size: 14.5px; color: var(--muted); }
+  .trust span::before { content: '✓ '; color: var(--brand); font-weight: 800; }
+  .offer-pill {
+    display: inline-flex; align-items: center; gap: 8px; margin-bottom: 16px; padding: 6px 12px; border-radius: 999px;
+    background: var(--amber-soft); color: var(--amber); font-weight: 800; font-size: 13.5px; text-decoration: none;
+  }
+  .offer-pill b { font-variant-numeric: tabular-nums; }
+
+  /* The 80 mm bill */
+  .bill-stage { display: flex; justify-content: center; }
+  .bill {
+    width: 100%; max-width: 300px; padding: 22px 20px 26px; background: var(--paper); color: var(--paper-ink);
+    font-family: var(--mono); font-size: 12.5px; line-height: 1.55; box-shadow: 0 18px 40px rgba(8, 30, 20, 0.18);
+    transform: rotate(-1.6deg);
+    -webkit-mask: radial-gradient(circle 6px at 50% 100%, transparent 98%, #000) 0 0 / 14px 100% repeat-x;
+            mask: radial-gradient(circle 6px at 50% 100%, transparent 98%, #000) 0 0 / 14px 100% repeat-x;
+  }
+  .bill .c { text-align: center; }
+  .bill .name { font-weight: 600; font-size: 15px; }
+  .bill hr { border: 0; border-top: 1px dashed var(--paper-line); margin: 10px 0; }
+  .bill .row { display: flex; justify-content: space-between; gap: 10px; font-variant-numeric: tabular-nums; }
+  .bill .total { font-weight: 600; font-size: 14.5px; }
+  .bill .paid { margin-top: 10px; text-align: center; font-weight: 600; letter-spacing: 0.2em; }
+  .bill-note { margin-top: 18px; text-align: center; font-size: 13px; color: var(--muted); }
+
+  /* Pain → fix */
+  .pains { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+  .pain { display: grid; gap: 10px; padding: 20px; border-radius: 14px; border: 1px solid var(--line); background: var(--surface); }
+  .pain .was { display: flex; gap: 10px; align-items: baseline; color: var(--bad); font-weight: 700; }
+  .pain .was::before { content: '✕'; font-weight: 800; }
+  .pain .now { display: flex; gap: 10px; align-items: baseline; }
+  .pain .now::before { content: '✓'; color: var(--brand); font-weight: 800; }
+
+  /* Steps: a real sequence, so numbered */
+  .steps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; counter-reset: step; list-style: none; padding: 0; margin: 0; }
+  .steps li { display: grid; gap: 6px; align-content: start; padding-top: 16px; border-top: 3px solid var(--brand); }
+  .steps li::before { counter-increment: step; content: counter(step); font-family: var(--display); font-size: 30px; font-weight: 700; color: var(--brand); line-height: 1; }
+  .steps p { color: var(--muted); font-size: 15px; }
+
+  /* Features */
+  .features { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+  .feature { padding: 24px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); }
+  .feature h3 { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+  .feature h3 i { font-style: normal; font-family: var(--body); font-size: 12px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--brand); background: var(--brand-soft); padding: 3px 8px; border-radius: 6px; }
+  .feature ul { margin: 0; padding-left: 0; list-style: none; display: grid; gap: 8px; }
+  .feature li { position: relative; padding-left: 22px; font-size: 15.5px; }
+  .feature li::before { content: ''; position: absolute; left: 2px; top: 0.62em; width: 9px; height: 9px; border-radius: 2px; background: var(--brand); }
+
+  .promise { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+  .promise div { display: grid; gap: 4px; }
+  .promise strong { font-family: var(--display); font-size: 30px; color: var(--brand); }
+  .promise span { color: var(--muted); font-size: 15px; }
+
+  /* Plans */
+  .plans { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; align-items: stretch; }
+  .plan { position: relative; display: flex; flex-direction: column; gap: 14px; padding: 26px 24px; border-radius: 16px; border: 1px solid var(--line); background: var(--surface); }
+  .plan.best { border: 2px solid var(--brand); box-shadow: 0 14px 34px rgba(20, 82, 61, 0.14); }
+  .plan .tag { position: absolute; top: -13px; left: 24px; padding: 4px 12px; border-radius: 999px; background: var(--brand); color: var(--on-brand); font-size: 12px; font-weight: 800; letter-spacing: 0.06em; }
+  .amount { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+  .amount strong { font-family: var(--display); font-size: 42px; line-height: 1; font-variant-numeric: tabular-nums; }
+  .amount span { color: var(--muted); }
+  .per { font-size: 14.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .was { color: var(--muted); font-size: 18px; text-decoration: line-through; text-decoration-thickness: 2px; font-variant-numeric: tabular-nums; }
+  .save.big { font-size: 14.5px; padding: 6px 12px; }
+  .save { align-self: flex-start; padding: 4px 10px; border-radius: 8px; background: var(--brand-soft); color: var(--brand); font-weight: 800; font-size: 13.5px; }
+  .setup-line { padding: 10px 12px; border-radius: 10px; font-size: 14.5px; }
+  .setup-line.free { background: var(--brand-soft); }
+  .setup-line.paid { background: var(--amber-soft); }
+  .setup-line b { font-variant-numeric: tabular-nums; }
+  .plan ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; font-size: 15px; }
+  .plan li::before { content: '✓  '; color: var(--brand); font-weight: 800; }
+  .plan .btn { margin-top: auto; width: 100%; }
+  .plan .spacer { flex: 1; min-height: 4px; }
+
+  /* Offer */
+  .offer {
+    margin-top: 22px; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 18px; align-items: center;
+    padding: 24px 26px; border-radius: 16px; background: var(--amber-soft); border: 1px solid color-mix(in srgb, var(--amber-fill) 45%, transparent);
+  }
+  .offer h3 { color: var(--amber); font-size: 22px; }
+  .offer p { margin-top: 6px; font-size: 15px; }
+  .spots { display: grid; justify-items: center; gap: 6px; text-align: center; }
+  .spots .dots { display: flex; gap: 6px; }
+  .spots .dot { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--amber-fill); }
+  .spots .dot.taken { background: var(--amber-fill); }
+  .spots strong { font-size: 15px; color: var(--amber); font-variant-numeric: tabular-nums; }
+  .setup { margin-top: 18px; display: grid; grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr); gap: 24px; padding: 24px 26px; border-radius: 16px; border: 1px dashed var(--brand); background: var(--surface); }
+  .setup ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; font-size: 15px; }
+  .setup li::before { content: '✓  '; color: var(--brand); font-weight: 800; }
+  .qr-addons { margin-top: 18px; display: grid; gap: 16px; padding: 24px 26px; border-radius: 16px; border: 1px solid var(--line); background: var(--surface); }
+  .qr-addons__head { display: grid; gap: 6px; max-width: 62ch; }
+  .qr-addons__grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+  .qr-addon { position: relative; display: grid; align-content: start; gap: 8px; padding: 18px 16px; border-radius: 12px; border: 1px solid var(--line); }
+  .qr-addon h4 { margin: 0; font-size: 16px; }
+  .qr-addon p { margin: 0; font-size: 14px; color: var(--muted); }
+  .qr-addon__price { display: flex; align-items: baseline; gap: 6px; }
+  .qr-addon__price strong { font-family: var(--display); font-size: 28px; line-height: 1; font-variant-numeric: tabular-nums; }
+  .qr-addon__price span { color: var(--muted); font-size: 14px; }
+  .qr-addon--pick { border: 2px solid var(--brand); }
+  .qr-addon__tag { position: absolute; top: -11px; left: 14px; padding: 2px 10px; border-radius: 999px; background: var(--brand); color: var(--on-brand); font-size: 11px; font-weight: 800; letter-spacing: 0.06em; }
+  @media (max-width: 860px) { .qr-addons__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 480px) { .qr-addons { padding: 20px 16px; } .qr-addons__grid { grid-template-columns: minmax(0, 1fr); } }
+  .fine { margin-top: 14px; font-size: 13.5px; color: var(--muted); }
+
+  /* Comparison */
+  .compare-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); }
+  table { width: 100%; min-width: 560px; border-collapse: collapse; font-size: 15px; }
+  th, td { padding: 13px 16px; text-align: left; border-bottom: 1px solid var(--line); }
+  th { font-size: 12.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+  tr:last-child td { border-bottom: 0; }
+  td.num { font-variant-numeric: tabular-nums; font-weight: 700; white-space: nowrap; }
+  tr.us td { background: var(--brand-soft); font-weight: 700; }
+
+  .two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+  .box { padding: 24px; border-radius: 14px; border: 1px solid var(--line); background: var(--surface); display: grid; gap: 10px; align-content: start; }
+  .box ul { margin: 0; padding-left: 20px; display: grid; gap: 6px; font-size: 15px; }
+
+  /* FAQ */
+  .faq { display: grid; gap: 10px; }
+  details { border: 1px solid var(--line); border-radius: 12px; background: var(--surface); padding: 0 18px; }
+  summary { cursor: pointer; padding: 16px 0; font-weight: 700; list-style: none; display: flex; justify-content: space-between; gap: 12px; }
+  summary::-webkit-details-marker { display: none; }
+  summary::after { content: '+'; color: var(--brand); font-size: 20px; line-height: 1; }
+  details[open] summary::after { content: '–'; }
+  details p { padding-bottom: 16px; color: var(--muted); font-size: 15px; max-width: 70ch; }
+
+  /* Lead form */
+  .lead-card { margin-top: 80px; display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: 28px; padding: 32px; border-radius: 18px; background: var(--brand-deep); color: #ffffff; scroll-margin-top: 80px; }
+  .lead-card h2 { color: #ffffff; }
+  .lead-card .sub { color: #d4ebe0; margin-top: 10px; }
+  .lead-card ol { margin: 18px 0 0; padding-left: 20px; display: grid; gap: 6px; color: #e3f3eb; font-size: 15px; }
+  .contact-line { margin-top: 18px; display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 12px 14px; border-radius: 10px; background: rgba(255, 255, 255, 0.1); font-family: var(--mono); font-size: 15px; word-break: break-all; }
+  .contact-line button { flex-shrink: 0; border: 0; border-radius: 8px; padding: 7px 12px; background: var(--amber-fill); color: #1d1d1b; font: inherit; font-family: var(--body); font-weight: 800; font-size: 13px; cursor: pointer; }
+  form.lead { display: grid; gap: 12px; padding: 22px; border-radius: 14px; background: var(--surface); color: var(--fg); }
+  .field { display: grid; gap: 5px; }
+  .field label { font-size: 13.5px; font-weight: 700; }
+  .field input, .field select { min-height: 46px; padding: 0 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--fg); font: inherit; font-size: 15.5px; }
+  .field-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .form-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+  .form-actions .btn { flex: 1 1 200px; }
+  .form-note { font-size: 13px; color: var(--muted); }
+  .form-out { display: grid; gap: 8px; padding: 12px; border-radius: 10px; background: var(--brand-soft); font-size: 14px; white-space: pre-wrap; }
+  .error-text { color: var(--bad); font-size: 13px; }
+
+  .hero-price { margin-top: 12px; font-size: 14.5px; color: var(--muted); }
+  .hero-price a { color: var(--brand); font-weight: 700; }
+  .self-signup { margin-top: 14px; font-size: 14.5px; color: var(--muted); }
+  .self-signup a { color: var(--brand); font-weight: 700; }
+  .site-footer { margin-top: 56px; padding-top: 28px; border-top: 1px solid var(--line); font-size: 14px; color: var(--muted); }
+  .site-footer__cols { display: grid; grid-template-columns: minmax(0, 1.4fr) repeat(2, minmax(0, 1fr)); gap: 24px; }
+  .site-footer nav { display: grid; align-content: start; gap: 8px; }
+  .site-footer a { color: var(--fg); text-decoration: none; }
+  .site-footer a:hover { color: var(--brand); }
+  .site-footer__brand { font-family: var(--display); font-size: 20px; font-weight: 700; color: var(--fg); margin-bottom: 6px; }
+  .site-footer__title { font-size: 12.5px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+  .site-footer__fine { margin-top: 24px; font-size: 12.5px; }
+  @media (max-width: 620px) { .site-footer__cols { grid-template-columns: minmax(0, 1fr); } }
+
+  /* Sticky CTA on phones */
+  .mobile-cta {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 6; display: none; gap: 10px; align-items: center;
+    padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px)); background: var(--surface); border-top: 1px solid var(--line);
+    box-shadow: 0 -8px 24px rgba(8, 30, 20, 0.12);
+  }
+  .mobile-cta .txt { flex: 1; min-width: 0; font-size: 13.5px; line-height: 1.3; }
+  .mobile-cta .txt b { display: block; font-size: 15px; }
+
+  @media (max-width: 900px) {
+    .plans { grid-template-columns: minmax(0, 1fr); max-width: 520px; margin-inline: auto; }
+    .plan.best { order: -1; }
+  }
+  @media (max-width: 860px) {
+    .hero, .lead-card, .setup, .offer { grid-template-columns: minmax(0, 1fr); }
+    .steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .bill { transform: none; }
+    .top nav a:not(.btn):not(.nav-login) { display: none; }
+    .spots { justify-items: start; text-align: left; }
+  }
+  @media (max-width: 620px) {
+    .features, .two, .promise, .steps, .pains, .field-row { grid-template-columns: minmax(0, 1fr); }
+    section { margin-top: 60px; }
+    .lead-card, .setup, .offer { padding: 22px; }
+    .mobile-cta { display: flex; }
+    .wrap { padding-block-end: 120px; }
+  }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <a class="brand" href="/" aria-label="QRenvo home">
+      <svg viewBox="0 0 64 64" aria-hidden="true">
+        <defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#218062"/><stop offset="1" stop-color="#14523d"/></linearGradient></defs>
+        <rect width="64" height="64" rx="14" fill="url(#lg)"/>
+        <rect x="13" y="13" width="32" height="32" rx="7" fill="none" stroke="#fff" stroke-width="6"/>
+        <rect x="23" y="23" width="12" height="12" rx="2.5" fill="#fff"/>
+        <path d="M41 41 L51 51" stroke="#f59e0b" stroke-width="7" stroke-linecap="round"/>
+      </svg>
+      QRenvo
+    </a>
+    <nav aria-label="Main">
+      <a href="#how">How it works</a>
+      <a href="#features">Features</a>
+      <a href="#plans">Pricing</a>
+      <a href="#faq">FAQ</a>
+      <a href="https://demo.qrenvo.com/m/saket-rasoi/menu?t=1" target="_blank" rel="noopener">Live demo</a>
+      <a class="nav-login" href="https://app.qrenvo.com/admin/login">Log in</a>
+      <a class="btn small" href="#get-started">Start free trial</a>
+    </nav>
+  </header>
+
+  <!-- 1. Hook -->
+  <div class="hero" id="start">
+    <div>
+      <a class="offer-pill" href="#offer">Free setup for the first <b data-spots-total>5</b> restaurants · <b data-spots-left>5</b> left</a>
+      <h1>Guests order from the table. <em>Your kitchen gets it in seconds.</em></h1>
+      <p class="lead">
+        A QR code on every table, a kitchen screen instead of paper slips, and a GST bill in one tap. Guests pay you
+        by UPI. No app to download and no commission on any order.
+      </p>
+      <div class="cta-row">
+        <a class="btn" href="#get-started">Start 14-day free trial</a>
+        <a class="btn ghost" href="https://demo.qrenvo.com/m/saket-rasoi/menu?t=1" target="_blank" rel="noopener">Try the live demo</a>
+      </div>
+      <p class="hero-price">Plans from <b>₹833/month</b> · <a href="#plans">see pricing</a></p>
+      <div class="trust">
+        <span>No card needed</span>
+        <span>Live in 1 day</span>
+        <span>0% commission</span>
+        <span>Cancel anytime</span>
+      </div>
+    </div>
+
+    <div>
+      <div class="bill-stage">
+        <div class="bill" aria-label="Sample table bill printed from QRenvo">
+          <div class="c name">Saket Rasoi</div>
+          <div class="c">12, Saket, New Delhi</div>
+          <div class="c">GSTIN: 07ABCDE1234F1Z5</div>
+          <div class="c" style="margin-top:6px;font-weight:600">TAX INVOICE</div>
+          <hr>
+          <div class="row"><span>Invoice: SR-0042</span><span>Table 5</span></div>
+          <div class="row"><span>04 Oct 2026</span><span>08:14 PM</span></div>
+          <hr>
+          <div class="row"><span>2× Paneer Tikka</span><span>500.00</span></div>
+          <div class="row"><span>1× Dal Makhani</span><span>280.00</span></div>
+          <div class="row"><span>4× Butter Naan</span><span>240.00</span></div>
+          <div class="row"><span>2× Masala Chaas</span><span>120.00</span></div>
+          <hr>
+          <div class="row"><span>Subtotal</span><span>1,140.00</span></div>
+          <div class="row"><span>CGST (2.5%)</span><span>28.50</span></div>
+          <div class="row"><span>SGST (2.5%)</span><span>28.50</span></div>
+          <div class="row total"><span>Total</span><span>Rs. 1,197.00</span></div>
+          <hr>
+          <div class="paid">PAID · UPI</div>
+          <div class="c" style="margin-top:6px">Thank you! Visit again.</div>
+        </div>
+      </div>
+      <p class="bill-note">A real bill from QRenvo: every order at Table 5 on one invoice, printed on an 80 mm printer.</p>
+    </div>
+  </div>
+
+  <!-- 2. Pain -->
+  <section aria-labelledby="pain">
+    <div class="section-head">
+      <p class="eyebrow">Sound familiar?</p>
+      <h2 id="pain">The rush-hour problems QRenvo takes off your plate</h2>
+    </div>
+    <div class="pains">
+      <div class="pain">
+        <span class="was">Guests wait 10 minutes just to give their order</span>
+        <span class="now">They scan and order the moment they sit down</span>
+      </div>
+      <div class="pain">
+        <span class="was">Wrong items because a slip was misread</span>
+        <span class="now">The kitchen sees exactly what the guest tapped, with sizes and add-ons</span>
+      </div>
+      <div class="pain">
+        <span class="was">Reprinting menus every time a price changes</span>
+        <span class="now">Change a price or mark an item sold out from your phone, live in seconds</span>
+      </div>
+      <div class="pain">
+        <span class="was">Adding up a table's bill by hand at closing time</span>
+        <span class="now">Bill the whole table in one tap, with GST worked out for you</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. How it works -->
+  <section aria-labelledby="how-title" id="how">
+    <div class="section-head">
+      <p class="eyebrow">How it works</p>
+      <h2 id="how-title">From scan to bill, without anyone writing an order down</h2>
+    </div>
+    <ol class="steps">
+      <li><h3>Guest scans</h3><p>Each table has its own QR. The menu opens in the phone's browser with photos, veg marks and sizes.</p></li>
+      <li><h3>Guest orders</h3><p>They pick items and add-ons and place the order. They can also call a waiter, ask for water or the bill.</p></li>
+      <li><h3>Kitchen cooks</h3><p>The order appears on the kitchen screen with a sound. A tap moves it from New to Preparing to Served.</p></li>
+      <li><h3>You bill</h3><p>Bill one order or the whole table, print it, and get paid by UPI straight into your account.</p></li>
+    </ol>
+  </section>
+
+  <!-- 4. Features -->
+  <section aria-labelledby="features" id="features">
+    <div class="section-head">
+      <p class="eyebrow">Every plan includes everything</p>
+      <h2 id="features">What you get</h2>
+    </div>
+    <div class="features">
+      <div class="feature">
+        <h3><i>Guests</i> Ordering from the table</h3>
+        <ul>
+          <li>Menu with photos, veg / non-veg marks, search and categories</li>
+          <li>Sizes and add-ons (half / full, extra cheese)</li>
+          <li>Live order status on their phone</li>
+          <li>Call waiter, ask for water or the bill in one tap</li>
+          <li>UPI payment with the amount already filled in</li>
+        </ul>
+      </div>
+      <div class="feature">
+        <h3><i>Kitchen</i> A screen instead of slips</h3>
+        <ul>
+          <li>Full-screen board: New, Preparing, Served</li>
+          <li>Sound for every new order; late orders turn amber, then red</li>
+          <li>Tap to move an order, with undo for a wrong tap</li>
+          <li>Own kitchen PIN, so the tablet never sees your sales or settings</li>
+        </ul>
+      </div>
+      <div class="feature">
+        <h3><i>Billing</i> GST bills in one tap</h3>
+        <ul>
+          <li>Bill one order or the whole table together</li>
+          <li>Your own invoice numbers (SR-0001, SR-0002 …)</li>
+          <li>CGST / SGST split with your GSTIN, service charge if you use it</li>
+          <li>Print on an 80 mm thermal printer or A4, or save as PDF</li>
+          <li>Mark paid by cash, UPI or card</li>
+        </ul>
+      </div>
+      <div class="feature">
+        <h3><i>Owner</i> Run it from your phone</h3>
+        <ul>
+          <li>Today's sales, orders and average bill against yesterday</li>
+          <li>7 and 30 day revenue, top-selling items, QR scans</li>
+          <li>AI menu upload: send a photo of your menu, items appear on their own</li>
+          <li>Change prices or mark items sold out in seconds</li>
+          <li>Printable QR cards with your logo and colours</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section aria-label="Why owners switch">
+    <div class="promise">
+      <div><strong>0%</strong><span>commission on orders. Guest UPI payments go straight to your bank account.</span></div>
+      <div><strong>0 apps</strong><span>for guests to download. The menu opens in any phone's browser.</span></div>
+      <div><strong>1 day</strong><span>to go live. We load your menu and set up your tables for you.</span></div>
+    </div>
+  </section>
+
+  <!-- 5. Plans -->
+  <section aria-labelledby="plans-title" id="plans">
+    <div class="section-head center">
+      <p class="eyebrow">Plans</p>
+      <h2 id="plans-title">Pick how often you want to pay</h2>
+      <p class="muted">Same features in every plan. Start with a 14-day free trial; choose a plan when you are happy.</p>
+    </div>
+
+    <div class="plans">
+      <div class="plan">
+        <h3>Monthly</h3>
+        <div class="amount"><strong>₹999</strong><span>/ month</span></div>
+        <p class="per">Pay month by month</p>
+        <div class="setup-line paid">One-time setup <b>₹99</b>, <b>free</b> for the first 5 restaurants</div>
+        <ul>
+          <li>All features</li>
+          <li>Unlimited items, tables and orders</li>
+          <li>WhatsApp and phone support</li>
+        </ul>
+        <span class="spacer"></span>
+        <a class="btn ghost" href="#get-started" data-plan="Monthly">Start with Monthly</a>
+      </div>
+
+      <div class="plan">
+        <h3>Half Yearly</h3>
+        <div class="amount"><strong>₹5,649</strong><span>/ 6 months</span></div>
+        <p class="per">≈ ₹942 a month</p>
+        <span class="save">Save ₹345 vs monthly</span>
+        <div class="setup-line free"><b>Setup free</b>, always</div>
+        <ul>
+          <li>All features</li>
+          <li>Unlimited items, tables and orders</li>
+          <li>WhatsApp and phone support</li>
+        </ul>
+        <span class="spacer"></span>
+        <a class="btn ghost" href="#get-started" data-plan="Half Yearly">Start with Half Yearly</a>
+      </div>
+
+      <div class="plan best">
+        <span class="tag">BEST VALUE · 2 MONTHS FREE</span>
+        <h3>Yearly</h3>
+        <div class="amount"><span class="was">₹11,988</span><strong>₹9,990</strong><span>/ year</span></div>
+        <p class="per">≈ ₹833 a month · pay for 10 months, use 12</p>
+        <span class="save big">Save ₹1,998 vs monthly</span>
+        <div class="setup-line free"><b>Setup free</b>, always</div>
+        <ul>
+          <li>All features</li>
+          <li>Price locked for 12 months</li>
+          <li>Priority support</li>
+        </ul>
+        <span class="spacer"></span>
+        <a class="btn" href="#get-started" data-plan="Yearly">Start with Yearly</a>
+      </div>
+    </div>
+    <p class="fine" style="text-align:center">Savings compared with paying monthly: 6 months = ₹5,994, 12 months = ₹11,988. Yearly costs the same as 10 months. Half Yearly and Yearly also skip the ₹99 setup fee.</p>
+
+    <!-- 6. Urgency -->
+    <div class="offer" id="offer">
+      <div>
+        <h3>Launch offer: free setup on Monthly for the first 5 restaurants</h3>
+        <p>Normally ₹99. We load your full menu, set up your tables and QR codes, and train your staff, at no cost. Half Yearly and Yearly always include free setup.</p>
+      </div>
+      <div class="spots" aria-label="Free setup spots">
+        <div class="dots" data-dots></div>
+        <strong><span data-spots-left>5</span> of <span data-spots-total>5</span> spots left</strong>
+      </div>
+    </div>
+
+    <div class="setup">
+      <div>
+        <p class="eyebrow">What setup includes</p>
+        <h3 style="margin-top:6px">We get you live in a day</h3>
+        <p class="fine" style="margin-top:8px">₹99 once with Monthly. Free with Half Yearly and Yearly.</p>
+      </div>
+      <ul>
+        <li>Your full menu loaded from a photo or your printed card</li>
+        <li>Tables and QR codes created, with a print-ready PDF of your QR cards</li>
+        <li>30-minute training for you and your staff</li>
+        <li>Logo, colours, GST and UPI set up for you</li>
+      </ul>
+    </div>
+    <!-- Printed QR codes: optional add-on -->
+    <div class="qr-addons" id="qr-codes">
+      <div class="qr-addons__head">
+        <p class="eyebrow">Table QR codes</p>
+        <h3>Print them yourself, or let us deliver them ready to use</h3>
+        <p class="fine">Every plan includes a print-ready PDF of your QR cards with your logo and colours. Want them printed? Pick a finish, priced per table.</p>
+      </div>
+      <div class="qr-addons__grid">
+        <div class="qr-addon">
+          <h4>Print yourself</h4>
+          <div class="qr-addon__price"><strong>Free</strong></div>
+          <p>Download the PDF from your panel and print at any shop. 4 cards per A4 sheet.</p>
+        </div>
+        <div class="qr-addon">
+          <h4>QR stickers</h4>
+          <div class="qr-addon__price"><strong>₹30</strong><span>/ table</span></div>
+          <p>Laminated, waterproof, 4 × 4 inch. Sticks on the table or wall.</p>
+        </div>
+        <div class="qr-addon qr-addon--pick">
+          <span class="qr-addon__tag">RECOMMENDED</span>
+          <h4>Table tent cards</h4>
+          <div class="qr-addon__price"><strong>₹49</strong><span>/ table</span></div>
+          <p>Two-sided, laminated, stands on its own. Guests see it from both sides of the table.</p>
+        </div>
+        <div class="qr-addon">
+          <h4>Acrylic standee</h4>
+          <div class="qr-addon__price"><strong>₹199</strong><span>/ table</span></div>
+          <p>Clear acrylic stand with your logo. Looks premium and lasts for years.</p>
+        </div>
+      </div>
+      <p class="fine">Printed QRs reach you with your setup, usually within 2–3 days. Add more tables any time at the same price. Your QR codes keep working even if you change prices or the menu.</p>
+    </div>
+
+    <p class="fine">Prices in Indian rupees, per outlet. GST is charged extra where applicable. Plans are paid online through Razorpay (UPI, cards, net banking).</p>
+  </section>
+
+  <section aria-labelledby="compare">
+    <div class="section-head">
+      <p class="eyebrow">What it costs you per month</p>
+      <h2 id="compare">Compared with the usual options</h2>
+    </div>
+    <div class="compare-wrap">
+      <table>
+        <thead><tr><th>Option</th><th>Typical cost</th><th>What you get</th></tr></thead>
+        <tbody>
+          <tr class="us"><td>QRenvo Yearly</td><td class="num">≈ ₹833 / month</td><td>QR ordering, kitchen screen, GST bills, direct UPI</td></tr>
+          <tr class="us"><td>QRenvo Half Yearly</td><td class="num">≈ ₹942 / month</td><td>The same, paid every 6 months</td></tr>
+          <tr><td>Full restaurant POS</td><td class="num">₹1,800 – 3,500 / month</td><td>Billing counter, inventory, integrations; QR ordering often an add-on</td></tr>
+          <tr><td>Printed menus</td><td class="num">₹3,000 + per reprint</td><td>Reprint whenever a price changes; no ordering, no bills</td></tr>
+          <tr><td>Extra waiter for taking orders</td><td class="num">₹12,000 + / month</td><td>One person, one shift</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="fine">POS and staff costs are typical figures in India and vary by city and vendor.</p>
+  </section>
+
+  <section aria-labelledby="needs">
+    <div class="two">
+      <div class="box">
+        <p class="eyebrow">What you need</p>
+        <h3 id="needs">Things you probably already have</h3>
+        <ul>
+          <li>An internet connection (Wi-Fi or mobile data)</li>
+          <li>Any phone or tablet for the kitchen screen</li>
+          <li>Your phone or laptop for the owner panel</li>
+          <li>A UPI ID for your restaurant</li>
+          <li>Optional: an 80 mm thermal printer for bills</li>
+        </ul>
+      </div>
+      <div class="box">
+        <p class="eyebrow">Coming next</p>
+        <h3>On our roadmap</h3>
+        <ul>
+          <li>Counter billing for walk-in and phone orders</li>
+          <li>Kitchen order slips (KOT) on a printer</li>
+          <li>Discounts and split bills</li>
+          <li>Staff logins for cashier and captain</li>
+        </ul>
+        <p class="fine" style="margin-top:4px">Restaurants on a plan get these when they launch, at no extra cost for the rest of their plan.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7. Objections -->
+  <section aria-labelledby="faq-title" id="faq">
+    <div class="section-head">
+      <p class="eyebrow">Questions owners ask</p>
+      <h2 id="faq-title">Before you decide</h2>
+    </div>
+    <div class="faq">
+      <details>
+        <summary>Do my guests need to download an app or sign up?</summary>
+        <p>No. They scan the QR and the menu opens in their phone's browser. They type their name and phone number once, when they place their first order.</p>
+      </details>
+      <details>
+        <summary>Where does the guests' money go?</summary>
+        <p>Straight to your own UPI account. We never hold your money and take no commission on orders. When a guest taps "I've paid", your staff checks the UPI app and marks it received.</p>
+      </details>
+      <details>
+        <summary>My guests are older or prefer ordering from a waiter.</summary>
+        <p>That still works. Your waiter scans the table's QR on their own phone and places the order for the guest. It reaches the kitchen screen and the table's bill like any other order.</p>
+      </details>
+      <details>
+        <summary>Can I change prices or mark an item sold out during service?</summary>
+        <p>Yes, from your phone, any time. Guests see the change immediately; there is nothing to reprint.</p>
+      </details>
+      <details>
+        <summary>Will the kitchen staff see my sales?</summary>
+        <p>No. The kitchen signs in with its own PIN and only sees the orders it has to cook. Changing the PIN signs every kitchen screen out.</p>
+      </details>
+      <details>
+        <summary>What happens after the 14-day trial?</summary>
+        <p>Pick Monthly, Half Yearly or Yearly from "My plan" and pay online. If you don't, guests can still see your menu but can't place orders until you choose a plan. Your menu and data stay safe.</p>
+      </details>
+      <details>
+        <summary>What if I renew late?</summary>
+        <p>A paid plan gets 7 extra days in which guests can still order, so a late renewal never stops service. Renew early and the new period starts after the current one ends, so you lose no days.</p>
+      </details>
+      <details>
+        <summary>Does it work without internet?</summary>
+        <p>No. Ordering, the kitchen screen and billing need an internet connection. Mobile data on the kitchen phone is enough.</p>
+      </details>
+      <details>
+        <summary>I have more than one outlet.</summary>
+        <p>Each outlet has its own plan, menu and QR codes. Talk to us for a multi-outlet price.</p>
+      </details>
+    </div>
+  </section>
+
+  <!-- 8. Action -->
+  <div class="lead-card" id="get-started">
+    <div>
+      <h2>Start your 14-day free trial</h2>
+      <p class="sub">Tell us about your restaurant. We'll set it up and show it to you on your own tables.</p>
+      <ol>
+        <li>Send the form, or call us</li>
+        <li>Share a photo of your menu</li>
+        <li>Go live the next day, free for 14 days</li>
+      </ol>
+      <div class="contact-line"><span id="phone-text">+91 96702 26608</span><button type="button" data-copy="phone-text">Copy</button></div>
+      <p class="self-signup">Prefer to set it up yourself? <a href="https://app.qrenvo.com/admin/register">Create your account →</a></p>
+    </div>
+
+    <form class="lead" id="lead-form" novalidate>
+      <div class="field">
+        <label for="lf-name">Your name</label>
+        <input id="lf-name" name="name" type="text" autocomplete="name" required>
+      </div>
+      <div class="field">
+        <label for="lf-restaurant">Restaurant name</label>
+        <input id="lf-restaurant" name="restaurant" type="text" required>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label for="lf-city">City</label>
+          <input id="lf-city" name="city" type="text" autocomplete="address-level2">
+        </div>
+        <div class="field">
+          <label for="lf-tables">Number of tables</label>
+          <input id="lf-tables" name="tables" type="number" min="1" max="500" inputmode="numeric">
+        </div>
+      </div>
+      <div class="field">
+        <label for="lf-plan">Plan you're interested in</label>
+        <select id="lf-plan" name="plan">
+          <option>Not sure yet</option>
+          <option>Monthly</option>
+          <option>Half Yearly</option>
+          <option>Yearly</option>
+        </select>
+      </div>
+      <p class="error-text" id="lf-error" hidden>Please enter your name and your restaurant's name.</p>
+      <div class="form-actions">
+        <button class="btn" type="submit" id="lf-whatsapp">Send on WhatsApp</button>
+        <button class="btn ghost" type="button" id="lf-copy">Copy message</button>
+      </div>
+      <p class="form-note" id="lf-note">Opens WhatsApp with your details filled in. Nothing is sent until you press send there.</p>
+      <div class="form-out" id="lf-out" hidden></div>
+    </form>
+  </div>
+
+  <footer class="site-footer">
+    <div class="site-footer__cols">
+      <div>
+        <p class="site-footer__brand">QRenvo</p>
+        <p>QR ordering, kitchen screen and GST billing for restaurants in India.</p>
+      </div>
+      <nav aria-label="Product">
+        <p class="site-footer__title">Product</p>
+        <a href="#how">How it works</a>
+        <a href="#plans">Pricing</a>
+        <a href="https://demo.qrenvo.com/m/saket-rasoi/menu?t=1" target="_blank" rel="noopener">Live demo</a>
+        <a href="https://app.qrenvo.com/admin/login">Log in</a>
+        <a href="https://app.qrenvo.com/admin/register">Sign up</a>
+      </nav>
+      <nav aria-label="Legal">
+        <p class="site-footer__title">Company</p>
+        <a href="/contact.html">Contact us</a>
+        <a href="/privacy.html">Privacy policy</a>
+        <a href="/terms.html">Terms of service</a>
+        <a href="/refund.html">Refund &amp; cancellation</a>
+      </nav>
+    </div>
+    <p class="site-footer__fine">© <span data-year>2026</span> QRenvo. All prices in Indian rupees.</p>
+  </footer>
+</div>
+
+<div class="mobile-cta" role="region" aria-label="Start free trial">
+  <span class="txt"><b>14-day free trial</b>Free setup: <span data-spots-left>5</span> spots left</span>
+  <a class="btn small" href="#get-started">Start free</a>
+</div>
+
+<script>
+  // ---- Settings to edit before sharing ----
+  // Your WhatsApp number with country code, digits only (e.g. '919876543210'). Leave '' to hide the WhatsApp button.
+  var WHATSAPP_NUMBER = '919670226608';
+  // Free-setup offer: update SPOTS_LEFT as restaurants join, so the count stays true.
+  var SPOTS_TOTAL = 5;
+  var SPOTS_LEFT = 5;
+
+  document.querySelectorAll('[data-year]').forEach(function (el) { el.textContent = String(new Date().getFullYear()); });
+
+  (function () {
+    var left = Math.max(0, Math.min(SPOTS_TOTAL, SPOTS_LEFT));
+    document.querySelectorAll('[data-spots-left]').forEach(function (el) { el.textContent = String(left); });
+    document.querySelectorAll('[data-spots-total]').forEach(function (el) { el.textContent = String(SPOTS_TOTAL); });
+    var dots = document.querySelector('[data-dots]');
+    if (dots) {
+      for (var i = 0; i < SPOTS_TOTAL; i++) {
+        var d = document.createElement('span');
+        d.className = 'dot' + (i < SPOTS_TOTAL - left ? ' taken' : '');
+        dots.appendChild(d);
+      }
+    }
+    if (WHATSAPP_NUMBER) {
+      var pretty = '+' + WHATSAPP_NUMBER.replace(/^(\d{2})(\d{5})(\d+)$/, '$1 $2 $3');
+      document.getElementById('phone-text').textContent = pretty;
+    }
+  })();
+
+  // Plan buttons pre-select the plan in the form.
+  document.querySelectorAll('[data-plan]').forEach(function (link) {
+    link.addEventListener('click', function () {
+      var select = document.getElementById('lf-plan');
+      select.value = link.getAttribute('data-plan');
+    });
+  });
+
+  function copyText(text, button, onFail) {
+    var done = function () {
+      var old = button.textContent;
+      button.textContent = 'Copied';
+      setTimeout(function () { button.textContent = old; }, 1800);
+    };
+    try {
+      navigator.clipboard.writeText(text).then(done, onFail);
+    } catch (e) {
+      onFail();
+    }
+  }
+
+  function selectNode(el) {
+    var range = document.createRange();
+    range.selectNodeContents(el);
+    var sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+  }
+
+  document.querySelectorAll('[data-copy]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var el = document.getElementById(btn.getAttribute('data-copy'));
+      copyText(el.textContent.trim(), btn, function () { selectNode(el); });
+    });
+  });
+
+  // Lead form: builds a WhatsApp message. There is no server, so nothing is stored or sent from this page.
+  var form = document.getElementById('lead-form');
+  var out = document.getElementById('lf-out');
+  var waButton = document.getElementById('lf-whatsapp');
+  var note = document.getElementById('lf-note');
+  if (!WHATSAPP_NUMBER) {
+    waButton.hidden = true;
+    note.textContent = 'Copy the message and send it to us on WhatsApp or SMS.';
+  }
+
+  function buildMessage() {
+    var v = function (id) { return document.getElementById(id).value.trim(); };
+    var name = v('lf-name');
+    var restaurant = v('lf-restaurant');
+    var error = document.getElementById('lf-error');
+    if (!name || !restaurant) {
+      error.hidden = false;
+      (name ? document.getElementById('lf-restaurant') : document.getElementById('lf-name')).focus();
+      return null;
+    }
+    error.hidden = true;
+    var lines = [
+      'Hi QRenvo, I want to start the 14-day free trial.',
+      'Name: ' + name,
+      'Restaurant: ' + restaurant
+    ];
+    if (v('lf-city')) lines.push('City: ' + v('lf-city'));
+    if (v('lf-tables')) lines.push('Tables: ' + v('lf-tables'));
+    lines.push('Plan: ' + v('lf-plan'));
+    return lines.join('\n');
+  }
+
+  form.addEventListener('submit', function (event) {
+    event.preventDefault();
+    var message = buildMessage();
+    if (!message || !WHATSAPP_NUMBER) return;
+    var link = document.createElement('a');
+    link.href = 'https://wa.me/' + WHATSAPP_NUMBER + '?text=' + encodeURIComponent(message);
+    link.target = '_blank';
+    link.rel = 'noopener';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  });
+
+  document.getElementById('lf-copy').addEventListener('click', function (event) {
+    var message = buildMessage();
+    if (!message) return;
+    out.textContent = message;
+    out.hidden = false;
+    copyText(message, event.currentTarget, function () { selectNode(out); });
+  });
+</script>
+</body>
+</html>

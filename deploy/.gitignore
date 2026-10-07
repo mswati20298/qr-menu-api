@@ -5,5 +5,3 @@ demo.env
 certs/*
 !certs/.gitkeep
 backups/
-landing/*
-!landing/.gitkeep

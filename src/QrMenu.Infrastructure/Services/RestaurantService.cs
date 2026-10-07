@@ -9,7 +9,11 @@ using QrMenu.Infrastructure.Persistence;
 
 namespace QrMenu.Infrastructure.Services;
 
-public class RestaurantService(AppDbContext db, IPasswordHasher passwordHasher, IOptions<SiteSettings> siteOptions) : IRestaurantService
+public class RestaurantService(
+    AppDbContext db,
+    IPasswordHasher passwordHasher,
+    IOptions<SiteSettings> siteOptions,
+    TimeProvider clock) : IRestaurantService
 {
     private readonly SiteSettings _site = siteOptions.Value;
 
@@ -139,46 +143,45 @@ public class RestaurantService(AppDbContext db, IPasswordHasher passwordHasher, 
 
     public async Task<List<ScanStatsDto>> GetScanStatsAsync(Guid restaurantId, int days, CancellationToken ct = default)
     {
-        var since = DateTime.UtcNow.Date.AddDays(-(days - 1));
+        // Days are Indian calendar days (the server runs in UTC).
+        var today = IndianTime.DateOf(clock.GetUtcNow().UtcDateTime);
+        var firstDay = today.AddDays(-(days - 1));
+        var since = IndianTime.StartOfDayUtc(firstDay);
 
         var scans = await db.ScanLogs
             .Where(s => s.RestaurantId == restaurantId && s.ScannedAt >= since)
+            .Select(s => s.ScannedAt)
             .ToListAsync(ct);
 
-        var grouped = scans
-            .GroupBy(s => DateOnly.FromDateTime(s.ScannedAt))
-            .ToDictionary(g => g.Key, g => g.Count());
-
-        var result = new List<ScanStatsDto>();
-        for (var i = 0; i < days; i++)
-        {
-            var date = DateOnly.FromDateTime(since.AddDays(i));
-            result.Add(new ScanStatsDto(date, grouped.GetValueOrDefault(date, 0)));
-        }
-
-        return result;
+        var grouped = scans.GroupBy(IndianTime.DateOf).ToDictionary(g => g.Key, g => g.Count());
+        return Enumerable.Range(0, days)
+            .Select(i => firstDay.AddDays(i))
+            .Select(d => new ScanStatsDto(d, grouped.GetValueOrDefault(d, 0)))
+            .ToList();
     }
 
     public async Task<DashboardStatsDto> GetDashboardStatsAsync(Guid restaurantId, CancellationToken ct = default)
     {
-        var todayStart = DateTime.UtcNow.Date;
-        var todayEnd = todayStart.AddDays(1);
+        // "Today" and every day below are Indian calendar days, so the numbers roll over at midnight IST.
+        var today = IndianTime.DateOf(clock.GetUtcNow().UtcDateTime);
+        var since30 = IndianTime.StartOfDayUtc(today.AddDays(-29));
 
-        var todaysOrders = await db.Orders
-            .Where(o => o.RestaurantId == restaurantId && o.CreatedAt >= todayStart && o.CreatedAt < todayEnd && o.Status != OrderStatus.Cancelled)
+        var orders = await db.Orders
+            .AsNoTracking()
+            .Include(o => o.Items)
+            .Where(o => o.RestaurantId == restaurantId && o.CreatedAt >= since30 && o.Status != OrderStatus.Cancelled)
             .ToListAsync(ct);
 
-        var totalOrders = todaysOrders.Count;
-        var totalRevenue = todaysOrders.Sum(o => o.Total);
+        var byDay = orders.GroupBy(o => IndianTime.DateOf(o.CreatedAt)).ToDictionary(g => g.Key, g => g.ToList());
+        List<Order> OnDay(DateOnly day) => byDay.GetValueOrDefault(day) ?? [];
+
+        var todays = OnDay(today);
+        var yesterdays = OnDay(today.AddDays(-1));
+        var totalOrders = todays.Count;
+        var totalRevenue = todays.Sum(o => o.Total);
         var avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
-
-        var yesterdayStart = todayStart.AddDays(-1);
-        var yesterdaysOrders = await db.Orders
-            .Where(o => o.RestaurantId == restaurantId && o.CreatedAt >= yesterdayStart && o.CreatedAt < todayStart && o.Status != OrderStatus.Cancelled)
-            .ToListAsync(ct);
-
-        var totalOrdersYesterday = yesterdaysOrders.Count;
-        var totalRevenueYesterday = yesterdaysOrders.Sum(o => o.Total);
+        var totalOrdersYesterday = yesterdays.Count;
+        var totalRevenueYesterday = yesterdays.Sum(o => o.Total);
         var avgOrderValueYesterday = totalOrdersYesterday > 0 ? totalRevenueYesterday / totalOrdersYesterday : 0;
 
         var totalTables = await db.Tables.CountAsync(t => t.RestaurantId == restaurantId && t.IsActive, ct);
@@ -191,56 +194,49 @@ public class RestaurantService(AppDbContext db, IPasswordHasher passwordHasher, 
 
         var scanStats = await GetScanStatsAsync(restaurantId, 7, ct);
 
-        var since7 = DateTime.UtcNow.Date.AddDays(-6);
-        var recentOrdersRaw = await db.Orders
-            .Include(o => o.Items)
-            .Where(o => o.RestaurantId == restaurantId && o.CreatedAt >= since7 && o.Status != OrderStatus.Cancelled)
-            .ToListAsync(ct);
+        List<DailyRevenueDto> Days(int count) => Enumerable.Range(0, count)
+            .Select(i => today.AddDays(i - count + 1))
+            .Select(d => new DailyRevenueDto(d, OnDay(d).Sum(o => o.Total), OnDay(d).Count))
+            .ToList();
 
-        var revenueByDate = recentOrdersRaw
-            .GroupBy(o => DateOnly.FromDateTime(o.CreatedAt))
-            .ToDictionary(g => g.Key, g => (Revenue: g.Sum(o => o.Total), Count: g.Count()));
-
-        var revenueLast7Days = new List<DailyRevenueDto>();
-        for (var i = 0; i < 7; i++)
-        {
-            var date = DateOnly.FromDateTime(since7.AddDays(i));
-            var (revenue, count) = revenueByDate.GetValueOrDefault(date, (0, 0));
-            revenueLast7Days.Add(new DailyRevenueDto(date, revenue, count));
-        }
-
-        var since30 = DateTime.UtcNow.Date.AddDays(-29);
-        var ordersLast30 = await db.Orders
-            .Where(o => o.RestaurantId == restaurantId && o.CreatedAt >= since30 && o.Status != OrderStatus.Cancelled)
-            .Select(o => new { o.CreatedAt, o.Total })
-            .ToListAsync(ct);
-
-        var revenueByDate30 = ordersLast30
-            .GroupBy(o => DateOnly.FromDateTime(o.CreatedAt))
-            .ToDictionary(g => g.Key, g => (Revenue: g.Sum(o => o.Total), Count: g.Count()));
-
-        var revenueLast30Days = new List<DailyRevenueDto>();
-        for (var i = 0; i < 30; i++)
-        {
-            var date = DateOnly.FromDateTime(since30.AddDays(i));
-            var (revenue, count) = revenueByDate30.GetValueOrDefault(date, (0, 0));
-            revenueLast30Days.Add(new DailyRevenueDto(date, revenue, count));
-        }
-
-        var topSellingItems = recentOrdersRaw
-            .SelectMany(o => o.Items)
-            .GroupBy(i => i.ItemName)
-            .Select(g => new TopSellingItemDto(g.Key, g.Sum(i => i.Qty)))
-            .OrderByDescending(t => t.QtySold)
-            .Take(4)
+        var revenueTodayByHour = Enumerable.Range(0, 24)
+            .Select(h =>
+            {
+                var inHour = todays.Where(o => IndianTime.FromUtc(o.CreatedAt).Hour == h).ToList();
+                return new HourlyRevenueDto(h, inHour.Sum(o => o.Total), inHour.Count);
+            })
             .ToList();
 
         var recentOrdersEntities = await db.Orders
+            .AsNoTracking()
             .Include(o => o.Items)
             .Where(o => o.RestaurantId == restaurantId)
             .OrderByDescending(o => o.CreatedAt)
             .Take(5)
             .ToListAsync(ct);
+
+        // Photos for the dish cards: each menu item's current image.
+        var menuItemIds = orders.Concat(recentOrdersEntities)
+            .SelectMany(o => o.Items)
+            .Where(i => i.MenuItemId != null)
+            .Select(i => i.MenuItemId!.Value)
+            .Distinct()
+            .ToList();
+        var images = await db.MenuItems
+            .Where(m => menuItemIds.Contains(m.Id) && m.ImageUrl != null)
+            .Select(m => new { m.Id, m.ImageUrl })
+            .ToDictionaryAsync(m => m.Id, m => m.ImageUrl, ct);
+        string? ImageOf(OrderItem item) => item.MenuItemId is { } id ? images.GetValueOrDefault(id) : null;
+
+        var last7Start = today.AddDays(-6);
+        var topSellingItems = orders
+            .Where(o => IndianTime.DateOf(o.CreatedAt) >= last7Start)
+            .SelectMany(o => o.Items)
+            .GroupBy(i => i.ItemName)
+            .Select(g => new TopSellingItemDto(g.Key, g.Sum(i => i.Qty), g.Select(ImageOf).FirstOrDefault(u => u != null)))
+            .OrderByDescending(t => t.QtySold)
+            .Take(4)
+            .ToList();
 
         var recentOrders = recentOrdersEntities.Select(o => new RecentOrderDto(
             o.Id,
@@ -248,13 +244,14 @@ public class RestaurantService(AppDbContext db, IPasswordHasher passwordHasher, 
             string.Join(", ", o.Items.Select(i => i.ItemName)),
             o.Total,
             o.Status.ToString(),
-            o.CreatedAt)).ToList();
+            o.CreatedAt,
+            o.Items.Select(ImageOf).FirstOrDefault(u => u != null))).ToList();
 
         return new DashboardStatsDto(
             totalOrders, totalRevenue, avgOrderValue,
             totalOrdersYesterday, totalRevenueYesterday, avgOrderValueYesterday,
             activeTables, totalTables,
-            scanStats, revenueLast7Days, revenueLast30Days, topSellingItems, recentOrders);
+            scanStats, Days(7), Days(30), topSellingItems, recentOrders, revenueTodayByHour);
     }
 
     private RestaurantDto ToDto(Restaurant r) => new(

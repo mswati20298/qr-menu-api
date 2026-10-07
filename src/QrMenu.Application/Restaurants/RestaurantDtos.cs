@@ -69,7 +69,10 @@ public record ScanStatsDto(DateOnly Date, int Count);
 
 public record DailyRevenueDto(DateOnly Date, decimal Revenue, int OrderCount);
 
-public record TopSellingItemDto(string Name, int QtySold);
+public record TopSellingItemDto(string Name, int QtySold, string? ImageUrl = null);
+
+/// <summary>Sales in one hour of today (Indian time), for the Today chart.</summary>
+public record HourlyRevenueDto(int Hour, decimal Revenue, int OrderCount);
 
 public record RecentOrderDto(
     Guid Id,
@@ -77,7 +80,8 @@ public record RecentOrderDto(
     string ItemsSummary,
     decimal Total,
     string Status,
-    DateTime CreatedAt);
+    DateTime CreatedAt,
+    string? ImageUrl = null);
 
 public record DashboardStatsDto(
     int TotalOrdersToday,
@@ -92,7 +96,8 @@ public record DashboardStatsDto(
     List<DailyRevenueDto> RevenueLast7Days,
     List<DailyRevenueDto> RevenueLast30Days,
     List<TopSellingItemDto> TopSellingItems,
-    List<RecentOrderDto> RecentOrders);
+    List<RecentOrderDto> RecentOrders,
+    List<HourlyRevenueDto> RevenueTodayByHour);
 
 /// <summary>Subdomain = the restaurant's own address name ("saket"), or null/empty to remove it.</summary>
 public record SetSubdomainRequest(string? Subdomain);

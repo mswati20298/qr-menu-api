@@ -11,6 +11,13 @@ public static class IndianTime
     public static DateTime FromUtc(DateTime utc) =>
         TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(utc, DateTimeKind.Utc), Zone);
 
+    /// <summary>The Indian calendar date of a UTC moment.</summary>
+    public static DateOnly DateOf(DateTime utc) => DateOnly.FromDateTime(FromUtc(utc));
+
+    /// <summary>The UTC moment an Indian calendar day starts (midnight IST = 18:30 UTC the day before).</summary>
+    public static DateTime StartOfDayUtc(DateOnly istDate) =>
+        TimeZoneInfo.ConvertTimeToUtc(istDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Unspecified), Zone);
+
     /// <summary>
     /// Whether a restaurant with these opening hours (Indian time) is open at the given UTC moment.
     /// Hours that pass midnight (e.g. 6 PM to 2 AM) are handled.

@@ -237,21 +237,121 @@
   .feature .cat { font-size: 11px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--mint); margin-top: 6px; }
   .feature p { color: var(--muted); font-size: 14px; }
 
-  /* How it works */
-  .steps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; list-style: none; margin: 0; padding: 0; counter-reset: s; }
-  .step { padding: 24px 22px; display: grid; gap: 12px; align-content: start; }
-  .step::before { counter-increment: s; content: '0' counter(s); font-family: var(--display); font-size: 15px; color: var(--faint); }
-  .step p { color: var(--muted); font-size: 14.5px; }
-  .step:not(:last-child)::after { content: ''; position: absolute; top: 50%; right: -12px; width: 8px; height: 8px; border-top: 2px solid var(--line-strong); border-right: 2px solid var(--line-strong); transform: translate(50%, -50%) rotate(45deg); }
+  /* How it works: four connected steps, each with a small live scene */
+  .flow-sec { position: relative; isolation: isolate; }
+  .flow-sec::before { content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+    background: radial-gradient(50% 60% at 50% 40%, rgba(66, 211, 160, 0.07), transparent 70%); }
+  .flow4 { position: relative; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 44px; list-style: none; margin: 0; padding: 0; }
+  .fstep { position: relative; display: flex; flex-direction: column; gap: 10px; padding: 22px 22px 0; min-height: 340px;
+    transition: transform 0.3s var(--ease), border-color 0.3s, box-shadow 0.3s, opacity 0.65s var(--ease); }
+  .fstep:first-child { border-color: rgba(66, 211, 160, 0.45); box-shadow: 0 0 0 1px rgba(66, 211, 160, 0.12), 0 0 40px rgba(66, 211, 160, 0.12); }
+  .fstep:hover { transform: translateY(-4px); border-color: rgba(66, 211, 160, 0.5); box-shadow: 0 18px 44px rgba(0, 0, 0, 0.4), 0 0 34px rgba(66, 211, 160, 0.14); }
+  .fstep-top { display: flex; align-items: center; gap: 10px; }
+  .fnum { width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center; font-weight: 800; font-size: 15px;
+    background: rgba(66, 211, 160, 0.1); border: 1px solid var(--line-strong); color: var(--fg); font-variant-numeric: tabular-nums; }
+  .fstep .icon-box { width: 42px; height: 42px; border-radius: 12px; }
+  .fstep:hover .icon-box { transform: scale(1.06) translateY(-2px); }
+  .fstep h3 { font-size: 23px; margin-top: 6px; }
+  .fstep p { color: var(--muted); font-size: 14.5px; }
+  .scene { position: relative; margin: auto -22px 0; height: 160px; display: grid; place-items: end center; overflow: hidden; border-radius: 0 0 var(--radius) var(--radius); }
+  .scene::before { content: ''; position: absolute; inset: auto 0 0; height: 60%; background: linear-gradient(transparent, rgba(0, 0, 0, 0.35)); pointer-events: none; }
 
-  /* Problem -> solution */
-  .ps { display: grid; gap: 12px; max-width: 900px; margin-inline: auto; }
-  .ps-row { display: grid; grid-template-columns: 1fr 40px 1fr; align-items: center; gap: 12px; }
-  .ps-row > div { display: flex; align-items: center; gap: 12px; padding: 18px 20px; border-radius: 14px; font-weight: 700; font-size: 16px; }
-  .ps-old { background: rgba(255, 138, 118, 0.06); border: 1px solid rgba(255, 138, 118, 0.18); color: var(--coral); }
-  .ps-new { background: rgba(66, 211, 160, 0.06); border: 1px solid var(--line-strong); }
-  .ps-new .ic { color: var(--mint); }
-  .ps-arrow { color: var(--faint); justify-self: center; }
+  /* connector between cards: a line with a travelling glow and an arrow badge */
+  .fstep:not(:last-child)::after { content: ''; position: absolute; top: 50%; right: -44px; width: 44px; height: 2px; z-index: 2;
+    background: linear-gradient(90deg, transparent, var(--mint), transparent) 0 0 / 200% 100% no-repeat, rgba(66, 211, 160, 0.25);
+    animation: flowline 2.4s linear infinite; }
+  .farrow { position: absolute; top: 50%; right: -22px; transform: translate(50%, -50%); z-index: 3; width: 36px; height: 36px; border-radius: 50%;
+    display: grid; place-items: center; background: #0b2219; border: 1px solid rgba(66, 211, 160, 0.55); color: var(--mint);
+    box-shadow: 0 0 18px rgba(66, 211, 160, 0.25); }
+  .farrow .ic { width: 18px; height: 18px; animation: nudge 2.4s var(--ease) infinite; }
+  @keyframes flowline { from { background-position: 100% 0, 0 0; } to { background-position: -100% 0, 0 0; } }
+  /* 'translate' (not 'transform'), so an element's own rotate() is kept while it nudges */
+  @keyframes nudge { 0%, 100% { translate: -1px 0; } 50% { translate: 2px 0; } }
+  @keyframes nudge-down { 0%, 100% { translate: 0 -1px; } 50% { translate: 0 2px; } }
+
+  /* scene 1: tent card with QR */
+  .tent { position: relative; z-index: 1; width: 120px; padding: 12px 12px 14px; border-radius: 10px 10px 4px 4px; text-align: center;
+    background: linear-gradient(180deg, #0f2a20, #0a1c15); border: 1px solid rgba(66, 211, 160, 0.4); transform: perspective(300px) rotateX(8deg);
+    box-shadow: 0 16px 30px rgba(0, 0, 0, 0.5); }
+  .tent b { display: block; font-size: 10px; letter-spacing: 0.04em; color: var(--mint); }
+  .tent svg { width: 74px; height: 74px; margin: 7px auto 6px; display: block; background: #f3f6f4; border-radius: 6px; padding: 5px; }
+  .tent small { display: block; font-size: 10px; color: var(--fg); font-weight: 700; }
+  .tent i { display: block; font-style: normal; font-size: 9px; color: var(--muted); }
+
+  /* scene 2: phone with a dish */
+  .mini-phone { position: relative; z-index: 1; width: 132px; height: 150px; border-radius: 20px 20px 0 0; padding: 8px 8px 0; background: #0d1512;
+    border: 1px solid rgba(255, 255, 255, 0.12); border-bottom: 0; transform: rotate(-6deg) translateY(10px); box-shadow: 0 18px 34px rgba(0, 0, 0, 0.55); }
+  .mini-phone .sc { height: 100%; border-radius: 14px 14px 0 0; background: #08130f; padding: 10px 8px; display: grid; gap: 7px; align-content: start; font-size: 9px; }
+  .mini-phone .tabs { display: flex; gap: 4px; }
+  .mini-phone .tabs span { padding: 2px 6px; border-radius: 99px; border: 1px solid var(--line); color: var(--muted); }
+  .mini-phone .tabs span:first-child { background: var(--mint); color: var(--on-mint); border-color: transparent; font-weight: 800; }
+  .mini-phone .dish { display: grid; grid-template-columns: 42px 1fr; gap: 6px; align-items: center; padding: 5px; border-radius: 8px; background: var(--surface-2); border: 1px solid var(--line); }
+  .mini-phone .dish img { width: 42px; height: 42px; border-radius: 6px; object-fit: cover; }
+  .mini-phone .dish b { display: block; font-size: 9.5px; }
+  .mini-phone .add { justify-self: start; margin-top: 3px; padding: 1px 7px; border-radius: 99px; background: var(--mint); color: var(--on-mint); font-weight: 800; }
+
+  /* scene 3: kitchen screen */
+  .kds { position: relative; z-index: 1; width: 170px; padding: 10px 12px 12px; border-radius: 10px; background: #0a1511; border: 6px solid #141c19;
+    box-shadow: 0 18px 34px rgba(0, 0, 0, 0.55); font-size: 10.5px; transform: translateY(8px); }
+  .kds .k-h { display: flex; justify-content: space-between; align-items: center; font-weight: 800; font-size: 11.5px; margin-bottom: 6px; }
+  .kds ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 3px; color: var(--muted); }
+  .kds .k-t { margin-top: 8px; display: flex; justify-content: space-between; align-items: center; }
+  .kds .k-t span { padding: 1px 7px; border-radius: 6px; background: rgba(66, 211, 160, 0.14); color: var(--mint); font-weight: 800; font-size: 9.5px; }
+  .ring { width: 8px; height: 8px; border-radius: 50%; background: var(--mint); box-shadow: 0 0 0 0 rgba(66, 211, 160, 0.6); animation: ring 2s infinite; }
+  @keyframes ring { 70% { box-shadow: 0 0 0 10px rgba(66, 211, 160, 0); } 100% { box-shadow: 0 0 0 0 rgba(66, 211, 160, 0); } }
+
+  /* scene 4: payment + GST slip */
+  .pay { position: relative; z-index: 1; width: 118px; height: 148px; border-radius: 20px 20px 0 0; padding: 8px 8px 0; background: #0d1512;
+    border: 1px solid rgba(255, 255, 255, 0.12); border-bottom: 0; transform: translate(-22px, 10px); box-shadow: 0 18px 34px rgba(0, 0, 0, 0.55); }
+  .pay .sc { height: 100%; border-radius: 14px 14px 0 0; background: #08130f; display: grid; justify-items: center; align-content: center; gap: 4px; text-align: center; font-size: 9px; padding-bottom: 12px; }
+  .pay .ok { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; border: 1.5px solid var(--mint); color: var(--mint); }
+  .pay .ok .ic { width: 16px; height: 16px; stroke-width: 2.6; }
+  .pay b { font-family: var(--display); font-size: 20px; font-variant-numeric: tabular-nums; }
+  .pay small { color: var(--muted); }
+  .slip { position: absolute; z-index: 2; right: 8px; bottom: 6px; width: 74px; padding: 8px 7px 10px; background: #f4f1ea; color: #1d1d1b; font-size: 7.5px; line-height: 1.5;
+    transform: rotate(6deg); box-shadow: 0 10px 20px rgba(0, 0, 0, 0.45);
+    -webkit-mask: radial-gradient(circle 3px at 50% 100%, transparent 98%, #000) 0 0 / 7px 100% repeat-x; mask: radial-gradient(circle 3px at 50% 100%, transparent 98%, #000) 0 0 / 7px 100% repeat-x; }
+  .slip b { display: block; font-size: 8px; text-align: center; margin-bottom: 3px; }
+  .slip div { display: flex; justify-content: space-between; }
+  .slip .tot { border-top: 1px dashed #b9b4a8; margin-top: 3px; padding-top: 3px; font-weight: 700; }
+
+  /* Before -> after */
+  .xf-wrap { position: relative; max-width: 960px; margin-inline: auto; }
+  .xf-labels { display: grid; grid-template-columns: 1fr 72px 1fr; gap: 14px; margin-bottom: 16px; }
+  .xf-labels span { justify-self: start; padding: 6px 14px; border-radius: 99px; font-size: 12px; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase; }
+  .xf-labels .b { color: var(--coral); border: 1px solid rgba(255, 138, 118, 0.4); background: rgba(255, 138, 118, 0.06); }
+  .xf-labels .a { grid-column: 3; justify-self: end; color: var(--mint); border: 1px solid var(--line-strong); background: rgba(66, 211, 160, 0.06); }
+  .xf { display: grid; gap: 14px; }
+  .xf-row { display: grid; grid-template-columns: 1fr 72px 1fr; align-items: center; gap: 14px; border-radius: 18px; transition: background-color 0.3s; }
+  .xf-side { display: flex; align-items: center; gap: 16px; padding: 16px 18px; border-radius: 16px; font-weight: 700; font-size: 16.5px;
+    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); transition: transform 0.3s var(--ease), border-color 0.3s, box-shadow 0.3s, opacity 0.55s var(--ease); }
+  .xf-old { background: linear-gradient(90deg, rgba(255, 138, 118, 0.08), rgba(255, 138, 118, 0.03)); border: 1px solid rgba(255, 138, 118, 0.2); color: #f3dcd6; }
+  .xf-new { background: linear-gradient(90deg, rgba(66, 211, 160, 0.05), rgba(66, 211, 160, 0.1)); border: 1px solid rgba(66, 211, 160, 0.28); }
+  .xf-ic { width: 40px; height: 40px; flex: none; border-radius: 50%; display: grid; place-items: center; transition: transform 0.3s var(--ease); }
+  .xf-old .xf-ic { color: var(--coral); background: rgba(255, 138, 118, 0.1); border: 1px solid rgba(255, 138, 118, 0.35); }
+  .xf-new .xf-ic { color: var(--mint); background: rgba(66, 211, 160, 0.1); border: 1px solid var(--line-strong); }
+  .xf-ic .ic { width: 20px; height: 20px; }
+  .xf-arrow { position: relative; height: 2px; background: linear-gradient(90deg, rgba(255, 138, 118, 0.35), rgba(66, 211, 160, 0.6)); }
+  .xf-arrow::before { content: ''; position: absolute; inset: -3px 0; background: linear-gradient(90deg, transparent, rgba(66, 211, 160, 0.9), transparent) 0 0 / 40% 100% no-repeat;
+    filter: blur(2px); animation: energy 2.2s linear infinite; }
+  .xf-arrow::after { content: ''; position: absolute; right: -2px; top: 50%; width: 9px; height: 9px; border-top: 2px solid var(--mint); border-right: 2px solid var(--mint);
+    transform: translateY(-50%) rotate(45deg); animation: nudge 2.2s var(--ease) infinite; }
+  @keyframes energy { from { background-position: -40% 0; } to { background-position: 140% 0; } }
+  .xf-row:hover .xf-side, .xf-row:focus-within .xf-side { transform: translateY(-4px); }
+  .xf-row:hover .xf-old { border-color: rgba(255, 138, 118, 0.45); box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3); }
+  .xf-row:hover .xf-new { border-color: rgba(66, 211, 160, 0.6); box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3), 0 0 26px rgba(66, 211, 160, 0.14); }
+  .xf-row:hover .xf-ic { transform: scale(1.08); }
+  .xf-row:hover .xf-arrow { background: linear-gradient(90deg, rgba(255, 138, 118, 0.6), var(--mint)); }
+
+  /* sequential reveal inside each row: before, then arrow, then after */
+  .xf-row .xf-old, .xf-row .xf-arrow, .xf-row .xf-new { opacity: 0; transition: transform 0.55s var(--ease), opacity 0.55s var(--ease), border-color 0.3s, box-shadow 0.3s; }
+  .xf-row .xf-old { transform: translateX(-24px); }
+  .xf-row .xf-arrow { transform: scaleX(0.2); transform-origin: left; }
+  .xf-row .xf-new { transform: translateX(24px); }
+  .xf-row.in .xf-old { opacity: 1; transform: none; transition-delay: calc(var(--i, 0) * 120ms); }
+  .xf-row.in .xf-arrow { opacity: 1; transform: none; transition-delay: calc(var(--i, 0) * 120ms + 160ms); }
+  .xf-row.in .xf-new { opacity: 1; transform: none; transition-delay: calc(var(--i, 0) * 120ms + 320ms); }
+  .xf-row.in:hover .xf-side { transform: translateY(-4px); transition-delay: 0s; }
 
   /* Showcase */
   .show { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 28px; align-items: stretch; }
@@ -437,6 +537,10 @@
   .m-cta .txt { flex: 1; font-size: 13px; line-height: 1.3; color: var(--muted); }
   .m-cta .txt b { display: block; color: var(--fg); font-size: 15px; }
 
+  /* Card rules set their own transition, which would drop the reveal stagger: restore it while revealing. */
+  .reveal.in { transition-delay: calc(var(--i, 0) * 90ms); }
+  .reveal.in:hover { transition-delay: 0s; }
+
   /* Responsive */
   @media (max-width: 1100px) {
     .feat-wrap { grid-template-columns: minmax(0, 1fr); gap: 32px; }
@@ -454,8 +558,8 @@
     .hero-grid { grid-template-columns: minmax(0, 1fr); gap: 56px; }
     .hero-bg { background-position: center; opacity: 0.35; }
     .features, .qr, .needs, .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .step:nth-child(2)::after { display: none; }
+    .flow4 { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px 44px; }
+    .flow4 .fstep:nth-child(2)::after, .flow4 .fstep:nth-child(2) .farrow { display: none; }
     .show, .founding, .trial { grid-template-columns: minmax(0, 1fr); }
     .plans { grid-template-columns: minmax(0, 1fr); max-width: 520px; margin-inline: auto; }
     .plan.best { order: -1; }
@@ -465,10 +569,25 @@
     .container { padding-inline: 18px; }
     .hero { padding-top: 104px; padding-bottom: 72px; }
     .features, .qr, .needs { grid-template-columns: minmax(0, 1fr); }
-    .steps { grid-template-columns: minmax(0, 1fr); }
-    .step::after { display: none; }
-    .ps-row { grid-template-columns: minmax(0, 1fr); gap: 6px; }
-    .ps-arrow { transform: rotate(90deg); }
+    /* steps become a vertical timeline */
+    .flow4 { grid-template-columns: minmax(0, 1fr); gap: 18px; padding-left: 26px; }
+    .flow4::before { content: ''; position: absolute; left: 8px; top: 20px; bottom: 20px; width: 2px;
+      background: linear-gradient(180deg, transparent, var(--mint), transparent) 0 0 / 100% 40% no-repeat, rgba(66, 211, 160, 0.22);
+      animation: flowdown 3s linear infinite; }
+    @keyframes flowdown { from { background-position: 0 -40%; } to { background-position: 0 140%; } }
+    .fstep { min-height: 0; padding-bottom: 0; }
+    .fstep::after, .fstep .farrow { display: none !important; }
+    .fstep::before { content: ''; position: absolute; left: -24px; top: 30px; width: 12px; height: 12px; border-radius: 50%; background: var(--mint); box-shadow: 0 0 0 4px rgba(66, 211, 160, 0.18); }
+    .scene { height: 140px; }
+    .xf-labels { grid-template-columns: 1fr 1fr; }
+    .xf-labels .a { grid-column: 2; }
+    .xf { gap: 26px; }
+    .xf-row { grid-template-columns: minmax(0, 1fr); gap: 0; }
+    .xf-arrow { width: 2px; height: 22px; justify-self: center; background: linear-gradient(180deg, rgba(255, 138, 118, 0.4), var(--mint)); }
+    .xf-arrow::before { display: none; }
+    .xf-arrow::after { right: auto; left: 50%; top: auto; bottom: 0; margin-left: -4.5px; transform: rotate(135deg); animation-name: nudge-down; }
+    .xf-row .xf-arrow { transform: none; }
+    .xf-side { font-size: 15.5px; padding: 14px 16px; }
     .bar { grid-template-columns: minmax(0, 1fr) auto; gap: 8px 12px; }
     .bar .track { grid-column: 1 / -1; grid-row: 2; }
     .guarantee { flex-direction: column; text-align: center; }
@@ -486,7 +605,8 @@
     *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.2s !important; transition-delay: 0s !important; }
     .hero-bg { animation: none; }
     .reveal, .reveal-x { transform: none; }
-    .feature:hover, .plan:hover, .qr .card:hover, .need:hover, .btn:hover { transform: none; }
+    .feature:hover, .plan:hover, .qr .card:hover, .need:hover, .btn:hover, .fstep:hover, .xf-row:hover .xf-side { transform: none; }
+    .xf-row .xf-old, .xf-row .xf-arrow, .xf-row .xf-new { opacity: 1; transform: none; }
   }
 </style>
 </head>
@@ -529,6 +649,10 @@
   <symbol id="i-zap" viewBox="0 0 24 24"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></symbol>
   <symbol id="i-gift" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13M19 12v9H5v-9"/><path d="M12 8C10.5 4 7 4 7 6s2.5 2 5 2c2.5 0 5 0 5-2s-3.5-2-5 2"/></symbol>
   <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 11 12 3l9 8v10H3z"/><path d="M9 21v-6h6v6"/></symbol>
+  <symbol id="i-scan" viewBox="0 0 24 24"><path d="M3 8V5a2 2 0 0 1 2-2h3M16 3h3a2 2 0 0 1 2 2v3M21 16v3a2 2 0 0 1-2 2h-3M8 21H5a2 2 0 0 1-2-2v-3"/><path d="M7 12h10"/></symbol>
+  <symbol id="i-hourglass" viewBox="0 0 24 24"><path d="M6 2h12M6 22h12M7 2v4a5 5 0 0 0 10 0V2M7 22v-4a5 5 0 0 1 10 0v4"/></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h4"/></symbol>
+  <symbol id="i-pen" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></symbol>
   <symbol id="i-burger" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
 </svg>
 
@@ -677,17 +801,48 @@
   </section>
 
   <!-- How it works -->
-  <section id="how">
+  <section id="how" class="flow-sec">
     <div class="container">
       <div class="head center reveal">
         <span class="eyebrow">How it works</span>
-        <h2>Scan. Order. Cook. Bill.</h2>
+        <h2>Scan. Order. Cook. <span class="accent" style="font-style:normal">Bill.</span></h2>
+        <p class="lede">From table to kitchen to payment, in one flow.</p>
       </div>
-      <ol class="steps">
-        <li class="card step reveal"><span class="icon-box"><svg class="ic"><use href="#i-qr"/></svg></span><h3>Guest scans</h3><p>Each table has its own QR code.</p></li>
-        <li class="card step reveal"><span class="icon-box"><svg class="ic"><use href="#i-cart"/></svg></span><h3>Guest orders</h3><p>From their own phone, no app.</p></li>
-        <li class="card step reveal"><span class="icon-box"><svg class="ic"><use href="#i-chef"/></svg></span><h3>Kitchen cooks</h3><p>The order pops up with a sound.</p></li>
-        <li class="card step reveal"><span class="icon-box"><svg class="ic"><use href="#i-bill"/></svg></span><h3>You bill</h3><p>GST bill in a tap, paid by UPI.</p></li>
+      <ol class="flow4">
+        <li class="card fstep reveal">
+          <div class="fstep-top"><span class="fnum">01</span><span class="icon-box"><svg class="ic"><use href="#i-scan"/></svg></span></div>
+          <h3>Guest scans</h3><p>Each table has its own QR code.</p>
+          <div class="scene" aria-hidden="true"><div class="tent"><b>QRenvo</b><svg viewBox="0 0 29 29" aria-hidden="true"><g fill="#0b1d16"><path d="M1 1h7v7H1zM21 1h7v7h-7zM1 21h7v7H1z" fill="none" stroke="#0b1d16" stroke-width="1.6"/><rect x="3" y="3" width="3" height="3"/><rect x="23" y="3" width="3" height="3"/><rect x="3" y="23" width="3" height="3"/><rect x="10" y="1" width="2" height="2"/><rect x="14" y="2" width="2" height="3"/><rect x="11" y="5" width="3" height="2"/><rect x="17" y="1" width="2" height="2"/><rect x="10" y="9" width="2" height="2"/><rect x="13" y="10" width="3" height="2"/><rect x="18" y="9" width="2" height="3"/><rect x="1" y="10" width="3" height="2"/><rect x="5" y="12" width="2" height="2"/><rect x="9" y="13" width="2" height="2"/><rect x="21" y="10" width="2" height="2"/><rect x="25" y="11" width="3" height="2"/><rect x="12" y="14" width="2" height="3"/><rect x="15" y="15" width="3" height="2"/><rect x="20" y="14" width="2" height="2"/><rect x="23" y="15" width="3" height="2"/><rect x="2" y="15" width="2" height="2"/><rect x="6" y="16" width="2" height="2"/><rect x="10" y="18" width="2" height="2"/><rect x="14" y="19" width="2" height="2"/><rect x="18" y="18" width="3" height="2"/><rect x="22" y="19" width="2" height="2"/><rect x="25" y="18" width="3" height="3"/><rect x="11" y="22" width="2" height="3"/><rect x="15" y="23" width="3" height="2"/><rect x="20" y="22" width="2" height="2"/><rect x="23" y="23" width="2" height="2"/><rect x="26" y="25" width="2" height="3"/><rect x="12" y="26" width="3" height="2"/><rect x="18" y="26" width="2" height="2"/><rect x="21" y="25" width="2" height="3"/></g></svg><small>Scan to order</small><i>Table 5</i></div></div>
+          <span class="farrow" aria-hidden="true"><svg class="ic"><use href="#i-arrow"/></svg></span>
+        </li>
+        <li class="card fstep reveal">
+          <div class="fstep-top"><span class="fnum">02</span><span class="icon-box"><svg class="ic"><use href="#i-phone"/></svg></span></div>
+          <h3>Guest orders</h3><p>From their own phone, no app.</p>
+          <div class="scene" aria-hidden="true"><div class="mini-phone"><div class="sc">
+            <div class="tabs"><span>Starters</span><span>Mains</span></div>
+            <div class="dish"><img src="/img/thumb-paneer-tikka.jpg" alt="" width="48" height="48" loading="lazy"><div><b>Paneer Tikka</b>₹240<br><span class="add">Add +</span></div></div>
+            <div class="dish"><img src="/img/thumb-dal-makhani.jpg" alt="" width="48" height="48" loading="lazy"><div><b>Dal Makhani</b>₹220</div></div>
+          </div></div></div>
+          <span class="farrow" aria-hidden="true"><svg class="ic"><use href="#i-arrow"/></svg></span>
+        </li>
+        <li class="card fstep reveal">
+          <div class="fstep-top"><span class="fnum">03</span><span class="icon-box"><svg class="ic"><use href="#i-chef"/></svg></span></div>
+          <h3>Kitchen cooks</h3><p>The order pops up with a sound.</p>
+          <div class="scene" aria-hidden="true"><div class="kds">
+            <div class="k-h">New order <span class="ring"></span></div>
+            <ul><li>2 × Paneer Tikka</li><li>1 × Dal Makhani</li><li>4 × Butter Naan</li></ul>
+            <div class="k-t"><small>1 min</small><span>Table 5</span></div>
+          </div></div>
+          <span class="farrow" aria-hidden="true"><svg class="ic"><use href="#i-arrow"/></svg></span>
+        </li>
+        <li class="card fstep reveal">
+          <div class="fstep-top"><span class="fnum">04</span><span class="icon-box"><svg class="ic"><use href="#i-bill"/></svg></span></div>
+          <h3>You bill</h3><p>GST bill in a tap, paid by UPI.</p>
+          <div class="scene" aria-hidden="true">
+            <div class="pay"><div class="sc"><span class="ok"><svg class="ic"><use href="#i-check"/></svg></span><small>Paid by UPI</small><b>₹1,197</b><small>GST bill ready</small></div></div>
+            <div class="slip"><b>TAX INVOICE</b><div><span>Subtotal</span><span>1,140</span></div><div><span>GST 5%</span><span>57</span></div><div class="tot"><span>Total</span><span>1,197</span></div></div>
+          </div>
+        </li>
       </ol>
     </div>
   </section>
@@ -696,14 +851,18 @@
   <section aria-labelledby="ps-title">
     <div class="container">
       <div class="head center reveal">
-        <span class="eyebrow">Rush hour, fixed</span>
-        <h2 id="ps-title">Before and after QRenvo</h2>
+        <span class="eyebrow">The problem &amp; solution</span>
+        <h2 id="ps-title">Before and after <span class="accent" style="font-style:normal">QRenvo</span></h2>
+        <p class="lede">Less waiting. Fewer mistakes. More tables served.</p>
       </div>
-      <div class="ps">
-        <div class="ps-row reveal-x"><div class="ps-old"><svg class="ic"><use href="#i-x"/></svg>10 min wait to order</div><svg class="ic ps-arrow"><use href="#i-arrow"/></svg><div class="ps-new"><svg class="ic"><use href="#i-check"/></svg>Order on sitting down</div></div>
-        <div class="ps-row reveal-x"><div class="ps-old"><svg class="ic"><use href="#i-x"/></svg>Misread paper slips</div><svg class="ic ps-arrow"><use href="#i-arrow"/></svg><div class="ps-new"><svg class="ic"><use href="#i-check"/></svg>Exact order on screen</div></div>
-        <div class="ps-row reveal-x"><div class="ps-old"><svg class="ic"><use href="#i-x"/></svg>Reprint menu for prices</div><svg class="ic ps-arrow"><use href="#i-arrow"/></svg><div class="ps-new"><svg class="ic"><use href="#i-check"/></svg>Change from your phone</div></div>
-        <div class="ps-row reveal-x"><div class="ps-old"><svg class="ic"><use href="#i-x"/></svg>Bills added by hand</div><svg class="ic ps-arrow"><use href="#i-arrow"/></svg><div class="ps-new"><svg class="ic"><use href="#i-check"/></svg>One-tap GST bill</div></div>
+      <div class="xf-wrap">
+        <div class="xf-labels reveal" aria-hidden="true"><span class="b">Before</span><span class="a">After</span></div>
+        <div class="xf">
+          <div class="xf-row" tabindex="0"><div class="xf-side xf-old"><span class="xf-ic"><svg class="ic"><use href="#i-hourglass"/></svg></span>10 min wait to order</div><span class="xf-arrow" aria-label="becomes"></span><div class="xf-side xf-new"><span class="xf-ic"><svg class="ic"><use href="#i-check"/></svg></span>Order on sitting down</div></div>
+          <div class="xf-row" tabindex="0"><div class="xf-side xf-old"><span class="xf-ic"><svg class="ic"><use href="#i-file"/></svg></span>Misread paper slips</div><span class="xf-arrow" aria-label="becomes"></span><div class="xf-side xf-new"><span class="xf-ic"><svg class="ic"><use href="#i-monitor"/></svg></span>Exact order on screen</div></div>
+          <div class="xf-row" tabindex="0"><div class="xf-side xf-old"><span class="xf-ic"><svg class="ic"><use href="#i-phone"/></svg></span>Reprint menu for prices</div><span class="xf-arrow" aria-label="becomes"></span><div class="xf-side xf-new"><span class="xf-ic"><svg class="ic"><use href="#i-phone"/></svg></span>Change from your phone</div></div>
+          <div class="xf-row" tabindex="0"><div class="xf-side xf-old"><span class="xf-ic"><svg class="ic"><use href="#i-pen"/></svg></span>Bills added by hand</div><span class="xf-arrow" aria-label="becomes"></span><div class="xf-side xf-new"><span class="xf-ic"><svg class="ic"><use href="#i-rupee"/></svg></span>One-tap GST bill</div></div>
+        </div>
       </div>
     </div>
   </section>
@@ -1012,7 +1171,7 @@
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') setMenu(false); });
 
   // Stagger index for reveal children that sit together in a grid/list.
-  document.querySelectorAll('.features, .steps, .ps, .stats, .plans, .qr, .needs, .faq').forEach(function (group) {
+  document.querySelectorAll('.features, .flow4, .xf, .stats, .plans, .qr, .needs, .faq').forEach(function (group) {
     Array.prototype.forEach.call(group.children, function (child, i) { child.style.setProperty('--i', String(i)); });
   });
 
@@ -1034,13 +1193,16 @@
   }
 
   // Scroll reveal, chart/bar animation and counters.
-  var observed = document.querySelectorAll('.reveal, .reveal-x, .stage, .bars, .anywhere');
+  var observed = document.querySelectorAll('.reveal, .reveal-x, .xf-row, .stage, .bars, .anywhere');
   if ('IntersectionObserver' in window) {
     var io = new IntersectionObserver(function (entries) {
       entries.forEach(function (entry) {
         if (!entry.isIntersecting) return;
         entry.target.classList.add('in');
         entry.target.querySelectorAll('[data-count]').forEach(countUp);
+        // Once revealed, drop the stagger so hover reacts at once.
+        var el = entry.target;
+        setTimeout(function () { el.style.setProperty('--i', '0'); }, 1600);
         io.unobserve(entry.target);
       });
     }, { threshold: 0.18, rootMargin: '0px 0px -40px 0px' });

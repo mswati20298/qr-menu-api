@@ -55,6 +55,22 @@ public class RestaurantService(AppDbContext db, IPasswordHasher passwordHasher, 
             restaurant.InvoicePrefix = request.InvoicePrefix.Trim().ToUpperInvariant();
         }
 
+        // Older clients don't send these: leave them as they are.
+        if (request.RequireTableQr is not null)
+        {
+            restaurant.RequireTableQr = request.RequireTableQr.Value;
+        }
+
+        if (request.QrSessionHours is not null)
+        {
+            restaurant.QrSessionHours = Math.Clamp(request.QrSessionHours.Value, 1, 12);
+        }
+
+        if (request.AllowLinkTakeaway is not null)
+        {
+            restaurant.AllowLinkTakeaway = request.AllowLinkTakeaway.Value;
+        }
+
         restaurant.UpiId = string.IsNullOrWhiteSpace(request.UpiId) ? null : request.UpiId.Trim();
         restaurant.UpiPayeeName = restaurant.UpiId is null || string.IsNullOrWhiteSpace(request.UpiPayeeName)
             ? null
@@ -248,5 +264,6 @@ public class RestaurantService(AppDbContext db, IPasswordHasher passwordHasher, 
         r.ShowWelcomeMessage, r.WelcomeMessage, r.ThemeColor,
         r.GstNumber, r.InvoicePrefix, r.UpiId, r.UpiPayeeName, r.KitchenPinHash is not null,
         r.Subdomain, MenuLinks.MenuUrl(_site, r.Slug, r.Subdomain), _site.SubdomainsEnabled,
-        _site.SubdomainsEnabled ? _site.RootDomain : null);
+        _site.SubdomainsEnabled ? _site.RootDomain : null,
+        r.RequireTableQr, r.QrSessionHours, r.AllowLinkTakeaway);
 }

@@ -32,7 +32,10 @@ public record RestaurantDto(
     // False on deployments without restaurant subdomains (Demo, local).
     bool SubdomainsEnabled,
     // e.g. "qrenvo.com", to show the owner "saket.qrenvo.com" while typing.
-    string? RootDomain);
+    string? RootDomain,
+    bool RequireTableQr,
+    int QrSessionHours,
+    bool AllowLinkTakeaway);
 
 public record UpdateRestaurantRequest(
     string Name,
@@ -54,7 +57,10 @@ public record UpdateRestaurantRequest(
     string? GstNumber = null,
     string? InvoicePrefix = null,
     string? UpiId = null,
-    string? UpiPayeeName = null);
+    string? UpiPayeeName = null,
+    bool? RequireTableQr = null,
+    int? QrSessionHours = null,
+    bool? AllowLinkTakeaway = null);
 
 /// <summary>Pin = 4 to 8 digits, or null/empty to turn the separate kitchen login off.</summary>
 public record SetKitchenPinRequest(string? Pin);

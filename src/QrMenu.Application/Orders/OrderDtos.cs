@@ -49,13 +49,15 @@ public record StaffOrderRequest(
 
 public record OrderItemInput(Guid MenuItemId, Guid? VariantId, List<Guid>? AddOnIds, int Qty);
 
+/// <summary>TableSession = the token from scanning the table's QR; required when the restaurant only takes table-QR orders.</summary>
 public record CreateOrderRequest(
     string? TableNumber,
     string? CustomerName,
     string? CustomerPhone,
     string? Note,
     bool SkipServiceCharge,
-    List<OrderItemInput> Items);
+    List<OrderItemInput> Items,
+    string? TableSession = null);
 
 public record UpdateOrderStatusRequest(string Status);
 

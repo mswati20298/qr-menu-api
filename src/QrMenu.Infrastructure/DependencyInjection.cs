@@ -42,6 +42,8 @@ public static class DependencyInjection
 
         services.AddScoped<IPasswordHasher, BcryptPasswordHasher>();
         services.AddScoped<IJwtTokenService, JwtTokenService>();
+        services.AddSingleton<ITableSessionTokens, TableSessionTokens>();
+        services.AddScoped<TableAccessGuard>();
         services.AddScoped<IFileStorageService, LocalFileStorageService>();
         services.AddSingleton<IImageOptimizer, ImageOptimizer>();
         services.AddScoped<IQrPdfService, QrCardPdfService>();

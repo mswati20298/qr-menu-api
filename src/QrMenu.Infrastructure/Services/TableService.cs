@@ -40,7 +40,8 @@ public class TableService(AppDbContext db) : ITableService
             RestaurantId = restaurantId,
             Number = request.Number,
             Capacity = request.Capacity,
-            IsActive = true
+            IsActive = true,
+            QrCode = TableCodes.New()
         };
 
         db.Tables.Add(table);
@@ -77,6 +78,16 @@ public class TableService(AppDbContext db) : ITableService
         await db.SaveChangesAsync(ct);
     }
 
+    public async Task<TableDto> ResetQrCodeAsync(Guid restaurantId, Guid tableId, CancellationToken ct = default)
+    {
+        var table = await GetOwnedTableAsync(restaurantId, tableId, ct);
+        table.QrCode = TableCodes.New();
+        await db.SaveChangesAsync(ct);
+
+        var hasActiveOrder = await db.Orders.AnyAsync(o => o.TableId == tableId && ActiveStatuses.Contains(o.Status), ct);
+        return ToDto(table, hasActiveOrder);
+    }
+
     private async Task<Table> GetOwnedTableAsync(Guid restaurantId, Guid tableId, CancellationToken ct)
     {
         var table = await db.Tables.FirstOrDefaultAsync(t => t.Id == tableId, ct)
@@ -90,5 +101,5 @@ public class TableService(AppDbContext db) : ITableService
         return table;
     }
 
-    private static TableDto ToDto(Table t, bool hasActiveOrder) => new(t.Id, t.Number, t.Capacity, t.IsActive, hasActiveOrder);
+    private static TableDto ToDto(Table t, bool hasActiveOrder) => new(t.Id, t.Number, t.Capacity, t.IsActive, hasActiveOrder, t.QrCode);
 }

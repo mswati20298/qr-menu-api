@@ -27,6 +27,13 @@ public class TablesController(ITableService tableService) : OwnerControllerBase
         return Ok(result);
     }
 
+    /// <summary>New secret QR code for this table; its old printed QR stops working.</summary>
+    [HttpPost("{id:guid}/reset-code")]
+    public async Task<ActionResult<TableDto>> ResetCode(Guid id, CancellationToken ct)
+    {
+        return Ok(await tableService.ResetQrCodeAsync(RestaurantId, id, ct));
+    }
+
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
     {

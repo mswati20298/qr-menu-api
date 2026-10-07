@@ -43,7 +43,7 @@ public class StaffOrderTests
         return new Menu(restaurant, paneer, half, full, cheese, chaas);
     }
 
-    private static OrderService Orders(AppDbContext db) => new(db, Options.Create(new SubscriptionSettings()));
+    private static OrderService Orders(AppDbContext db) => new(db, Options.Create(new SubscriptionSettings()), TestGuards.TableAccess(db));
 
     [Fact]
     public async Task StaffOrder_IsPricedFromTheMenu_WithSizesAddOnsAndCharges()

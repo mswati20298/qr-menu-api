@@ -156,7 +156,7 @@ public class InvoiceAndKitchenTests
         var restaurant = AddRestaurant(db);
         var order = AddOrder(db, restaurant, "5", 200);
         await db.SaveChangesAsync();
-        var service = new OrderService(db, Options.Create(new SubscriptionSettings()));
+        var service = new OrderService(db, Options.Create(new SubscriptionSettings()), TestGuards.TableAccess(db));
 
         var claimed = await service.ClaimPublicPaymentAsync(restaurant.Slug, order.Id, new ClaimPaymentRequest("412345678901"));
         var confirmed = await service.UpdatePaymentAsync(restaurant.Id, order.Id, new UpdatePaymentRequest("Paid", "Upi", null));
@@ -175,7 +175,7 @@ public class InvoiceAndKitchenTests
         restaurant.UpiId = null;
         var order = AddOrder(db, restaurant, "5", 200);
         await db.SaveChangesAsync();
-        var service = new OrderService(db, Options.Create(new SubscriptionSettings()));
+        var service = new OrderService(db, Options.Create(new SubscriptionSettings()), TestGuards.TableAccess(db));
 
         var act = () => service.ClaimPublicPaymentAsync(restaurant.Slug, order.Id, new ClaimPaymentRequest(null));
 

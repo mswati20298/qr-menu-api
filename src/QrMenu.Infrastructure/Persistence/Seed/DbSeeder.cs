@@ -88,7 +88,7 @@ public static class DbSeeder
         };
 
         var tables = Enumerable.Range(1, 8)
-            .Select(n => new Table { Id = Guid.NewGuid(), RestaurantId = restaurant.Id, Number = n.ToString(), Capacity = n % 2 == 0 ? 4 : 2, IsActive = true })
+            .Select(n => new Table { Id = Guid.NewGuid(), RestaurantId = restaurant.Id, Number = n.ToString(), Capacity = n % 2 == 0 ? 4 : 2, IsActive = true, QrCode = QrMenu.Application.Tables.TableCodes.New() })
             .ToList();
 
         db.Restaurants.Add(restaurant);

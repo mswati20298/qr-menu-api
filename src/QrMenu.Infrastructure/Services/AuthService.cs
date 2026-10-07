@@ -49,6 +49,9 @@ public class AuthService(
             CreatedAt = DateTime.UtcNow,
             // New restaurants start on a free trial, then must buy a plan. 0 days = no trial: the trial ends
             // straight away, so the owner can set up the menu but customers cannot order until a plan is bought.
+            // New restaurants print their QR codes with the secret table code, so only table QR orders from day one.
+            RequireTableQr = true,
+            AllowLinkTakeaway = false,
             Plan = SubscriptionPlan.Trial,
             PlanName = "Trial",
             PlanExpiresAt = now.AddDays(Math.Max(0, trialDays))

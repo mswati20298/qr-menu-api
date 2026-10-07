@@ -27,7 +27,16 @@ public record PublicRestaurantDto(
     bool OrderingEnabled,
     // Null when the restaurant has not set up UPI payments.
     string? UpiId,
-    string? UpiPayeeName);
+    string? UpiPayeeName,
+    // Ordering needs a scanned table QR (a table session) / takeaway allowed from the link.
+    bool RequireTableQr,
+    bool AllowLinkTakeaway);
+
+/// <summary>Sent after scanning a table's QR: the table number and the secret code from the link.</summary>
+public record StartTableSessionRequest(string Table, string Code);
+
+/// <summary>Lets this phone order for the table until ExpiresAt (UTC).</summary>
+public record TableSessionDto(string Token, string TableNumber, DateTime ExpiresAt);
 
 public record PublicBackgroundDto(string ImageUrl, int Slots, bool IsDefault);
 

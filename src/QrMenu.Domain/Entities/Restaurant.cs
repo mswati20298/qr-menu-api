@@ -38,6 +38,14 @@ public class Restaurant
     public string? UpiId { get; set; }
     public string? UpiPayeeName { get; set; }
 
+    // Who may order from the guest menu.
+    /// <summary>On: only phones that scanned a table's QR (with its secret code) can order for a table.</summary>
+    public bool RequireTableQr { get; set; }
+    /// <summary>How long a scan lets that phone order, in hours (1-12).</summary>
+    public int QrSessionHours { get; set; } = 3;
+    /// <summary>Off: orders without a table (takeaway) are taken only at the counter.</summary>
+    public bool AllowLinkTakeaway { get; set; } = true;
+
     // Kitchen display login. Null = no separate kitchen login (the owner can still open the kitchen screen).
     public string? KitchenPinHash { get; set; }
     /// <summary>Goes up whenever the PIN changes, which signs every kitchen screen out.</summary>

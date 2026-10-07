@@ -29,6 +29,14 @@ public class PublicMenuController(
         return NoContent();
     }
 
+    /// <summary>Called when the menu is opened from a table's QR: checks its code, returns a table session.</summary>
+    [EnableRateLimiting(RateLimits.Public)]
+    [HttpPost("{slug}/table-session")]
+    public async Task<ActionResult<TableSessionDto>> StartTableSession(string slug, StartTableSessionRequest request, CancellationToken ct)
+    {
+        return Ok(await publicMenuService.StartTableSessionAsync(slug, request, ct));
+    }
+
     [EnableRateLimiting(RateLimits.Public)]
     [HttpPost("{slug}/requests")]
     public async Task<ActionResult<ServiceRequestDto>> RaiseServiceRequest(string slug, CreateServiceRequest request, CancellationToken ct)

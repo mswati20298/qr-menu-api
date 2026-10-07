@@ -6,16 +6,20 @@ using QrMenu.Infrastructure.Persistence;
 
 namespace QrMenu.Infrastructure.Services;
 
-public class ServiceRequestService(AppDbContext db) : IServiceRequestService
+public class ServiceRequestService(AppDbContext db, TableAccessGuard tableAccess) : IServiceRequestService
 {
     public async Task<ServiceRequestDto> CreatePublicAsync(string slug, CreateServiceRequest request, CancellationToken ct = default)
     {
         var restaurant = await db.Restaurants.FirstOrDefaultAsync(r => r.Slug == slug && r.IsActive, ct)
             ?? throw new NotFoundException("Restaurant not found.");
 
+        // Same rules as ordering: with "only table QR orders" on, the phone must have scanned the table's QR.
+        var tableNumber = await tableAccess.ResolveAsync(restaurant, request.TableNumber, request.TableSession, ct)
+            ?? throw new NotFoundException("Table not found.");
+
         // Only real, active tables can raise a request, so a made-up ?t= value can't spam the staff.
         var table = await db.Tables.FirstOrDefaultAsync(
-            t => t.RestaurantId == restaurant.Id && t.Number == request.TableNumber && t.IsActive, ct)
+            t => t.RestaurantId == restaurant.Id && t.Number == tableNumber && t.IsActive, ct)
             ?? throw new NotFoundException("Table not found.");
 
         var type = Enum.Parse<ServiceRequestType>(request.Type, ignoreCase: true);

@@ -11,11 +11,12 @@ public static class MenuLinks
             ? $"https://{subdomain}.{site.RootDomain.Trim().TrimStart('.')}"
             : $"{site.AppUrl.TrimEnd('/')}/m/{slug}";
 
-    /// <summary>The address printed on a table's QR card.</summary>
-    public static string TableUrl(SiteSettings site, string slug, string? subdomain, string tableNumber)
+    /// <summary>The address printed on a table's QR card: table number plus its secret code (k).</summary>
+    public static string TableUrl(SiteSettings site, string slug, string? subdomain, string tableNumber, string? code = null)
     {
         var menu = MenuUrl(site, slug, subdomain);
         var separator = site.SubdomainsEnabled && !string.IsNullOrWhiteSpace(subdomain) ? "/?t=" : "?t=";
-        return $"{menu}{separator}{Uri.EscapeDataString(tableNumber)}";
+        var key = string.IsNullOrWhiteSpace(code) ? string.Empty : $"&k={Uri.EscapeDataString(code)}";
+        return $"{menu}{separator}{Uri.EscapeDataString(tableNumber)}{key}";
     }
 }

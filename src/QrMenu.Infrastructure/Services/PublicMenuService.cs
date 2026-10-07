@@ -2,6 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using QrMenu.Application.Common;
 using QrMenu.Application.Common.Exceptions;
+using QrMenu.Application.Common.Interfaces;
+using QrMenu.Application.Tables;
 using QrMenu.Application.PublicMenu;
 using QrMenu.Application.Subscriptions;
 using QrMenu.Domain.Entities;
@@ -12,8 +14,28 @@ namespace QrMenu.Infrastructure.Services;
 public class PublicMenuService(
     AppDbContext db,
     IOptions<SubscriptionSettings> subscriptionOptions,
-    TimeProvider clock) : IPublicMenuService
+    TimeProvider clock,
+    ITableSessionTokens tableSessions) : IPublicMenuService
 {
+    public async Task<TableSessionDto> StartTableSessionAsync(string slug, StartTableSessionRequest request, CancellationToken ct = default)
+    {
+        var restaurant = await db.Restaurants.AsNoTracking().FirstOrDefaultAsync(r => r.Slug == slug && r.IsActive, ct)
+            ?? throw new NotFoundException("Restaurant not found.");
+
+        var number = request.Table?.Trim();
+        var table = await db.Tables.AsNoTracking().FirstOrDefaultAsync(
+            t => t.RestaurantId == restaurant.Id && t.Number == number && t.IsActive, ct);
+
+        if (table is null || !TableCodes.Matches(table.QrCode, request.Code))
+        {
+            throw new ForbiddenException("This QR code is no longer valid. Please ask the staff for help.", "table_qr_invalid");
+        }
+
+        var hours = Math.Clamp(restaurant.QrSessionHours, 1, 12);
+        var expires = clock.GetUtcNow().UtcDateTime.AddHours(hours);
+        return new TableSessionDto(tableSessions.Create(table.Id, table.QrCode, expires), table.Number, expires);
+    }
+
     public async Task<PublicMenuResponse> GetMenuAsync(string slug, CancellationToken ct = default)
     {
         var restaurant = await db.Restaurants
@@ -47,7 +69,9 @@ public class PublicMenuService(
             restaurant.ThemeColor,
             SubscriptionRules.CanTakeOrders(restaurant, subscriptionOptions.Value.GraceDays, DateTime.UtcNow),
             restaurant.UpiId,
-            restaurant.UpiPayeeName);
+            restaurant.UpiPayeeName,
+            restaurant.RequireTableQr,
+            restaurant.AllowLinkTakeaway);
 
         var categories = restaurant.Categories.Select(c => new PublicCategoryDto(
             c.Id, c.Name, c.SortOrder,

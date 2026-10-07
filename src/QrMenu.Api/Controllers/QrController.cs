@@ -27,15 +27,15 @@ public class QrController(
         }
 
         var tables = await tableService.GetAllAsync(RestaurantId, ct);
-        var tableNumbers = tables.Where(t => t.IsActive).Select(t => t.Number).ToList();
+        var activeTables = tables.Where(t => t.IsActive).ToList();
 
-        if (tableNumbers.Count == 0)
+        if (activeTables.Count == 0)
         {
             return BadRequest(new { message = "Add at least one table under Table Management before generating QR cards." });
         }
 
-        var cards = tableNumbers
-            .Select(n => (n, MenuLinks.TableUrl(_site, restaurant.Slug, restaurant.Subdomain, n)))
+        var cards = activeTables
+            .Select(t => (t.Number, MenuLinks.TableUrl(_site, restaurant.Slug, restaurant.Subdomain, t.Number, t.QrCode)))
             .ToList();
         var pdfBytes = qrPdfService.GenerateTableQrPdf(restaurant.Name, cards);
 
@@ -51,8 +51,10 @@ public class QrController(
             throw new NotFoundException("Restaurant not found.");
         }
 
+        var table = (await tableService.GetAllAsync(RestaurantId, ct)).FirstOrDefault(t => t.Number == tableNumber)
+            ?? throw new NotFoundException("Table not found.");
         var pngBytes = qrPdfService.GenerateTableQrPng(
-            MenuLinks.TableUrl(_site, restaurant.Slug, restaurant.Subdomain, tableNumber));
+            MenuLinks.TableUrl(_site, restaurant.Slug, restaurant.Subdomain, table.Number, table.QrCode));
 
         return File(pngBytes, "image/png");
     }

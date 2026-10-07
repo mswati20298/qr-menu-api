@@ -9,7 +9,10 @@ using QrMenu.Infrastructure.Persistence;
 
 namespace QrMenu.Infrastructure.Services;
 
-public class OrderService(AppDbContext db, IOptions<SubscriptionSettings> subscriptionOptions) : IOrderService
+public class OrderService(
+    AppDbContext db,
+    IOptions<SubscriptionSettings> subscriptionOptions,
+    TableAccessGuard tableAccess) : IOrderService
 {
     public async Task<OrderDto> CreatePublicOrderAsync(string slug, CreateOrderRequest request, CancellationToken ct = default)
     {
@@ -24,7 +27,10 @@ public class OrderService(AppDbContext db, IOptions<SubscriptionSettings> subscr
                 "ordering_unavailable");
         }
 
-        var order = await BuildOrderAsync(restaurant, request.TableNumber, request.CustomerName, request.CustomerPhone,
+        // Which table (if any) this phone may order for: a scanned table QR, or the link's rules.
+        var tableNumber = await tableAccess.ResolveAsync(restaurant, request.TableNumber, request.TableSession, ct);
+
+        var order = await BuildOrderAsync(restaurant, tableNumber, request.CustomerName, request.CustomerPhone,
             request.Note, request.SkipServiceCharge, request.Items, OrderStatus.Placed, OrderSource.Qr, ct);
         return ToDto(order);
     }

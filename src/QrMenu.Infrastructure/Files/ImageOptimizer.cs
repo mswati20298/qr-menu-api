@@ -24,7 +24,14 @@ public class ImageOptimizer : IImageOptimizer
 
     private static readonly SKSamplingOptions HighQuality = new(SKCubicResampler.Mitchell);
 
-    public Task<OptimizedImage> OptimizeAsync(Stream source, ImagePurpose purpose, CancellationToken ct = default)
+    public Task<OptimizedImage> OptimizeAsync(Stream source, ImagePurpose purpose, CancellationToken ct = default) =>
+        Task.FromResult(Process(source, MaxSide(purpose), JpegQuality, ct));
+
+    // Thumbnails are viewed small, so a slightly lower quality is invisible and saves more bytes.
+    public Task<OptimizedImage> ThumbnailAsync(Stream source, int maxSide, CancellationToken ct = default) =>
+        Task.FromResult(Process(source, maxSide, 75, ct));
+
+    private static OptimizedImage Process(Stream source, int maxSide, int quality, CancellationToken ct)
     {
         // Skia only reads what it recognises as an image, so a renamed text or script file is refused here.
         using var codec = SKCodec.Create(source)
@@ -54,7 +61,7 @@ public class ImageOptimizer : IImageOptimizer
         // Phones store photos sideways plus a "rotate me" flag; bake the rotation into the pixels.
         using var upright = ApplyOrientation(decoded, codec.EncodedOrigin);
 
-        var (width, height) = FitWithin(upright.Width, upright.Height, MaxSide(purpose));
+        var (width, height) = FitWithin(upright.Width, upright.Height, maxSide);
         using var resized = width == upright.Width && height == upright.Height
             ? upright.Copy()
             : upright.Resize(new SKImageInfo(width, height, SKColorType.Rgba8888, SKAlphaType.Premul), HighQuality);
@@ -67,11 +74,11 @@ public class ImageOptimizer : IImageOptimizer
         {
             // Logos with a see-through background stay PNG so the transparency is kept.
             using var png = image.Encode(SKEncodedImageFormat.Png, 100);
-            return Task.FromResult(new OptimizedImage(png.ToArray(), ".png", "image/png", width, height));
+            return new OptimizedImage(png.ToArray(), ".png", "image/png", width, height);
         }
 
-        using var jpeg = image.Encode(SKEncodedImageFormat.Jpeg, JpegQuality);
-        return Task.FromResult(new OptimizedImage(jpeg.ToArray(), ".jpg", "image/jpeg", width, height));
+        using var jpeg = image.Encode(SKEncodedImageFormat.Jpeg, quality);
+        return new OptimizedImage(jpeg.ToArray(), ".jpg", "image/jpeg", width, height);
     }
 
     private static (int Width, int Height) FitWithin(int width, int height, int maxSide)

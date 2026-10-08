@@ -6,9 +6,10 @@ COPY src/QrMenu.Domain/QrMenu.Domain.csproj src/QrMenu.Domain/
 COPY src/QrMenu.Application/QrMenu.Application.csproj src/QrMenu.Application/
 COPY src/QrMenu.Infrastructure/QrMenu.Infrastructure.csproj src/QrMenu.Infrastructure/
 COPY src/QrMenu.Api/QrMenu.Api.csproj src/QrMenu.Api/
-RUN dotnet restore src/QrMenu.Api/QrMenu.Api.csproj
+RUN dotnet restore src/QrMenu.Api/QrMenu.Api.csproj -r linux-x64
 COPY src ./src
-RUN dotnet publish src/QrMenu.Api/QrMenu.Api.csproj -c Release -o /app --no-restore
+# ReadyToRun: compiled ahead of time, so the API answers quickly right after a deploy instead of compiling on first use.
+RUN dotnet publish src/QrMenu.Api/QrMenu.Api.csproj -c Release -o /app --no-restore -r linux-x64 --self-contained false -p:PublishReadyToRun=true
 
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
 # Fonts for QuestPDF invoices and QR cards.

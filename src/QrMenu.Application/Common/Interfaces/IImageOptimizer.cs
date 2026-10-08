@@ -24,4 +24,7 @@ public interface IImageOptimizer
 {
     /// <exception cref="Exceptions.ConflictException">The file is not a readable JPEG, PNG or WEBP image.</exception>
     Task<OptimizedImage> OptimizeAsync(Stream source, ImagePurpose purpose, CancellationToken ct = default);
+
+    /// <summary>A small copy of an already stored image (longest side at most <paramref name="maxSide"/>), for lists.</summary>
+    Task<OptimizedImage> ThumbnailAsync(Stream source, int maxSide, CancellationToken ct = default);
 }

@@ -150,6 +150,17 @@ public class DemoResetService(
         {
             return;
         }
+        foreach (var thumbs in Directory.EnumerateDirectories(folder, "_w*"))
+        {
+            try
+            {
+                Directory.Delete(thumbs, recursive: true);
+            }
+            catch (IOException ex)
+            {
+                logger.LogWarning(ex, "Could not delete {Folder} during the demo reset", thumbs);
+            }
+        }
         foreach (var file in Directory.EnumerateFiles(folder))
         {
             try

@@ -13,7 +13,9 @@ using QrMenu.Api.Filters;
 using QrMenu.Api.Middleware;
 using QrMenu.Application.Auth;
 using QrMenu.Application.Common.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using QrMenu.Application.Platform;
+using QrMenu.Application.PublicMenu;
 using QrMenu.Infrastructure;
 using QrMenu.Infrastructure.Auth;
 using QrMenu.Infrastructure.Persistence;
@@ -176,5 +178,25 @@ app.UseAuthorization();
 app.UseRateLimiter();
 
 app.MapControllers();
+
+// Warm-up: the first menu request after a start compiles the code paths and EF queries, which can take
+// several seconds. Do that once in the background now, so the first guest after a deploy does not wait.
+app.Lifetime.ApplicationStarted.Register(() => _ = Task.Run(async () =>
+{
+    try
+    {
+        using var scope = app.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var slug = await db.Restaurants.AsNoTracking().Where(r => r.IsActive).Select(r => r.Slug).FirstOrDefaultAsync();
+        if (slug is not null)
+        {
+            await scope.ServiceProvider.GetRequiredService<IPublicMenuService>().GetMenuAsync(slug);
+        }
+    }
+    catch (Exception ex)
+    {
+        app.Logger.LogWarning(ex, "Warm-up request failed");
+    }
+}));
 
 app.Run();

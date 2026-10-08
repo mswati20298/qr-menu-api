@@ -38,7 +38,11 @@ public class PublicMenuService(
 
     public async Task<PublicMenuResponse> GetMenuAsync(string slug, CancellationToken ct = default)
     {
+        // Split query: categories, dishes, sizes and add-ons as separate small queries. As one query the rows multiply
+        // (every dish x every size x every add-on) and a normal menu took seconds, sometimes timing out.
         var restaurant = await db.Restaurants
+            .AsNoTracking()
+            .AsSplitQuery()
             .Include(r => r.Categories.OrderBy(c => c.SortOrder))
             .ThenInclude(c => c.MenuItems.OrderBy(i => i.SortOrder))
             .ThenInclude(i => i.Variants.OrderBy(v => v.SortOrder))

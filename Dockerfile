@@ -6,7 +6,7 @@ COPY src/QrMenu.Domain/QrMenu.Domain.csproj src/QrMenu.Domain/
 COPY src/QrMenu.Application/QrMenu.Application.csproj src/QrMenu.Application/
 COPY src/QrMenu.Infrastructure/QrMenu.Infrastructure.csproj src/QrMenu.Infrastructure/
 COPY src/QrMenu.Api/QrMenu.Api.csproj src/QrMenu.Api/
-RUN dotnet restore src/QrMenu.Api/QrMenu.Api.csproj -r linux-x64
+RUN dotnet restore src/QrMenu.Api/QrMenu.Api.csproj -r linux-x64 -p:PublishReadyToRun=true
 COPY src ./src
 # ReadyToRun: compiled ahead of time, so the API answers quickly right after a deploy instead of compiling on first use.
 RUN dotnet publish src/QrMenu.Api/QrMenu.Api.csproj -c Release -o /app --no-restore -r linux-x64 --self-contained false -p:PublishReadyToRun=true

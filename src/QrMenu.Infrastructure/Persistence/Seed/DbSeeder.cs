@@ -36,6 +36,7 @@ public static class DbSeeder
             IsServiceChargeEnabled = false,
             ServiceChargePercentage = 10.00m,
             ShowWelcomeMessage = true,
+            AllowLinkTakeaway = false,
             WelcomeMessage = "Explore our fresh and delicious menu."
         };
 

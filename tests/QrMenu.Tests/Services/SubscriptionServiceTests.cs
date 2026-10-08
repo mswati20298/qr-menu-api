@@ -28,6 +28,8 @@ public class SubscriptionServiceTests
             Task.FromResult("order_test");
         public bool IsPaymentSignatureValid(string orderId, string paymentId, string signature) => true;
         public bool IsWebhookSignatureValid(string body, string? signature) => true;
+        public Task<GatewayCheckResult> CheckCredentialsAsync(string keyId, string keySecret, CancellationToken ct = default) =>
+            Task.FromResult(new GatewayCheckResult(true, "ok"));
     }
 
     private static SubscriptionService CreateService(out AppDbContext db, out Restaurant restaurant, out PricingPlan monthly, out PricingPlan yearly)

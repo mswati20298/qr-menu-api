@@ -22,6 +22,7 @@ using QrMenu.Infrastructure.Files;
 using QrMenu.Infrastructure.Payments;
 using QrMenu.Infrastructure.Pdf;
 using QrMenu.Infrastructure.Persistence;
+using QrMenu.Infrastructure.Security;
 using QrMenu.Infrastructure.Services;
 
 namespace QrMenu.Infrastructure;
@@ -38,6 +39,8 @@ public static class DependencyInjection
         services.Configure<SubscriptionSettings>(configuration.GetSection("Subscription"));
         services.AddSingleton(TimeProvider.System);
         services.Configure<RazorpaySettings>(configuration.GetSection("Razorpay"));
+        services.AddSingleton<SecretProtector>();
+        services.AddSingleton<IntegrationKeyStore>();
         services.AddHttpClient<IPaymentGateway, RazorpayGateway>(client => client.Timeout = TimeSpan.FromSeconds(30));
 
         services.AddScoped<IPasswordHasher, BcryptPasswordHasher>();
@@ -49,6 +52,10 @@ public static class DependencyInjection
         services.AddScoped<IQrPdfService, QrCardPdfService>();
         services.AddScoped<IInvoicePdfService, InvoicePdfService>();
         services.AddHttpClient<IMenuScanService, GeminiMenuScanService>(client => client.Timeout = TimeSpan.FromSeconds(120));
+
+        services.AddScoped<IPlatformKeysService, PlatformKeysService>();
+        services.AddScoped<IDemoResetService, DemoResetService>();
+        services.AddHostedService<DemoAutoResetWorker>();
 
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IRestaurantService, RestaurantService>();

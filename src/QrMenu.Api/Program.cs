@@ -13,6 +13,7 @@ using QrMenu.Api.Filters;
 using QrMenu.Api.Middleware;
 using QrMenu.Application.Auth;
 using QrMenu.Application.Common.Interfaces;
+using QrMenu.Application.Platform;
 using QrMenu.Infrastructure;
 using QrMenu.Infrastructure.Auth;
 using QrMenu.Infrastructure.Persistence;
@@ -138,12 +139,17 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     // Sample restaurant only where asked for (local development and the Demo deployment), never in Prod.
-    await DbSeeder.SeedAsync(db, builder.Configuration.GetValue("Seed:DemoData", false));
+    await DbSeeder.SeedAsync(
+        db,
+        builder.Configuration.GetValue("Seed:DemoData", false),
+        scope.ServiceProvider.GetRequiredService<IFileStorageService>());
     await SuperAdminSeeder.SeedAsync(
         db,
         builder.Configuration,
         scope.ServiceProvider.GetRequiredService<IPasswordHasher>(),
         scope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("SuperAdminSeeder"));
+    // Payment and AI keys saved in the super admin panel.
+    await scope.ServiceProvider.GetRequiredService<IPlatformKeysService>().LoadAsync();
 }
 
 if (forwardedHeadersEnabled)

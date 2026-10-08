@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Wipes the demo (database QrMenuDemo + its photos) and starts it fresh with the sample restaurant.
-# Prod is never touched. Cron (as root):  0 4 * * *  /opt/qrenvo/qr-menu-api/deploy/reset-demo.sh
+# Prod is never touched. EMERGENCY ONLY: the normal reset is Super admin -> Settings -> Reset demo, which keeps
+# plans, settings and the keys saved in the panel. This script drops all of that too. Do not put it in cron.
 set -euo pipefail
 cd "$(dirname "$0")"
 set -a; . ./.env; set +a

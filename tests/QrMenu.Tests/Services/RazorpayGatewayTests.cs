@@ -1,9 +1,11 @@
 using System.Security.Cryptography;
 using System.Text;
 using FluentAssertions;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using QrMenu.Infrastructure.Payments;
+using QrMenu.Infrastructure.Security;
 using Xunit;
 
 namespace QrMenu.Tests.Services;
@@ -12,7 +14,9 @@ public class RazorpayGatewayTests
 {
     private static RazorpayGateway Create(string webhookSecret = "whsec") => new(
         new HttpClient(),
-        Options.Create(new RazorpaySettings { KeyId = "rzp_test_key", KeySecret = "secret", WebhookSecret = webhookSecret }),
+        new IntegrationKeyStore(
+            Options.Create(new RazorpaySettings { KeyId = "rzp_test_key", KeySecret = "secret", WebhookSecret = webhookSecret }),
+            new ConfigurationBuilder().Build()),
         NullLogger<RazorpayGateway>.Instance);
 
     private static string Sign(string payload, string secret) =>

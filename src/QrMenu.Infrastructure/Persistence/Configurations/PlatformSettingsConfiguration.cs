@@ -13,5 +13,9 @@ public class PlatformSettingsConfiguration : IEntityTypeConfiguration<PlatformSe
         builder.Property(s => s.Id).ValueGeneratedNever();
         builder.Property(s => s.UpdatedBy).HasMaxLength(256);
         builder.Property(s => s.UpdatedAt).HasDefaultValueSql("SYSUTCDATETIME()");
+        builder.Property(s => s.RazorpayKeyId).HasMaxLength(64);
+        builder.Property(s => s.RazorpayKeySecretEncrypted).HasMaxLength(512);
+        builder.Property(s => s.RazorpayWebhookSecretEncrypted).HasMaxLength(512);
+        builder.Property(s => s.GeminiApiKeyEncrypted).HasMaxLength(512);
     }
 }

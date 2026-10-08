@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
     <ProjectReference Include="..\QrMenu.Domain\QrMenu.Domain.csproj" />
@@ -22,6 +22,11 @@
     <PackageReference Include="SkiaSharp" Version="4.153.1" />
     <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="4.153.1" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.2.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Photos for the sample restaurant (Demo and local development). -->
+    <EmbeddedResource Include="Persistence\Seed\Photos\*.jpg" LogicalName="SeedPhotos.%(Filename)%(Extension)" />
   </ItemGroup>
 
   <PropertyGroup>

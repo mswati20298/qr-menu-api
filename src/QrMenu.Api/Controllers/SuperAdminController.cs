@@ -16,6 +16,8 @@ public class SuperAdminController(
     ISubscriptionService subscriptionService,
     IPricingPlanService pricingPlanService,
     IPlatformSettingsService platformSettingsService,
+    IPlatformKeysService platformKeysService,
+    IDemoResetService demoResetService,
     ILogger<SuperAdminController> logger) : ControllerBase
 {
     [HttpGet("stats")]
@@ -140,6 +142,58 @@ public class SuperAdminController(
         var result = await platformSettingsService.UpdateAsync(request, AdminEmail, ct);
         logger.LogInformation("Super admin {Email} set the free trial to {TrialDays} days", AdminEmail, result.TrialDays);
         return Ok(result);
+    }
+
+    // Payment and AI keys. Secrets go in, but never come back out (only "set", the source and the last 4 characters).
+
+    [HttpGet("settings/keys")]
+    public async Task<ActionResult<PlatformKeysDto>> GetKeys(CancellationToken ct)
+    {
+        return Ok(await platformKeysService.GetAsync(ct));
+    }
+
+    [HttpPut("settings/keys")]
+    public async Task<ActionResult<PlatformKeysDto>> UpdateKeys(UpdatePlatformKeysRequest request, CancellationToken ct)
+    {
+        var result = await platformKeysService.UpdateAsync(request, AdminEmail, ct);
+        var changed = new[]
+        {
+            request.RazorpayKeyId is null ? null : "Razorpay key id",
+            request.RazorpayKeySecret is null ? null : "Razorpay key secret",
+            request.RazorpayWebhookSecret is null ? null : "Razorpay webhook secret",
+            request.GeminiApiKey is null ? null : "Gemini API key"
+        }.Where(k => k is not null);
+        logger.LogInformation("Super admin {Email} changed: {Keys}", AdminEmail, string.Join(", ", changed));
+        return Ok(result);
+    }
+
+    [HttpPost("settings/keys/test-razorpay")]
+    public async Task<ActionResult<KeyCheckResultDto>> TestRazorpay(TestRazorpayKeysRequest request, CancellationToken ct)
+    {
+        return Ok(await platformKeysService.TestRazorpayAsync(request, ct));
+    }
+
+    // Demo deployment: wipe and re-seed the sample data, by hand or every N days.
+
+    [HttpGet("demo")]
+    public async Task<ActionResult<DemoStatusDto>> GetDemo(CancellationToken ct)
+    {
+        return Ok(await demoResetService.GetStatusAsync(ct));
+    }
+
+    [HttpPut("demo")]
+    public async Task<ActionResult<DemoStatusDto>> UpdateDemo(UpdateDemoSettingsRequest request, CancellationToken ct)
+    {
+        var result = await demoResetService.UpdateSettingsAsync(request, AdminEmail, ct);
+        logger.LogInformation("Super admin {Email} set the demo auto reset to {Days} days", AdminEmail, request.AutoResetDays);
+        return Ok(result);
+    }
+
+    [HttpPost("demo/reset")]
+    public async Task<ActionResult<DemoStatusDto>> ResetDemo(CancellationToken ct)
+    {
+        logger.LogInformation("Super admin {Email} is resetting the demo data", AdminEmail);
+        return Ok(await demoResetService.ResetAsync(AdminEmail, ct));
     }
 
     private string AdminEmail => User.FindFirst(ClaimTypes.Email)?.Value ?? "superadmin";

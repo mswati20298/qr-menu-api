@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using QrMenu.Application.Common;
 using QrMenu.Application.Common.Exceptions;
 using QrMenu.Application.Common.Interfaces;
 using QrMenu.Application.Subscriptions;
@@ -80,7 +81,81 @@ public class SuperAdminService(
         var grace = await FilterByPlan(db.Restaurants, "grace", now).CountAsync(ct);
         var stopped = await FilterByPlan(db.Restaurants, "stopped", now).CountAsync(ct);
 
-        return new SuperAdminStatsDto(total, active, total - active, recent, orders, recentOrders, trial, paid, expiring, grace, stopped);
+        // --- Money and activity, counted in Indian calendar days ---
+        var today = IndianTime.DateOf(now);
+        var firstDay = today.AddDays(-29);
+        var monthStart = new DateOnly(today.Year, today.Month, 1);
+        var firstMonth = monthStart.AddMonths(-11);
+        var since12Months = IndianTime.StartOfDayUtc(firstMonth);
+        var since30Days = IndianTime.StartOfDayUtc(firstDay);
+
+        var payments = await db.SubscriptionEvents.AsNoTracking()
+            .Where(e => e.Action == SubscriptionAction.PaymentRecorded && e.Amount != null && e.Amount > 0)
+            .Select(e => new { e.RestaurantId, e.PlanName, Amount = e.Amount!.Value, e.PaymentMethod, e.CreatedAt })
+            .ToListAsync(ct);
+        var allTime = payments.Sum(p => p.Amount);
+        var paymentsByDay = payments.Where(p => p.CreatedAt >= since12Months).GroupBy(p => IndianTime.DateOf(p.CreatedAt))
+            .ToDictionary(g => g.Key, g => (Revenue: g.Sum(p => p.Amount), Count: g.Count()));
+
+        var signupsByDay = (await db.Restaurants.AsNoTracking().Where(r => r.CreatedAt >= since30Days).Select(r => r.CreatedAt).ToListAsync(ct))
+            .GroupBy(IndianTime.DateOf).ToDictionary(g => g.Key, g => g.Count());
+
+        var orders30 = await db.Orders.AsNoTracking().Where(o => o.CreatedAt >= since30Days)
+            .Select(o => new { o.RestaurantId, o.CreatedAt }).ToListAsync(ct);
+        var ordersByDay = orders30.GroupBy(o => IndianTime.DateOf(o.CreatedAt)).ToDictionary(g => g.Key, g => g.ToList());
+
+        (decimal Revenue, int Count) PaidOn(DateOnly day) => paymentsByDay.GetValueOrDefault(day);
+        int OrdersOn(DateOnly day) => ordersByDay.GetValueOrDefault(day)?.Count ?? 0;
+
+        var last30 = Enumerable.Range(0, 30).Select(i => firstDay.AddDays(i))
+            .Select(d => new PlatformDayDto(d, PaidOn(d).Revenue, PaidOn(d).Count, signupsByDay.GetValueOrDefault(d), OrdersOn(d)))
+            .ToList();
+
+        var last12 = Enumerable.Range(0, 12).Select(i => firstMonth.AddMonths(i))
+            .Select(m =>
+            {
+                var inMonth = paymentsByDay.Where(kv => kv.Key.Year == m.Year && kv.Key.Month == m.Month).Select(kv => kv.Value).ToList();
+                return new PlatformMonthDto($"{m:yyyy-MM}", inMonth.Sum(v => v.Revenue), inMonth.Sum(v => v.Count));
+            })
+            .ToList();
+
+        var names = await db.Restaurants.AsNoTracking()
+            .Select(r => new { r.Id, r.Name, r.LogoUrl })
+            .ToDictionaryAsync(r => r.Id, ct);
+
+        var recentPayments = payments.OrderByDescending(p => p.CreatedAt).Take(6)
+            .Where(p => names.ContainsKey(p.RestaurantId))
+            .Select(p => new RecentPaymentDto(p.RestaurantId, names[p.RestaurantId].Name, names[p.RestaurantId].LogoUrl,
+                p.PlanName, p.Amount, p.PaymentMethod?.ToString(), p.CreatedAt))
+            .ToList();
+
+        var soon = now.AddDays(7);
+        var renewals = await db.Restaurants.AsNoTracking()
+            .Where(r => r.IsActive && r.PlanCancelledAt == null && r.PlanExpiresAt != null && r.PlanExpiresAt > now && r.PlanExpiresAt <= soon)
+            .OrderBy(r => r.PlanExpiresAt)
+            .Take(6)
+            .Select(r => new RenewalDueDto(r.Id, r.Name, r.LogoUrl, r.PlanName, r.Plan.ToString(), r.PlanExpiresAt!.Value))
+            .ToListAsync(ct);
+
+        var topIds = orders30.GroupBy(o => o.RestaurantId)
+            .Select(g => new { Id = g.Key, Count = g.Count() })
+            .OrderByDescending(x => x.Count).Take(5).ToList();
+        var topPlans = await db.Restaurants.AsNoTracking()
+            .Where(r => topIds.Select(t => t.Id).Contains(r.Id))
+            .Select(r => new { r.Id, Plan = r.Plan.ToString() })
+            .ToDictionaryAsync(r => r.Id, r => r.Plan, ct);
+        var topRestaurants = topIds.Where(t => names.ContainsKey(t.Id))
+            .Select(t => new TopRestaurantDto(t.Id, names[t.Id].Name, names[t.Id].LogoUrl, topPlans.GetValueOrDefault(t.Id, ""), t.Count))
+            .ToList();
+
+        var thisMonth = last12[^1];
+        var lastMonth = last12[^2];
+
+        return new SuperAdminStatsDto(total, active, total - active, recent, orders, recentOrders, trial, paid, expiring, grace, stopped,
+            PaidOn(today).Revenue, PaidOn(today.AddDays(-1)).Revenue, thisMonth.Revenue, lastMonth.Revenue, allTime, thisMonth.Payments,
+            OrdersOn(today), OrdersOn(today.AddDays(-1)),
+            ordersByDay.GetValueOrDefault(today)?.Select(o => o.RestaurantId).Distinct().Count() ?? 0,
+            last30, last12, recentPayments, renewals, topRestaurants);
     }
 
     public async Task<PagedResult<SuperAdminRestaurantDto>> ListRestaurantsAsync(

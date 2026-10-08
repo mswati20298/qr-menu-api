@@ -8,7 +8,7 @@
 | `demo.qrenvo.com` | everything, sample data, test payments | `QrMenuDemo` |
 
 Same code, two API containers, one SQL Server with two separate databases. Demo has its own JWT secret,
-Razorpay **test** keys, its own photos, and can be wiped any time with `reset-demo.sh`.
+Razorpay **test** keys, its own photos, and is reset from Super admin → Settings → Reset demo (by hand, or automatically every 7/15/30/90 days).
 
 ## 1. Server
 
@@ -59,8 +59,10 @@ push to `main` in either repo (`auto-deploy.sh`; log: `/var/log/qrenvo-autodeplo
 ```
 */2 * * * * /opt/qrenvo/qr-menu-api/deploy/auto-deploy.sh >> /var/log/qrenvo-autodeploy.log 2>&1
 30 2 * * * /opt/qrenvo/qr-menu-api/deploy/backup.sh >> /var/log/qrenvo-backup.log 2>&1
-0 4 * * *  /opt/qrenvo/qr-menu-api/deploy/reset-demo.sh >> /var/log/qrenvo-demo.log 2>&1
 ```
+
+The demo resets itself (Super admin → Settings → Reset demo), so there is no cron line for it any more.
+`reset-demo.sh` is only for emergencies: it drops the whole demo database, including keys saved in the panel.
 
 Copy `deploy/backups/` off the server too. Restore: `./restore.sh backups/QrMenuProd-<stamp>.bak`.
 

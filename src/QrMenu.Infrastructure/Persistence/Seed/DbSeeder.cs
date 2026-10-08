@@ -1,11 +1,13 @@
 using Microsoft.EntityFrameworkCore;
+using QrMenu.Application.Common.Interfaces;
 using QrMenu.Domain.Entities;
 
 namespace QrMenu.Infrastructure.Persistence.Seed;
 
 public static class DbSeeder
 {
-    public static async Task SeedAsync(AppDbContext db, bool demoData)
+    /// <param name="photoStorage">When given, the sample dishes and logo get their photos (embedded in this assembly).</param>
+    public static async Task SeedAsync(AppDbContext db, bool demoData, IFileStorageService? photoStorage = null)
     {
         await db.Database.MigrateAsync();
 
@@ -91,6 +93,15 @@ public static class DbSeeder
             .Select(n => new Table { Id = Guid.NewGuid(), RestaurantId = restaurant.Id, Number = n.ToString(), Capacity = n % 2 == 0 ? 4 : 2, IsActive = true, QrCode = QrMenu.Application.Tables.TableCodes.New() })
             .ToList();
 
+        if (photoStorage is not null)
+        {
+            restaurant.LogoUrl = await SavePhotoAsync(photoStorage, "logo");
+            foreach (var item in items)
+            {
+                item.ImageUrl = await SavePhotoAsync(photoStorage, item.Name.ToLowerInvariant().Replace(' ', '-'));
+            }
+        }
+
         db.Restaurants.Add(restaurant);
         db.Users.Add(owner);
         db.Categories.AddRange(starters, mainCourse, breads, desserts, beverages);
@@ -170,5 +181,18 @@ public static class DbSeeder
 
         db.Orders.AddRange(demoOrders);
         await db.SaveChangesAsync();
+    }
+
+    /// <summary>Copies an embedded sample photo (Seed/Photos/{name}.jpg) into the uploads; null when there is none.</summary>
+    private static async Task<string?> SavePhotoAsync(IFileStorageService storage, string name)
+    {
+        await using var stream = typeof(DbSeeder).Assembly.GetManifestResourceStream($"SeedPhotos.{name}.jpg");
+        if (stream is null)
+        {
+            return null;
+        }
+        using var buffer = new MemoryStream();
+        await stream.CopyToAsync(buffer);
+        return await storage.SaveAsync(buffer.ToArray(), ".jpg");
     }
 }

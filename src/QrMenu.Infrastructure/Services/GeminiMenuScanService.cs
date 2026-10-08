@@ -5,10 +5,11 @@ using Microsoft.Extensions.Logging;
 using QrMenu.Application.Common.Exceptions;
 using QrMenu.Application.Common.Interfaces;
 using QrMenu.Application.MenuScan;
+using QrMenu.Infrastructure.Security;
 
 namespace QrMenu.Infrastructure.Services;
 
-public class GeminiMenuScanService(HttpClient httpClient, IConfiguration configuration, ILogger<GeminiMenuScanService> logger) : IMenuScanService
+public class GeminiMenuScanService(HttpClient httpClient, IntegrationKeyStore keys, ILogger<GeminiMenuScanService> logger) : IMenuScanService
 {
     private const string Model = "gemini-flash-lite-latest";
 
@@ -26,11 +27,11 @@ public class GeminiMenuScanService(HttpClient httpClient, IConfiguration configu
 
     public async Task<MenuScanResultDto> ScanAsync(List<MenuScanImage> images, CancellationToken ct = default)
     {
-        var apiKey = configuration["Gemini:ApiKey"];
+        var apiKey = keys.GeminiApiKey;
         if (string.IsNullOrWhiteSpace(apiKey))
         {
             throw new ConflictException(
-                "Menu scanning isn't set up yet. Add a Gemini API key in the server configuration to enable this feature.");
+                "Menu scanning isn't set up yet. Please contact support.");
         }
 
         var parts = new List<object> { new { text = PromptText } };

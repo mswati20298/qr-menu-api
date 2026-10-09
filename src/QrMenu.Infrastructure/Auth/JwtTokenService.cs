@@ -46,7 +46,8 @@ public class JwtTokenService(IOptions<JwtSettings> settings) : IJwtTokenService
             new Claim(ClaimTypes.NameIdentifier, admin.Id.ToString()),
             new Claim(ClaimTypes.Email, admin.Email),
             new Claim(ClaimTypes.Name, admin.Name),
-            new Claim("superAdmin", "true")
+            new Claim("superAdmin", "true"),
+            new Claim("pwdv", admin.PasswordVersion.ToString())
         };
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_settings.Secret));

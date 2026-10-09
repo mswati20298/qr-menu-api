@@ -78,7 +78,7 @@ public class PlatformKeysService(
 
     private string? Encrypt(string value) => Clean(value) is { } v ? protector.Protect(v) : null;
 
-    private static string? Clean(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+    private static string? Clean(string? value) => value.CleanOrNull();
 
     private PlatformKeysDto ToDto(PlatformSettings? settings)
     {

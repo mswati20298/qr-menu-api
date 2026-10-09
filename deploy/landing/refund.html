@@ -25,7 +25,7 @@
   h1 { font-family: var(--display); font-size: clamp(28px, 4vw, 38px); line-height: 1.15; margin: 32px 0 6px; text-wrap: balance; }
   h2 { font-family: var(--display); font-size: 21px; margin: 32px 0 8px; }
   p, li { max-width: 68ch; }
-  ul { padding-left: 22px; }
+  ul, ol { padding-left: 22px; }
   a { color: var(--brand); }
   .updated { color: var(--muted); font-size: 14px; margin: 0; }
   .card { margin-top: 20px; padding: 18px 20px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); }
@@ -46,7 +46,7 @@
   </header>
   <main>
     <h1>Refund and cancellation policy</h1>
-    <p class="updated">Last updated: 6 October 2026</p>
+    <p class="updated">Last updated: 9 October 2026</p>
     <p>This policy covers payments made to QRenvo, operated by Mahesh Kumar (Proprietor) for QRenvo plans, setup and printed QR codes.</p>
 
     <h2>Free trial</h2>
@@ -60,11 +60,40 @@
 
     <h2>Refunds on plans</h2>
     <ul>
-      <li><b>Within 7 days of your first paid plan:</b> if QRenvo does not work for your restaurant, write to us and we refund the
-        plan amount in full. This applies once per restaurant.</li>
+      <li><b>Within 7 days of your first paid plan:</b> if QRenvo does not work for your restaurant, ask for a refund from
+        <b>My plan</b> in your admin panel (or write to us) and we refund the plan amount <b>less the payment gateway charges</b>.
+        This applies once per restaurant.</li>
+      <li><b>Payment gateway charges are not refundable.</b> Razorpay charges about 2% + GST on every online payment and does
+        not return it when a payment is refunded. Example: on a ₹499 plan you get about ₹487 back. My plan shows the exact
+        amount before you ask.</li>
+      <li>A refunded plan stops at once: customers can no longer place orders.</li>
       <li>After 7 days, unused months are not refunded.</li>
-      <li><b>Charged twice or in error:</b> always refunded in full.</li>
+      <li><b>Charged twice or in error:</b> always refunded in full, including the gateway charges.</li>
+      <li><b>Paid by UPI, bank transfer or cash directly to us</b> (not through Razorpay): no gateway charges apply, so the
+        full plan amount is refunded.</li>
     </ul>
+
+    <h2>How the refund amount is worked out</h2>
+    <p>We do not keep any part of your refund. The only deduction is the charge Razorpay (our payment gateway) takes on the
+      original payment, which Razorpay does not give back to us when we refund. We read the exact charge for your payment from
+      Razorpay; if it cannot be read, we use 2% + 18% GST.</p>
+    <div class="card">
+      <dl>
+        <dt>Plan amount you paid</dt><dd>₹499.00</dd>
+        <dt>Razorpay charges (2% + 18% GST)</dt><dd>− ₹11.78 (not refundable)</dd>
+        <dt><b>Refund you receive</b></dt><dd><b>₹487.22</b></dd>
+      </dl>
+    </div>
+    <p>The exact figures for your payment are shown on <b>My plan</b> before you send a request, so there are no surprises.</p>
+
+    <h2>What happens after you ask</h2>
+    <ol>
+      <li>You send a request from <b>My plan</b> with a short reason. You see the amount you will get back.</li>
+      <li>We review it, usually within 1 working day, and approve or reject it. If we reject it, the reason is shown on My plan.</li>
+      <li>Once approved, the plan stops at once and Razorpay sends the money to the same card, UPI or bank account you paid from.</li>
+      <li>The money reaches your account within 5 to 7 working days (this depends on your bank). My plan shows the status:
+        waiting for review, on its way, or refunded.</li>
+    </ol>
 
     <h2>Setup fee and printed QR codes</h2>
     <ul>
@@ -78,7 +107,8 @@
     for food orders are handled by the restaurant.</p>
 
     <h2>How to ask for a refund</h2>
-    <p>Email mswati20298@gmail.com or WhatsApp +91 96702 26608 with your restaurant name, the email on your account and the payment date or
+    <p>The quickest way: log in, open <b>My plan</b> and press <b>Request refund</b> next to the payment.</p>
+    <p>You can also email mswati20298@gmail.com or WhatsApp +91 96702 26608 with your restaurant name, the email on your account and the payment date or
     Razorpay payment ID. Approved refunds go back to the original payment method within 5 to 7 working days.</p>
 
   </main>

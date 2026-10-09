@@ -1,3 +1,5 @@
+using FluentValidation;
+
 namespace QrMenu.Application.SuperAdmins;
 
 public record SuperAdminLoginRequest(string Email, string Password);
@@ -10,6 +12,19 @@ public record SuperAdminAuthResponse(string Token, string Name, bool RequiresTwo
 
 /// <summary>Code: the 6 digits from the app, or one of the recovery codes.</summary>
 public record VerifyTwoFactorRequest(string ChallengeToken, string Code);
+
+/// <summary>The super admin changes their own password (at least 10 characters). Returns a fresh login.</summary>
+public record ChangeSuperAdminPasswordRequest(string CurrentPassword, string NewPassword);
+
+public class ChangeSuperAdminPasswordRequestValidator : FluentValidation.AbstractValidator<ChangeSuperAdminPasswordRequest>
+{
+    public ChangeSuperAdminPasswordRequestValidator()
+    {
+        RuleFor(x => x.CurrentPassword).NotEmpty();
+        RuleFor(x => x.NewPassword).NotEmpty().MinimumLength(10).WithMessage("Use at least 10 characters.").MaximumLength(100)
+            .NotEqual(x => x.CurrentPassword).WithMessage("The new password must be different from the current one.");
+    }
+}
 
 public record TwoFactorStatusDto(bool Enabled, int RecoveryCodesLeft);
 
@@ -72,9 +87,13 @@ public record PaymentLogDto(
     string? Note,
     string? PerformedBy,
     DateTime CreatedAt,
-    DateTime? PaidAt);
+    DateTime? PaidAt,
+    decimal RefundedAmount = 0,
+    string? RefundStatus = null,
+    decimal RefundFee = 0);
 
-public record PaymentLogSummaryDto(decimal ReceivedTotal, int PaidCount, int NotCompletedCount);
+/// <summary>ReceivedTotal is before refunds; RefundedTotal is what went back (or is on its way).</summary>
+public record PaymentLogSummaryDto(decimal ReceivedTotal, int PaidCount, int NotCompletedCount, decimal RefundedTotal = 0, int OpenRefundRequests = 0);
 
 public record PaymentLogResponse(PaymentLogSummaryDto Summary, List<PaymentLogDto> Items);
 

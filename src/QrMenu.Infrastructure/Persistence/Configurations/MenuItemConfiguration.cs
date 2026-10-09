@@ -11,6 +11,7 @@ public class MenuItemConfiguration : IEntityTypeConfiguration<MenuItem>
         builder.ToTable("MenuItems");
         builder.HasKey(i => i.Id);
         builder.Property(i => i.Name).HasMaxLength(200).IsRequired();
+        builder.HasIndex(i => new { i.CategoryId, i.Name }).IsUnique();
         builder.Property(i => i.Description).HasMaxLength(500);
         builder.Property(i => i.Price).HasColumnType("decimal(10,2)");
         builder.Property(i => i.ImageUrl).HasMaxLength(500);

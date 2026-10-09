@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
+using QrMenu.Application.Refunds;
 using QrMenu.Application.Restaurants;
 using QrMenu.Application.Subscriptions;
 
@@ -9,8 +10,23 @@ namespace QrMenu.Api.Controllers;
 public class RestaurantController(
     IRestaurantService restaurantService,
     ISubscriptionService subscriptionService,
-    IOnlinePaymentService onlinePaymentService) : OwnerControllerBase
+    IOnlinePaymentService onlinePaymentService,
+    IRefundService refundService) : OwnerControllerBase
 {
+    /// <summary>Payments that can still be refunded, and the refunds asked for so far.</summary>
+    [HttpGet("plan/refunds")]
+    public async Task<ActionResult<OwnerRefundsDto>> GetRefunds(CancellationToken ct)
+    {
+        return Ok(await refundService.GetOwnerRefundsAsync(RestaurantId, ct));
+    }
+
+    /// <summary>Asks for a refund of an online payment (within the refund window); the super admin decides.</summary>
+    [HttpPost("plan/refunds")]
+    public async Task<ActionResult<RefundDto>> RequestRefund(RequestRefundRequest request, CancellationToken ct)
+    {
+        return Ok(await refundService.RequestAsync(RestaurantId, request, ct));
+    }
+
     /// <summary>"My plan": the current subscription, payment history and the plans that can be bought.</summary>
     [HttpGet("plan")]
     public async Task<ActionResult<OwnerPlanDto>> GetPlan(CancellationToken ct)

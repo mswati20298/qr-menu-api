@@ -7,6 +7,9 @@ public class SuperAdmin
     public string Name { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
     public string PasswordHash { get; set; } = string.Empty;
+
+    /// <summary>Goes up when the password changes; tokens issued before stop working.</summary>
+    public int PasswordVersion { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     // Two-step login with an authenticator app (6-digit codes). Secrets are stored encrypted.

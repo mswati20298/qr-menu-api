@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using QrMenu.Application.Common;
 using QrMenu.Application.Common.Exceptions;
 using QrMenu.Application.Orders;
 using QrMenu.Application.Subscriptions;
@@ -56,7 +57,7 @@ public class OrderService(
         return ToDto(order);
     }
 
-    private static string? Clean(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+    private static string? Clean(string? value) => value.CleanOrNull();
 
     /// <summary>
     /// Prices an order from the menu (sizes, add-ons, service charge, GST) and saves it. Shared by guest and

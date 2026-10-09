@@ -207,7 +207,7 @@ public class FeedbackService(AppDbContext db, IOptions<SiteSettings> siteOptions
         return path.StartsWith('/') ? siteOptions.Value.AppUrl.TrimEnd('/') + path : path;
     }
 
-    private static string? Clean(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+    private static string? Clean(string? value) => value.CleanOrNull();
 
     private static FeedbackDto ToDto(Feedback f, string restaurantName, string? restaurantLogo, string? tableNumber) => new(
         f.Id,

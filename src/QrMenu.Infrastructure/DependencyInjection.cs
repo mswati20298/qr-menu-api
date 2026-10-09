@@ -7,6 +7,7 @@ using QrMenu.Application.Categories;
 using QrMenu.Application.Common;
 using QrMenu.Application.Common.Interfaces;
 using QrMenu.Application.Feedbacks;
+using QrMenu.Application.Refunds;
 using QrMenu.Application.Invoices;
 using QrMenu.Application.Items;
 using QrMenu.Application.Kitchen;
@@ -57,6 +58,7 @@ public static class DependencyInjection
 
         services.AddScoped<IPlatformKeysService, PlatformKeysService>();
         services.AddScoped<IFeedbackService, FeedbackService>();
+        services.AddScoped<IRefundService, RefundService>();
         services.AddSingleton<TwoFactorChallenges>();
         services.AddScoped<ISuperAdminTwoFactorService, SuperAdminTwoFactorService>();
         services.AddScoped<IDemoResetService, DemoResetService>();

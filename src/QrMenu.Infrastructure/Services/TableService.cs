@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using QrMenu.Application.Common;
 using QrMenu.Application.Common.Exceptions;
 using QrMenu.Application.Tables;
 using QrMenu.Domain.Entities;
@@ -28,17 +29,14 @@ public class TableService(AppDbContext db) : ITableService
 
     public async Task<TableDto> CreateAsync(Guid restaurantId, CreateTableRequest request, CancellationToken ct = default)
     {
-        var exists = await db.Tables.AnyAsync(t => t.RestaurantId == restaurantId && t.Number == request.Number, ct);
-        if (exists)
-        {
-            throw new ConflictException($"Table \"{request.Number}\" already exists.");
-        }
+        var number = NameRules.Normalize(request.Number);
+        await DuplicateGuard.TableNumberIsFreeAsync(db, restaurantId, number, null, ct);
 
         var table = new Table
         {
             Id = Guid.NewGuid(),
             RestaurantId = restaurantId,
-            Number = request.Number,
+            Number = number,
             Capacity = request.Capacity,
             IsActive = true,
             QrCode = TableCodes.New()
@@ -54,7 +52,9 @@ public class TableService(AppDbContext db) : ITableService
     {
         var table = await GetOwnedTableAsync(restaurantId, tableId, ct);
 
-        table.Number = request.Number;
+        var number = NameRules.Normalize(request.Number);
+        await DuplicateGuard.TableNumberIsFreeAsync(db, restaurantId, number, tableId, ct);
+        table.Number = number;
         table.Capacity = request.Capacity;
         table.IsActive = request.IsActive;
 

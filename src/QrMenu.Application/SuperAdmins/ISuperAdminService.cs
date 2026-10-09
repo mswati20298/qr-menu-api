@@ -3,6 +3,12 @@ namespace QrMenu.Application.SuperAdmins;
 public interface ISuperAdminService
 {
     Task<SuperAdminAuthResponse> LoginAsync(SuperAdminLoginRequest request, CancellationToken ct = default);
+
+    /// <summary>Checks the current password, saves the new one and ends every other login (returns a new token).</summary>
+    Task<SuperAdminAuthResponse> ChangePasswordAsync(Guid adminId, ChangeSuperAdminPasswordRequest request, CancellationToken ct = default);
+
+    /// <summary>The admin's current password version, or null when the admin no longer exists.</summary>
+    Task<int?> GetPasswordVersionAsync(Guid adminId, CancellationToken ct = default);
     Task<SuperAdminStatsDto> GetStatsAsync(CancellationToken ct = default);
 
     /// <summary>

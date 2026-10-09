@@ -23,6 +23,19 @@ public record VariantInput(string Name, decimal Price, bool IsDefault);
 
 public record AddOnInput(string Name, decimal Price);
 
+/// <summary>What creating and updating a dish have in common (one set of validation rules for both).</summary>
+public interface IItemInput
+{
+    Guid CategoryId { get; }
+    string Name { get; }
+    string? Description { get; }
+    decimal Price { get; }
+    string? ImageUrl { get; }
+    string? Tag { get; }
+    List<VariantInput>? Variants { get; }
+    List<AddOnInput>? AddOns { get; }
+}
+
 public record CreateItemRequest(
     Guid CategoryId,
     string Name,
@@ -32,7 +45,7 @@ public record CreateItemRequest(
     bool IsVeg,
     string? Tag,
     List<VariantInput>? Variants,
-    List<AddOnInput>? AddOns);
+    List<AddOnInput>? AddOns) : IItemInput;
 
 public record UpdateItemRequest(
     Guid CategoryId,
@@ -43,6 +56,6 @@ public record UpdateItemRequest(
     bool IsVeg,
     string? Tag,
     List<VariantInput>? Variants,
-    List<AddOnInput>? AddOns);
+    List<AddOnInput>? AddOns) : IItemInput;
 
 public record UpdateAvailabilityRequest(bool IsAvailable);

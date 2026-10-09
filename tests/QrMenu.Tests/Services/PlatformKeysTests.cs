@@ -32,6 +32,9 @@ public class PlatformKeysTests
         public bool IsWebhookSignatureValid(string body, string? signature) => true;
         public Task<GatewayCheckResult> CheckCredentialsAsync(string keyId, string keySecret, CancellationToken ct = default) =>
             Task.FromResult(new GatewayCheckResult(keySecret == "right", keyId));
+        public Task<long?> GetPaymentFeeAsync(string paymentId, CancellationToken ct = default) => Task.FromResult<long?>(null);
+        public Task<GatewayRefundResult> RefundAsync(string paymentId, long amountInPaise, string receipt, string? orderId, CancellationToken ct = default) =>
+            Task.FromResult(new GatewayRefundResult("rfnd_test", "processed"));
     }
 
     private static (PlatformKeysService Service, IntegrationKeyStore Store, AppDbContext Db) Create()

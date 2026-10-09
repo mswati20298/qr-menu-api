@@ -7,5 +7,8 @@ public enum SubscriptionAction
     FreeGranted,
     PaymentRecorded,
     Extended,
-    Cancelled
+    Cancelled,
+
+    /// <summary>Money given back (Amount = the refund). A full refund also cancels the plan.</summary>
+    Refunded
 }

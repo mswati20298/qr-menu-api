@@ -103,6 +103,98 @@ public class RazorpayGateway(HttpClient http, IntegrationKeyStore keys, ILogger<
         }
     }
 
+    public async Task<GatewayRefundResult> RefundAsync(string paymentId, long amountInPaise, string receipt, string? orderId, CancellationToken ct = default)
+    {
+        if (!IsConfigured)
+        {
+            throw new ConflictException("Online payments are not set up, so Razorpay cannot refund. Add the keys first.");
+        }
+
+        // "normal" speed: free, 5-7 working days. receipt ties the refund to our record in Razorpay's dashboard.
+        var payload = new { amount = amountInPaise, speed = "normal", receipt, notes = new Dictionary<string, string> { ["source"] = "QRenvo" } };
+        var requestJson = JsonSerializer.Serialize(payload);
+        using var request = new HttpRequestMessage(HttpMethod.Post, $"https://api.razorpay.com/v1/payments/{Uri.EscapeDataString(paymentId)}/refund")
+        {
+            Content = JsonContent.Create(payload)
+        };
+        request.Headers.Authorization = BasicAuth(keys.RazorpayKeyId, keys.RazorpayKeySecret);
+
+        HttpResponseMessage response;
+        try
+        {
+            response = await http.SendAsync(request, ct);
+        }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
+        {
+            await Log("refund.create", orderId, null, requestJson, null, $"No answer from Razorpay: {ex.Message}");
+            throw new ConflictException("Razorpay did not answer. Nothing was refunded; please try again.");
+        }
+
+        using (response)
+        {
+            var body = await response.Content.ReadAsStringAsync(ct);
+            if (!response.IsSuccessStatusCode)
+            {
+                logger.LogError("Razorpay refund failed: {Status} {Body}", (int)response.StatusCode, body);
+                await Log("refund.create", orderId, (int)response.StatusCode, requestJson, body, "Razorpay refused the refund");
+                throw new ConflictException(response.StatusCode == System.Net.HttpStatusCode.NotFound
+                    ? "Razorpay does not know this payment. Is it from the other mode (test vs live keys)? Nothing was refunded."
+                    : $"Razorpay refused the refund: {ReadError(body) ?? "unknown reason"}");
+            }
+
+            var refund = JsonSerializer.Deserialize<RazorpayRefund>(body)
+                ?? throw new ConflictException("Razorpay's answer could not be read.");
+            await Log("refund.create", orderId, (int)response.StatusCode, requestJson, body, $"Refund {refund.Id} created ({refund.Status})");
+            return new GatewayRefundResult(refund.Id, refund.Status ?? "pending");
+        }
+    }
+
+    public async Task<long?> GetPaymentFeeAsync(string paymentId, CancellationToken ct = default)
+    {
+        if (!IsConfigured)
+        {
+            return null;
+        }
+        try
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Get, $"https://api.razorpay.com/v1/payments/{Uri.EscapeDataString(paymentId)}");
+            request.Headers.Authorization = BasicAuth(keys.RazorpayKeyId, keys.RazorpayKeySecret);
+            using var response = await http.SendAsync(request, ct);
+            if (!response.IsSuccessStatusCode)
+            {
+                logger.LogWarning("Razorpay did not return payment {PaymentId}: {Status}", paymentId, (int)response.StatusCode);
+                return null;
+            }
+            using var doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync(ct));
+            // "fee" already includes GST ("tax" is the GST part of it).
+            return doc.RootElement.TryGetProperty("fee", out var fee) && fee.ValueKind == JsonValueKind.Number ? fee.GetInt64() : null;
+        }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or JsonException)
+        {
+            logger.LogWarning(ex, "Could not read the fee of Razorpay payment {PaymentId}", paymentId);
+            return null;
+        }
+    }
+
+    /// <summary>Razorpay errors look like {"error":{"description":"..."}}; its gateway answers {"message":"..."}.</summary>
+    private static string? ReadError(string body)
+    {
+        try
+        {
+            using var doc = JsonDocument.Parse(body);
+            var root = doc.RootElement;
+            if (root.TryGetProperty("error", out var e) && e.TryGetProperty("description", out var d))
+            {
+                return d.GetString();
+            }
+            return root.TryGetProperty("message", out var m) ? m.GetString() : null;
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+    }
+
     private Task Log(string kind, string? orderId, int? status, string? request, string? response, string note) =>
         paymentLog?.WriteAsync(kind, orderId, status, request, response, note) ?? Task.CompletedTask;
 
@@ -118,4 +210,6 @@ public class RazorpayGateway(HttpClient http, IntegrationKeyStore keys, ILogger<
     }
 
     private sealed record RazorpayOrder([property: JsonPropertyName("id")] string Id);
+
+    private sealed record RazorpayRefund([property: JsonPropertyName("id")] string Id, [property: JsonPropertyName("status")] string? Status);
 }

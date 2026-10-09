@@ -19,6 +19,10 @@ public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Exception
         }
     }
 
+    /// <summary>SQL Server 2601 / 2627: a unique index or key refused a duplicate row.</summary>
+    private static bool IsDuplicateKey(Microsoft.EntityFrameworkCore.DbUpdateException ex) =>
+        ex.InnerException is Microsoft.Data.SqlClient.SqlException { Number: 2601 or 2627 };
+
     private async Task HandleAsync(HttpContext context, Exception exception)
     {
         var (statusCode, message, errors) = exception switch
@@ -32,6 +36,8 @@ public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Exception
             UnauthorizedAppException unauthorizedEx => (HttpStatusCode.Unauthorized, unauthorizedEx.Message, Array.Empty<string>()),
             ForbiddenException forbiddenEx => (HttpStatusCode.Forbidden, forbiddenEx.Message, Array.Empty<string>()),
             TooManyAttemptsException tooManyEx => (HttpStatusCode.TooManyRequests, tooManyEx.Message, Array.Empty<string>()),
+            Microsoft.EntityFrameworkCore.DbUpdateException dbEx when IsDuplicateKey(dbEx) =>
+                (HttpStatusCode.Conflict, "This already exists. Please use a different name.", Array.Empty<string>()),
             _ => (HttpStatusCode.InternalServerError, "An unexpected error occurred. Please try again later.", Array.Empty<string>())
         };
 

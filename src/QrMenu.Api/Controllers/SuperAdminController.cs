@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using QrMenu.Application.Feedbacks;
 using QrMenu.Application.Platform;
+using QrMenu.Application.Refunds;
 using QrMenu.Application.Subscriptions;
 using QrMenu.Application.SuperAdmins;
 
@@ -12,6 +13,7 @@ namespace QrMenu.Api.Controllers;
 [ApiController]
 [Route("api/superadmin")]
 [Authorize(Policy = "SuperAdmin")]
+[ServiceFilter(typeof(QrMenu.Api.Filters.SuperAdminSessionFilter))]
 public class SuperAdminController(
     ISuperAdminService superAdminService,
     ISubscriptionService subscriptionService,
@@ -20,6 +22,7 @@ public class SuperAdminController(
     IPlatformKeysService platformKeysService,
     IDemoResetService demoResetService,
     IFeedbackService feedbackService,
+    IRefundService refundService,
     ISuperAdminTwoFactorService twoFactorService,
     ILogger<SuperAdminController> logger) : ControllerBase
 {
@@ -111,6 +114,38 @@ public class SuperAdminController(
     public async Task<ActionResult<List<PaymentGatewayLogDto>>> GatewayLog([FromQuery] string orderId, CancellationToken ct)
     {
         return Ok(await superAdminService.GetGatewayLogAsync(orderId, ct));
+    }
+
+    // Refunds: owners' requests and refunds the super admin starts. Online payments go back through Razorpay.
+
+    [HttpGet("refunds")]
+    public async Task<ActionResult<List<RefundDto>>> Refunds([FromQuery] string? status, CancellationToken ct)
+    {
+        return Ok(await refundService.ListAsync(status, ct));
+    }
+
+    [HttpPost("refunds/{id:guid}/approve")]
+    public async Task<ActionResult<RefundDto>> ApproveRefund(Guid id, ApproveRefundRequest request, CancellationToken ct)
+    {
+        var result = await refundService.ApproveAsync(id, request, AdminEmail, ct);
+        logger.LogInformation("Super admin {Email} approved refund {RefundId} of {Amount}", AdminEmail, id, result.Amount);
+        return Ok(result);
+    }
+
+    [HttpPost("refunds/{id:guid}/reject")]
+    public async Task<ActionResult<RefundDto>> RejectRefund(Guid id, RejectRefundRequest request, CancellationToken ct)
+    {
+        var result = await refundService.RejectAsync(id, request, AdminEmail, ct);
+        logger.LogInformation("Super admin {Email} rejected refund {RefundId}", AdminEmail, id);
+        return Ok(result);
+    }
+
+    [HttpPost("refunds")]
+    public async Task<ActionResult<RefundDto>> RefundDirect(AdminRefundRequest request, CancellationToken ct)
+    {
+        var result = await refundService.RefundDirectAsync(request, AdminEmail, ct);
+        logger.LogInformation("Super admin {Email} refunded {Amount} ({Source}) for restaurant {RestaurantId}", AdminEmail, result.Amount, result.Source, result.RestaurantId);
+        return Ok(result);
     }
 
     // Plan catalog. Owners only ever see the active plans, read-only, on their "My plan" page.
@@ -235,6 +270,16 @@ public class SuperAdminController(
         await feedbackService.DeleteAsync(id, ct);
         logger.LogInformation("Super admin {Email} deleted feedback {Id}", AdminEmail, id);
         return NoContent();
+    }
+
+    // The signed-in super admin's own password.
+
+    [HttpPut("account/password")]
+    public async Task<ActionResult<SuperAdminAuthResponse>> ChangeOwnPassword(ChangeSuperAdminPasswordRequest request, CancellationToken ct)
+    {
+        var result = await superAdminService.ChangePasswordAsync(AdminId, request, ct);
+        logger.LogInformation("Super admin {Email} changed their password", AdminEmail);
+        return Ok(result);
     }
 
     // Two-step login for the signed-in super admin.

@@ -5,6 +5,7 @@ using QrMenu.Application.Common;
 using QrMenu.Application.Common.Exceptions;
 using QrMenu.Application.Common.Interfaces;
 using QrMenu.Application.Subscriptions;
+using QrMenu.Application.Refunds;
 using QrMenu.Application.SuperAdmins;
 using QrMenu.Domain.Entities;
 using QrMenu.Infrastructure.Auth;
@@ -25,7 +26,7 @@ public class SuperAdminService(
 
     public async Task<SuperAdminAuthResponse> LoginAsync(SuperAdminLoginRequest request, CancellationToken ct = default)
     {
-        var email = request.Email.Trim().ToLowerInvariant();
+        var email = request.Email.NormalizeEmail();
 
         if (LoginAttemptTracker.IsLocked(email))
         {
@@ -52,12 +53,21 @@ public class SuperAdminService(
         return new SuperAdminAuthResponse(jwtTokenService.GenerateSuperAdminToken(admin), admin.Name);
     }
 
-    public async Task<List<PaymentGatewayLogDto>> GetGatewayLogAsync(string gatewayOrderId, CancellationToken ct = default) =>
-        await db.PaymentGatewayLogs.AsNoTracking()
-            .Where(l => l.GatewayOrderId == gatewayOrderId)
+    public async Task<List<PaymentGatewayLogDto>> GetGatewayLogAsync(string gatewayOrderId, CancellationToken ct = default)
+    {
+        // Refund webhooks name the payment, not the order: include them too.
+        var paymentId = await db.PlanPayments.AsNoTracking()
+            .Where(p => p.GatewayOrderId == gatewayOrderId)
+            .Select(p => p.GatewayPaymentId)
+            .FirstOrDefaultAsync(ct);
+        var paymentKey = paymentId is null ? null : "payment:" + paymentId;
+
+        return await db.PaymentGatewayLogs.AsNoTracking()
+            .Where(l => l.GatewayOrderId == gatewayOrderId || (paymentKey != null && l.GatewayOrderId == paymentKey))
             .OrderBy(l => l.CreatedAt)
             .Select(l => new PaymentGatewayLogDto(l.Kind, l.StatusCode, l.RequestBody, l.ResponseBody, l.Note, l.CreatedAt))
             .ToListAsync(ct);
+    }
 
     public async Task<PaymentLogResponse> ListPaymentsAsync(string? status, string? search, CancellationToken ct = default)
     {
@@ -72,7 +82,8 @@ public class SuperAdminService(
             .Select(p => new PaymentLogDto(
                 p.Id, "online", p.Status == PlanPaymentStatus.Paid ? "Paid" : "Not completed",
                 p.RestaurantId, p.Restaurant.Name, p.PlanName, p.Amount, "Razorpay",
-                p.GatewayOrderId, p.GatewayPaymentId, null, null, "owner (online)", p.CreatedAt, p.PaidAt))
+                p.GatewayOrderId, p.GatewayPaymentId, null, null, "owner (online)", p.CreatedAt, p.PaidAt, 0, null,
+                p.GatewayFee ?? Math.Round(p.Amount * RefundRules.EstimatedFeePercent / 100, 2)))
             .ToListAsync(ct);
 
         // Recorded by hand in the panel. (Online payments also leave a PaymentRecorded event; skip those.)
@@ -84,14 +95,34 @@ public class SuperAdminService(
             .Select(e => new PaymentLogDto(
                 e.Id, "manual", "Paid", e.RestaurantId, e.Restaurant.Name, e.PlanName, e.Amount ?? 0,
                 e.PaymentMethod.HasValue ? e.PaymentMethod.Value.ToString() : null,
-                null, null, e.PaymentReference, e.Note, e.PerformedBy, e.CreatedAt, e.CreatedAt))
+                null, null, e.PaymentReference, e.Note, e.PerformedBy, e.CreatedAt, e.CreatedAt, 0, null, 0))
             .ToListAsync(ct);
 
-        var all = online.Concat(manual).OrderByDescending(p => p.CreatedAt).ToList();
+        // Refunds per payment (money on its way or gone), plus the latest refund state to show on the row.
+        var refunds = await db.PlanRefunds.AsNoTracking()
+            .Select(r => new { r.PlanPaymentId, r.PaymentEventId, r.Amount, r.Status, r.RequestedAt })
+            .ToListAsync(ct);
+        string Key(Guid? planPaymentId, Guid? eventId) => planPaymentId?.ToString() ?? eventId?.ToString() ?? "";
+        var byPayment = refunds.GroupBy(r => Key(r.PlanPaymentId, r.PaymentEventId)).ToDictionary(g => g.Key, g => g.ToList());
+
+        PaymentLogDto WithRefunds(PaymentLogDto p)
+        {
+            if (!byPayment.TryGetValue(p.Id.ToString(), out var list))
+            {
+                return p;
+            }
+            var refunded = list.Where(r => r.Status is RefundStatus.Processing or RefundStatus.Refunded).Sum(r => r.Amount);
+            var latest = list.OrderByDescending(r => r.RequestedAt).First().Status.ToString();
+            return p with { RefundedAmount = refunded, RefundStatus = latest };
+        }
+
+        var all = online.Concat(manual).Select(WithRefunds).OrderByDescending(p => p.CreatedAt).ToList();
         var summary = new PaymentLogSummaryDto(
             all.Where(p => p.Status == "Paid").Sum(p => p.Amount),
             all.Count(p => p.Status == "Paid"),
-            all.Count(p => p.Status != "Paid"));
+            all.Count(p => p.Status != "Paid"),
+            refunds.Where(r => r.Status is RefundStatus.Processing or RefundStatus.Refunded).Sum(r => r.Amount),
+            refunds.Count(r => r.Status == RefundStatus.Requested));
 
         var items = status?.ToLowerInvariant() switch
         {
@@ -101,6 +132,32 @@ public class SuperAdminService(
         };
         return new PaymentLogResponse(summary, items.Take(500).ToList());
     }
+
+    public async Task<SuperAdminAuthResponse> ChangePasswordAsync(Guid adminId, ChangeSuperAdminPasswordRequest request, CancellationToken ct = default)
+    {
+        var lockKey = $"superadmin-change:{adminId:N}";
+        if (LoginAttemptTracker.IsLocked(lockKey))
+        {
+            throw new TooManyAttemptsException("Too many wrong passwords. Please try again in a few minutes.");
+        }
+
+        var admin = await db.SuperAdmins.FirstOrDefaultAsync(a => a.Id == adminId, ct)
+            ?? throw new NotFoundException("Super admin not found.");
+        if (!passwordHasher.Verify(request.CurrentPassword, admin.PasswordHash))
+        {
+            LoginAttemptTracker.RecordFailure(lockKey);
+            throw new ConflictException("The current password is not right.");
+        }
+
+        LoginAttemptTracker.Reset(lockKey);
+        admin.PasswordHash = passwordHasher.Hash(request.NewPassword);
+        admin.PasswordVersion++;
+        await db.SaveChangesAsync(ct);
+        return new SuperAdminAuthResponse(jwtTokenService.GenerateSuperAdminToken(admin), admin.Name);
+    }
+
+    public async Task<int?> GetPasswordVersionAsync(Guid adminId, CancellationToken ct = default) =>
+        await db.SuperAdmins.AsNoTracking().Where(a => a.Id == adminId).Select(a => (int?)a.PasswordVersion).FirstOrDefaultAsync(ct);
 
     public async Task<ResetOwnerPasswordResponse> ResetOwnerPasswordAsync(Guid restaurantId, CancellationToken ct = default)
     {
@@ -147,13 +204,21 @@ public class SuperAdminService(
         var since12Months = IndianTime.StartOfDayUtc(firstMonth);
         var since30Days = IndianTime.StartOfDayUtc(firstDay);
 
+        // Refunds are money going back: they count as negative amounts on the day they were made.
         var payments = await db.SubscriptionEvents.AsNoTracking()
-            .Where(e => e.Action == SubscriptionAction.PaymentRecorded && e.Amount != null && e.Amount > 0)
-            .Select(e => new { e.RestaurantId, e.PlanName, Amount = e.Amount!.Value, e.PaymentMethod, e.CreatedAt })
+            .Where(e => (e.Action == SubscriptionAction.PaymentRecorded || e.Action == SubscriptionAction.Refunded) && e.Amount != null && e.Amount > 0)
+            .Select(e => new
+            {
+                e.RestaurantId,
+                e.PlanName,
+                Amount = e.Action == SubscriptionAction.Refunded ? -e.Amount!.Value : e.Amount!.Value,
+                e.PaymentMethod,
+                e.CreatedAt
+            })
             .ToListAsync(ct);
         var allTime = payments.Sum(p => p.Amount);
         var paymentsByDay = payments.Where(p => p.CreatedAt >= since12Months).GroupBy(p => IndianTime.DateOf(p.CreatedAt))
-            .ToDictionary(g => g.Key, g => (Revenue: g.Sum(p => p.Amount), Count: g.Count()));
+            .ToDictionary(g => g.Key, g => (Revenue: g.Sum(p => p.Amount), Count: g.Count(p => p.Amount > 0)));
 
         var signupsByDay = (await db.Restaurants.AsNoTracking().Where(r => r.CreatedAt >= since30Days).Select(r => r.CreatedAt).ToListAsync(ct))
             .GroupBy(IndianTime.DateOf).ToDictionary(g => g.Key, g => g.Count());

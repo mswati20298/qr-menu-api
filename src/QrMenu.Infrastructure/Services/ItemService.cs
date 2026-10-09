@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using QrMenu.Application.Common;
 using QrMenu.Application.Common.Exceptions;
 using QrMenu.Application.Items;
 using QrMenu.Domain.Entities;
@@ -24,6 +25,8 @@ public class ItemService(AppDbContext db) : IItemService
     public async Task<MenuItemDto> CreateAsync(Guid restaurantId, CreateItemRequest request, CancellationToken ct = default)
     {
         var category = await GetOwnedCategoryAsync(restaurantId, request.CategoryId, ct);
+        var name = NameRules.Normalize(request.Name);
+        await DuplicateGuard.ItemNameIsFreeAsync(db, category.Id, name, null, ct);
 
         var maxSort = await db.MenuItems.Where(i => i.CategoryId == request.CategoryId)
             .Select(i => (int?)i.SortOrder).MaxAsync(ct) ?? -1;
@@ -32,7 +35,7 @@ public class ItemService(AppDbContext db) : IItemService
         {
             Id = Guid.NewGuid(),
             CategoryId = category.Id,
-            Name = request.Name,
+            Name = name,
             Description = request.Description,
             Price = request.Price,
             ImageUrl = request.ImageUrl,
@@ -56,8 +59,10 @@ public class ItemService(AppDbContext db) : IItemService
         var item = await GetOwnedItemAsync(restaurantId, itemId, ct, includeVariants: true);
         var category = await GetOwnedCategoryAsync(restaurantId, request.CategoryId, ct);
 
+        var name = NameRules.Normalize(request.Name);
+        await DuplicateGuard.ItemNameIsFreeAsync(db, category.Id, name, item.Id, ct);
         item.CategoryId = category.Id;
-        item.Name = request.Name;
+        item.Name = name;
         item.Description = request.Description;
         item.Price = request.Price;
         item.ImageUrl = request.ImageUrl;

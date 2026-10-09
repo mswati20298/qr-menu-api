@@ -69,6 +69,7 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddAuthorization(AuthorizationPolicies.Configure);
 
 builder.Services.AddScoped<ActiveRestaurantFilter>();
+builder.Services.AddScoped<QrMenu.Api.Filters.SuperAdminSessionFilter>();
 
 builder.Services.AddCors(options =>
 {

@@ -11,6 +11,7 @@ public class TableConfiguration : IEntityTypeConfiguration<Table>
         builder.ToTable("Tables");
         builder.HasKey(t => t.Id);
         builder.Property(t => t.Number).HasMaxLength(20).IsRequired();
+        builder.HasIndex(t => new { t.RestaurantId, t.Number }).IsUnique();
         builder.Property(t => t.QrCode).HasMaxLength(16).IsRequired();
         builder.Property(t => t.IsActive).HasDefaultValue(true);
         builder.HasIndex(t => t.RestaurantId);

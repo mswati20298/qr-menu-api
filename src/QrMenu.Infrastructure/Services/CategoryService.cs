@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using QrMenu.Application.Common;
 using QrMenu.Application.Categories;
 using QrMenu.Application.Common.Exceptions;
 using QrMenu.Domain.Entities;
@@ -19,6 +20,9 @@ public class CategoryService(AppDbContext db) : ICategoryService
 
     public async Task<CategoryDto> CreateAsync(Guid restaurantId, CreateCategoryRequest request, CancellationToken ct = default)
     {
+        var name = NameRules.Normalize(request.Name);
+        await DuplicateGuard.CategoryNameIsFreeAsync(db, restaurantId, name, null, ct);
+
         var maxSort = await db.Categories.Where(c => c.RestaurantId == restaurantId)
             .Select(c => (int?)c.SortOrder).MaxAsync(ct) ?? -1;
 
@@ -26,7 +30,7 @@ public class CategoryService(AppDbContext db) : ICategoryService
         {
             Id = Guid.NewGuid(),
             RestaurantId = restaurantId,
-            Name = request.Name,
+            Name = name,
             SortOrder = maxSort + 1
         };
 
@@ -39,7 +43,9 @@ public class CategoryService(AppDbContext db) : ICategoryService
     public async Task<CategoryDto> UpdateAsync(Guid restaurantId, Guid categoryId, UpdateCategoryRequest request, CancellationToken ct = default)
     {
         var category = await GetOwnedCategoryAsync(restaurantId, categoryId, ct);
-        category.Name = request.Name;
+        var name = NameRules.Normalize(request.Name);
+        await DuplicateGuard.CategoryNameIsFreeAsync(db, restaurantId, name, categoryId, ct);
+        category.Name = name;
         await db.SaveChangesAsync(ct);
 
         var itemCount = await db.MenuItems.CountAsync(i => i.CategoryId == categoryId, ct);

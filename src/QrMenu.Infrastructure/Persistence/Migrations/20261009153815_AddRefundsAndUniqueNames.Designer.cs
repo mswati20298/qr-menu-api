@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using QrMenu.Infrastructure.Persistence;
 
@@ -11,9 +12,11 @@ using QrMenu.Infrastructure.Persistence;
 namespace QrMenu.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20261009153815_AddRefundsAndUniqueNames")]
+    partial class AddRefundsAndUniqueNames
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -498,9 +501,6 @@ namespace QrMenu.Infrastructure.Persistence.Migrations
                     b.Property<int>("DurationMonths")
                         .HasColumnType("int");
 
-                    b.Property<decimal?>("GatewayFee")
-                        .HasColumnType("decimal(10,2)");
-
                     b.Property<string>("GatewayOrderId")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -561,10 +561,6 @@ namespace QrMenu.Infrastructure.Persistence.Migrations
                     b.Property<string>("DecidedBy")
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
-
-                    b.Property<decimal>("Fee")
-                        .HasPrecision(10, 2)
-                        .HasColumnType("decimal(10,2)");
 
                     b.Property<string>("GatewayRefundId")
                         .HasMaxLength(64)

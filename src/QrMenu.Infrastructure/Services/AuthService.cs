@@ -24,7 +24,7 @@ public class AuthService(
 
     public async Task<AuthResponse> RegisterAsync(RegisterRequest request, CancellationToken ct = default)
     {
-        var email = request.Email.Trim().ToLowerInvariant();
+        var email = request.Email.NormalizeEmail();
         var emailExists = await db.Users.AnyAsync(u => u.Email == email, ct);
         if (emailExists)
         {
@@ -89,7 +89,7 @@ public class AuthService(
 
     public async Task<AuthResponse> LoginAsync(LoginRequest request, CancellationToken ct = default)
     {
-        var email = request.Email.Trim().ToLowerInvariant();
+        var email = request.Email.NormalizeEmail();
         var lockKey = $"owner:{email}";
         if (LoginAttemptTracker.IsLocked(lockKey))
         {

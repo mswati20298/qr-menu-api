@@ -18,6 +18,9 @@ public class SiteSettings
     /// <summary>Where the owner panel, kitchen screen and super admin live, e.g. "https://app.qrenvo.com".</summary>
     public string AppUrl { get; set; } = "http://localhost:4200";
 
+    /// <summary>WhatsApp number (country code + digits) owners contact for help, e.g. a forgotten password.</summary>
+    public string SupportWhatsApp { get; set; } = string.Empty;
+
     public bool IsDemo => string.Equals(Environment, "Demo", StringComparison.OrdinalIgnoreCase);
 
     public bool SubdomainsEnabled => !string.IsNullOrWhiteSpace(RootDomain);

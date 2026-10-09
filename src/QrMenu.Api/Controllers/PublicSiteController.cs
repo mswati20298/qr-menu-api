@@ -6,7 +6,7 @@ using QrMenu.Application.Restaurants;
 namespace QrMenu.Api.Controllers;
 
 /// <summary>What this deployment is (Demo or Prod) and, on a restaurant subdomain, which restaurant it belongs to.</summary>
-public record PublicSiteDto(string Environment, bool IsDemo, string? RootDomain, string AppUrl, string? RestaurantSlug);
+public record PublicSiteDto(string Environment, bool IsDemo, string? RootDomain, string AppUrl, string? RestaurantSlug, string? SupportWhatsApp);
 
 [ApiController]
 [Route("api/public/site")]
@@ -33,6 +33,7 @@ public class PublicSiteController(IOptions<SiteSettings> siteOptions, IRestauran
             site.IsDemo,
             site.SubdomainsEnabled ? site.RootDomain : null,
             site.AppUrl.TrimEnd('/'),
-            slug));
+            slug,
+            string.IsNullOrWhiteSpace(site.SupportWhatsApp) ? null : site.SupportWhatsApp.Trim()));
     }
 }

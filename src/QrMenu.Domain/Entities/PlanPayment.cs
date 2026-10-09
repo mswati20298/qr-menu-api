@@ -25,6 +25,9 @@ public class PlanPayment
     public PlanPaymentStatus Status { get; set; } = PlanPaymentStatus.Created;
     public string GatewayOrderId { get; set; } = string.Empty;
     public string? GatewayPaymentId { get; set; }
+
+    /// <summary>Razorpay's charges on this payment incl. GST (rupees), read from Razorpay when first needed. Razorpay keeps them on a refund.</summary>
+    public decimal? GatewayFee { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? PaidAt { get; set; }
 

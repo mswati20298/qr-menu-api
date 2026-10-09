@@ -18,7 +18,8 @@ public class OnlinePaymentService(
     IOptions<SubscriptionSettings> options,
     TimeProvider clock,
     ILogger<OnlinePaymentService> logger,
-    PaymentGatewayLogWriter paymentLog) : IOnlinePaymentService
+    PaymentGatewayLogWriter paymentLog,
+    QrMenu.Application.Refunds.IRefundService? refunds = null) : IOnlinePaymentService
 {
     private const string Currency = "INR";
 
@@ -111,6 +112,16 @@ public class OnlinePaymentService(
             using var doc = JsonDocument.Parse(body);
             var root = doc.RootElement;
             var eventName = root.GetProperty("event").GetString();
+            if (eventName is "refund.processed" or "refund.failed" && refunds is not null)
+            {
+                var refund = root.GetProperty("payload").GetProperty("refund").GetProperty("entity");
+                var refundId = refund.GetProperty("id").GetString();
+                if (!string.IsNullOrEmpty(refundId))
+                {
+                    await refunds.HandleGatewayUpdateAsync(refundId, eventName == "refund.processed" ? "processed" : "failed", ct);
+                }
+                return true;
+            }
             if (eventName is not ("payment.captured" or "order.paid"))
             {
                 return true;
@@ -148,6 +159,10 @@ public class OnlinePaymentService(
                 if (payload.TryGetProperty("payment", out var pay) && pay.TryGetProperty("entity", out var pe) && pe.TryGetProperty("order_id", out var oid))
                 {
                     orderId = oid.GetString();
+                }
+                else if (payload.TryGetProperty("refund", out var rf) && rf.TryGetProperty("entity", out var re) && re.TryGetProperty("payment_id", out var rp))
+                {
+                    orderId = "payment:" + rp.GetString();
                 }
                 else if (payload.TryGetProperty("order", out var ord) && ord.TryGetProperty("entity", out var oe) && oe.TryGetProperty("id", out var id))
                 {

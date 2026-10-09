@@ -15,5 +15,8 @@ public class SuperAdminConfiguration : IEntityTypeConfiguration<SuperAdmin>
         builder.Property(a => a.PasswordHash).HasMaxLength(200).IsRequired();
         builder.Property(a => a.CreatedAt).HasDefaultValueSql("SYSUTCDATETIME()");
         builder.HasIndex(a => a.Email).IsUnique();
+        builder.Property(a => a.TwoFactorSecretEncrypted).HasMaxLength(512);
+        builder.Property(a => a.PendingTwoFactorSecretEncrypted).HasMaxLength(512);
+        builder.Property(a => a.RecoveryCodeHashes).HasMaxLength(1024);
     }
 }

@@ -2,6 +2,7 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Logging;
 using QrMenu.Application.Common.Exceptions;
@@ -11,7 +12,8 @@ using QrMenu.Infrastructure.Security;
 namespace QrMenu.Infrastructure.Payments;
 
 /// <summary>Keys come from <see cref="IntegrationKeyStore"/>: the super admin panel first, then the server configuration.</summary>
-public class RazorpayGateway(HttpClient http, IntegrationKeyStore keys, ILogger<RazorpayGateway> logger) : IPaymentGateway
+public class RazorpayGateway(HttpClient http, IntegrationKeyStore keys, ILogger<RazorpayGateway> logger, PaymentGatewayLogWriter? paymentLog = null)
+    : IPaymentGateway
 {
     public bool IsConfigured => !string.IsNullOrWhiteSpace(keys.RazorpayKeyId) && !string.IsNullOrWhiteSpace(keys.RazorpayKeySecret);
 
@@ -25,22 +27,39 @@ public class RazorpayGateway(HttpClient http, IntegrationKeyStore keys, ILogger<
             throw new ConflictException("Online payments are not set up yet. Please contact support.");
         }
 
+        var payload = new { amount = amountInPaise, currency, receipt, notes };
+        var requestJson = JsonSerializer.Serialize(payload);
         using var request = new HttpRequestMessage(HttpMethod.Post, "https://api.razorpay.com/v1/orders")
         {
-            Content = JsonContent.Create(new { amount = amountInPaise, currency, receipt, notes })
+            Content = JsonContent.Create(payload)
         };
         request.Headers.Authorization = BasicAuth(keys.RazorpayKeyId, keys.RazorpayKeySecret);
 
-        using var response = await http.SendAsync(request, ct);
-        if (!response.IsSuccessStatusCode)
+        HttpResponseMessage response;
+        try
         {
-            var body = await response.Content.ReadAsStringAsync(ct);
-            logger.LogError("Razorpay order creation failed: {Status} {Body}", (int)response.StatusCode, body);
+            response = await http.SendAsync(request, ct);
+        }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
+        {
+            await Log("order.create", null, null, requestJson, null, $"No answer from Razorpay: {ex.Message}");
             throw new ConflictException("Could not start the payment. Please try again in a moment.");
         }
 
-        var order = await response.Content.ReadFromJsonAsync<RazorpayOrder>(cancellationToken: ct);
-        return order?.Id ?? throw new ConflictException("Could not start the payment. Please try again in a moment.");
+        using (response)
+        {
+            var body = await response.Content.ReadAsStringAsync(ct);
+            if (!response.IsSuccessStatusCode)
+            {
+                logger.LogError("Razorpay order creation failed: {Status} {Body}", (int)response.StatusCode, body);
+                await Log("order.create", null, (int)response.StatusCode, requestJson, body, "Razorpay refused the order");
+                throw new ConflictException("Could not start the payment. Please try again in a moment.");
+            }
+
+            var order = JsonSerializer.Deserialize<RazorpayOrder>(body);
+            await Log("order.create", order?.Id, (int)response.StatusCode, requestJson, body, "Order created");
+            return order?.Id ?? throw new ConflictException("Could not start the payment. Please try again in a moment.");
+        }
     }
 
     // Razorpay signs "order_id|payment_id" with the key secret.
@@ -83,6 +102,9 @@ public class RazorpayGateway(HttpClient http, IntegrationKeyStore keys, ILogger<
             return new GatewayCheckResult(false, "Could not reach Razorpay. Try again in a moment.");
         }
     }
+
+    private Task Log(string kind, string? orderId, int? status, string? request, string? response, string note) =>
+        paymentLog?.WriteAsync(kind, orderId, status, request, response, note) ?? Task.CompletedTask;
 
     private static AuthenticationHeaderValue BasicAuth(string keyId, string keySecret) =>
         new("Basic", Convert.ToBase64String(Encoding.UTF8.GetBytes($"{keyId}:{keySecret}")));

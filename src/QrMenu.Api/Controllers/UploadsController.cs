@@ -38,6 +38,7 @@ public class UploadsController(IFileStorageService fileStorageService, IImageOpt
         {
             "background" => ImagePurpose.Background,
             "logo" => ImagePurpose.Logo,
+            "feedback" => ImagePurpose.Feedback,
             _ => ImagePurpose.Item
         };
 

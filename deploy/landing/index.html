@@ -538,6 +538,20 @@
   .m-cta .txt b { display: block; color: var(--fg); font-size: 15px; }
 
   /* Card rules set their own transition, which would drop the reveal stagger: restore it while revealing. */
+  /* Testimonials (published from the super admin panel; the section stays hidden until there is one). */
+  .tm { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 360px)); justify-content: center; gap: 18px; margin-top: 34px; }
+  .tm .card { padding: 22px; display: grid; gap: 14px; align-content: start; transition: transform 0.3s var(--ease), border-color 0.3s; animation: tm-in 0.6s var(--ease) both; animation-delay: calc(var(--i, 0) * 80ms); }
+  .tm .card:hover { transform: translateY(-4px); border-color: var(--line-strong); }
+  .tm-stars { color: var(--gold); font-size: 17px; letter-spacing: 2px; }
+  .tm-quote { margin: 0; font-size: 15.5px; line-height: 1.6; color: var(--fg); overflow-wrap: anywhere; }
+  .tm-quote::before { content: '\201C'; color: var(--mint); font-family: var(--display); font-size: 30px; line-height: 0; vertical-align: -10px; margin-right: 3px; }
+  .tm-who { display: flex; align-items: center; gap: 12px; margin-top: auto; }
+  .tm-avatar { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; flex-shrink: 0; border: 1px solid var(--line-strong); }
+  .tm-letter { display: grid; place-items: center; background: rgba(66, 211, 160, 0.14); color: var(--mint); font-weight: 800; font-size: 18px; }
+  .tm-name { font-weight: 800; font-size: 15px; }
+  .tm-role { color: var(--muted); font-size: 13px; }
+  @keyframes tm-in { from { opacity: 0; transform: translateY(18px); } }
+  @media (prefers-reduced-motion: reduce) { .tm .card { animation: none; } }
   .reveal.in { transition-delay: calc(var(--i, 0) * 90ms); }
   .reveal.in:hover { transition-delay: 0s; }
 
@@ -914,6 +928,17 @@
           </div>
         </div>
       </div>
+    </div>
+  </section>
+
+  <!-- Testimonials: filled from the API (published ratings only); hidden while there are none. -->
+  <section id="testimonials" aria-labelledby="tm-title" hidden>
+    <div class="container">
+      <div class="head center">
+        <span class="eyebrow">Loved by restaurants</span>
+        <h2 id="tm-title">What owners and guests say</h2>
+      </div>
+      <div class="tm" id="tm-list"></div>
     </div>
   </section>
 
@@ -1316,6 +1341,60 @@
     out.textContent = message; out.hidden = false;
     copyText(message, event.currentTarget, function () { selectNode(out); });
   });
+
+  // ---- Testimonials ----
+  // Published ratings from app.qrenvo.com. Text goes in with textContent only, never as HTML.
+  (function () {
+    var local = /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
+    var apiBase = local ? (new URLSearchParams(location.search).get('api') || 'http://localhost:5176') : 'https://app.qrenvo.com';
+    var section = document.getElementById('testimonials');
+    var list = document.getElementById('tm-list');
+    if (!section || !list || !window.fetch) return;
+
+    function el(tag, cls, text) {
+      var n = document.createElement(tag);
+      if (cls) n.className = cls;
+      if (text != null) n.textContent = text;
+      return n;
+    }
+    function safeImage(url) {
+      return typeof url === 'string' && /^https:\/\/(app|demo)\.qrenvo\.com\/uploads\//.test(url) || (local && /^http:\/\/localhost:\d+\/uploads\//.test(url));
+    }
+
+    fetch(apiBase + '/api/public/testimonials', { credentials: 'omit' })
+      .then(function (r) { return r.ok ? r.json() : []; })
+      .then(function (items) {
+        if (!Array.isArray(items) || items.length === 0) return;
+        items.slice(0, 12).forEach(function (t, i) {
+          var card = el('article', 'card');
+          card.style.setProperty('--i', String(i));
+          var rating = Math.max(1, Math.min(5, Number(t.rating) || 5));
+          var stars = el('div', 'tm-stars', '★★★★★'.slice(0, rating) + '☆☆☆☆☆'.slice(0, 5 - rating));
+          stars.setAttribute('aria-label', rating + ' out of 5 stars');
+          card.appendChild(stars);
+          if (t.comment) card.appendChild(el('p', 'tm-quote', String(t.comment)));
+
+          var who = el('div', 'tm-who');
+          var name = String(t.name || 'Guest');
+          if (safeImage(t.imageUrl)) {
+            var img = el('img', 'tm-avatar');
+            img.src = t.imageUrl; img.alt = ''; img.width = 44; img.height = 44; img.loading = 'lazy';
+            img.onerror = function () { img.replaceWith(el('span', 'tm-avatar tm-letter', name.charAt(0).toUpperCase())); };
+            who.appendChild(img);
+          } else {
+            who.appendChild(el('span', 'tm-avatar tm-letter', name.charAt(0).toUpperCase()));
+          }
+          var text = el('div');
+          text.appendChild(el('div', 'tm-name', name));
+          text.appendChild(el('div', 'tm-role', String(t.role || '')));
+          who.appendChild(text);
+          card.appendChild(who);
+          list.appendChild(card);
+        });
+        section.hidden = false;
+      })
+      .catch(function () { /* No testimonials: the section simply stays hidden. */ });
+  })();
 </script>
 </body>
 </html>

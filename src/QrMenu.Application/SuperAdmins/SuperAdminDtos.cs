@@ -2,7 +2,37 @@ namespace QrMenu.Application.SuperAdmins;
 
 public record SuperAdminLoginRequest(string Email, string Password);
 
-public record SuperAdminAuthResponse(string Token, string Name);
+/// <summary>
+/// With two-step login on, the password step returns RequiresTwoFactor + ChallengeToken (no Token); the app then sends
+/// the 6-digit code with the challenge to verify-2fa and gets the real token.
+/// </summary>
+public record SuperAdminAuthResponse(string Token, string Name, bool RequiresTwoFactor = false, string? ChallengeToken = null);
+
+/// <summary>Code: the 6 digits from the app, or one of the recovery codes.</summary>
+public record VerifyTwoFactorRequest(string ChallengeToken, string Code);
+
+public record TwoFactorStatusDto(bool Enabled, int RecoveryCodesLeft);
+
+/// <summary>Shown once while setting up: scan the QR (PNG data URL) or type the secret into the app.</summary>
+public record TwoFactorSetupDto(string Secret, string OtpAuthUri, string QrPngDataUrl);
+
+public record EnableTwoFactorRequest(string Code);
+
+/// <summary>The recovery codes, shown only this once.</summary>
+public record TwoFactorEnabledDto(List<string> RecoveryCodes);
+
+/// <summary>Turning it off needs the password and a current code (or a recovery code).</summary>
+public record DisableTwoFactorRequest(string Password, string Code);
+
+public interface ISuperAdminTwoFactorService
+{
+    Task<SuperAdminAuthResponse> VerifyLoginAsync(VerifyTwoFactorRequest request, CancellationToken ct = default);
+    Task<TwoFactorStatusDto> GetStatusAsync(Guid adminId, CancellationToken ct = default);
+    Task<TwoFactorSetupDto> StartSetupAsync(Guid adminId, CancellationToken ct = default);
+    Task<TwoFactorEnabledDto> EnableAsync(Guid adminId, EnableTwoFactorRequest request, CancellationToken ct = default);
+    Task<TwoFactorEnabledDto> RegenerateRecoveryCodesAsync(Guid adminId, EnableTwoFactorRequest request, CancellationToken ct = default);
+    Task DisableAsync(Guid adminId, DisableTwoFactorRequest request, CancellationToken ct = default);
+}
 
 /// <summary>Business summary only: the super admin sees counts, never a restaurant's orders or customers.</summary>
 public record SuperAdminRestaurantDto(
@@ -22,6 +52,34 @@ public record SuperAdminRestaurantDto(
     DateTime? PlanExpiresAt);
 
 public record PagedResult<T>(List<T> Items, int Total, int Page, int PageSize);
+
+/// <summary>
+/// One plan payment for the super admin's log. Source "online" = Razorpay checkout (Status "Paid", or "Not completed"
+/// when the owner opened the checkout but did not pay); "manual" = recorded by a super admin (cash, UPI, bank...).
+/// </summary>
+public record PaymentLogDto(
+    Guid Id,
+    string Source,
+    string Status,
+    Guid RestaurantId,
+    string RestaurantName,
+    string? PlanName,
+    decimal Amount,
+    string? Method,
+    string? GatewayOrderId,
+    string? GatewayPaymentId,
+    string? Reference,
+    string? Note,
+    string? PerformedBy,
+    DateTime CreatedAt,
+    DateTime? PaidAt);
+
+public record PaymentLogSummaryDto(decimal ReceivedTotal, int PaidCount, int NotCompletedCount);
+
+public record PaymentLogResponse(PaymentLogSummaryDto Summary, List<PaymentLogDto> Items);
+
+/// <summary>One message to or from Razorpay for an order, oldest first. Bodies are the raw JSON.</summary>
+public record PaymentGatewayLogDto(string Kind, int? StatusCode, string? RequestBody, string? ResponseBody, string? Note, DateTime CreatedAt);
 
 public record SuperAdminStatsDto(
     int TotalRestaurants,

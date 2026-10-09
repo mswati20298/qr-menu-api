@@ -78,6 +78,8 @@ builder.Services.AddCors(options =>
             .AllowAnyHeader()
             .AllowAnyMethod();
     });
+    // Read-only data any site may fetch (the landing page testimonials). GET only, no cookies or tokens.
+    options.AddPolicy(QrMenu.Api.Controllers.PublicReadCors.Policy, policy => policy.AllowAnyOrigin().WithMethods("GET"));
 });
 
 // Behind Cloudflare + Caddy the real client address arrives in X-Forwarded-For (Caddy fills it from

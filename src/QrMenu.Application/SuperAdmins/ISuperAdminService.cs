@@ -14,4 +14,10 @@ public interface ISuperAdminService
     Task<SuperAdminRestaurantDto> SetRestaurantStatusAsync(Guid restaurantId, bool isActive, CancellationToken ct = default);
     /// <summary>Gives the owner a new temporary password (shown once) and signs out all their logins.</summary>
     Task<ResetOwnerPasswordResponse> ResetOwnerPasswordAsync(Guid restaurantId, CancellationToken ct = default);
+
+    /// <summary>Every plan payment, newest first. status: "paid", "unpaid" (checkout opened, not paid) or empty.</summary>
+    Task<PaymentLogResponse> ListPaymentsAsync(string? status, string? search, CancellationToken ct = default);
+
+    /// <summary>Every Razorpay message for one order (request, response, checkout confirmation, webhooks, result).</summary>
+    Task<List<PaymentGatewayLogDto>> GetGatewayLogAsync(string gatewayOrderId, CancellationToken ct = default);
 }

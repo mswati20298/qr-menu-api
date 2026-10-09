@@ -13,6 +13,7 @@ public class ImageOptimizer : IImageOptimizer
     {
         ImagePurpose.Background => 1920,
         ImagePurpose.Logo => 512,
+        ImagePurpose.Feedback => 800,
         _ => 1200
     };
 

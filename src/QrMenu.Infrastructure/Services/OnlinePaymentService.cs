@@ -6,6 +6,7 @@ using QrMenu.Application.Common.Exceptions;
 using QrMenu.Application.Common.Interfaces;
 using QrMenu.Application.Subscriptions;
 using QrMenu.Domain.Entities;
+using QrMenu.Infrastructure.Payments;
 using QrMenu.Infrastructure.Persistence;
 
 namespace QrMenu.Infrastructure.Services;
@@ -16,7 +17,8 @@ public class OnlinePaymentService(
     ISubscriptionService subscriptionService,
     IOptions<SubscriptionSettings> options,
     TimeProvider clock,
-    ILogger<OnlinePaymentService> logger) : IOnlinePaymentService
+    ILogger<OnlinePaymentService> logger,
+    PaymentGatewayLogWriter paymentLog) : IOnlinePaymentService
 {
     private const string Currency = "INR";
 
@@ -68,7 +70,15 @@ public class OnlinePaymentService(
 
     public async Task<OwnerPlanDto> ConfirmCheckoutAsync(Guid restaurantId, ConfirmCheckoutRequest request, CancellationToken ct = default)
     {
-        if (!gateway.IsPaymentSignatureValid(request.RazorpayOrderId, request.RazorpayPaymentId, request.RazorpaySignature))
+        var signatureOk = gateway.IsPaymentSignatureValid(request.RazorpayOrderId, request.RazorpayPaymentId, request.RazorpaySignature);
+        await paymentLog.WriteAsync("checkout.confirm", request.RazorpayOrderId, null, JsonSerializer.Serialize(new
+        {
+            razorpay_order_id = request.RazorpayOrderId,
+            razorpay_payment_id = request.RazorpayPaymentId,
+            razorpay_signature = request.RazorpaySignature
+        }), null, signatureOk ? "From the owner's browser after paying: signature valid" : "From the owner's browser: signature INVALID, refused");
+
+        if (!signatureOk)
         {
             logger.LogWarning("Rejected payment confirmation with a bad signature for order {OrderId}", request.RazorpayOrderId);
             throw new ConflictException("We could not verify this payment. If money was deducted, it will be confirmed automatically or refunded.");
@@ -88,10 +98,13 @@ public class OnlinePaymentService(
 
     public async Task<bool> HandleWebhookAsync(string body, string? signature, CancellationToken ct = default)
     {
+        var (webhookEvent, webhookOrderId) = ReadWebhookSummary(body);
         if (!gateway.IsWebhookSignatureValid(body, signature))
         {
+            await paymentLog.WriteAsync("webhook", webhookOrderId, 400, body, null, $"{webhookEvent ?? "unknown event"}: signature INVALID, ignored");
             return false;
         }
+        await paymentLog.WriteAsync("webhook", webhookOrderId, 200, body, null, $"{webhookEvent ?? "unknown event"}: signature valid");
 
         try
         {
@@ -121,6 +134,34 @@ public class OnlinePaymentService(
         return true;
     }
 
+    /// <summary>The event name and order id of a webhook, best effort (for the log, before the signature is checked).</summary>
+    private static (string? Event, string? OrderId) ReadWebhookSummary(string body)
+    {
+        try
+        {
+            using var doc = JsonDocument.Parse(body);
+            var root = doc.RootElement;
+            var name = root.TryGetProperty("event", out var e) ? e.GetString() : null;
+            string? orderId = null;
+            if (root.TryGetProperty("payload", out var payload))
+            {
+                if (payload.TryGetProperty("payment", out var pay) && pay.TryGetProperty("entity", out var pe) && pe.TryGetProperty("order_id", out var oid))
+                {
+                    orderId = oid.GetString();
+                }
+                else if (payload.TryGetProperty("order", out var ord) && ord.TryGetProperty("entity", out var oe) && oe.TryGetProperty("id", out var id))
+                {
+                    orderId = id.GetString();
+                }
+            }
+            return (name, orderId);
+        }
+        catch (JsonException)
+        {
+            return (null, null);
+        }
+    }
+
     /// <summary>
     /// Applies the plan once. Both the browser callback and the webhook end up here, so a payment that was
     /// already applied is skipped.
@@ -131,11 +172,13 @@ public class OnlinePaymentService(
         if (payment is null)
         {
             logger.LogWarning("Payment for unknown order {OrderId}", orderId);
+            await paymentLog.WriteAsync("result", orderId, null, null, null, "Unknown order: nothing applied");
             return;
         }
 
         if (payment.Status == PlanPaymentStatus.Paid)
         {
+            await paymentLog.WriteAsync("result", orderId, null, null, null, $"Already applied earlier (payment {paymentId})");
             return;
         }
 
@@ -143,6 +186,8 @@ public class OnlinePaymentService(
         if (paidAmountInPaise.HasValue && paidAmountInPaise.Value != expected)
         {
             logger.LogError("Order {OrderId} was paid {Paid} paise but {Expected} was expected; plan not applied", orderId, paidAmountInPaise, expected);
+            await paymentLog.WriteAsync("result", orderId, null, null, null,
+                $"Amount mismatch: paid {paidAmountInPaise} paise, expected {expected}. Plan NOT applied");
             return;
         }
 
@@ -173,5 +218,7 @@ public class OnlinePaymentService(
         await db.SaveChangesAsync(ct);
         await transaction.CommitAsync(ct);
         logger.LogInformation("Online payment {PaymentId} applied {Plan} to restaurant {RestaurantId}", paymentId, payment.PlanName, restaurant.Id);
+        await paymentLog.WriteAsync("result", orderId, null, null, null,
+            $"Plan applied: {payment.PlanName} ({payment.DurationMonths} month(s)), payment {paymentId}, until {restaurant.PlanExpiresAt:d MMM yyyy}");
     }
 }

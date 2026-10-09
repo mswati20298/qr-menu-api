@@ -37,7 +37,8 @@ public class QrController(
         var cards = activeTables
             .Select(t => (t.Number, MenuLinks.TableUrl(_site, restaurant.Slug, restaurant.Subdomain, t.Number, t.QrCode)))
             .ToList();
-        var pdfBytes = qrPdfService.GenerateTableQrPdf(restaurant.Name, cards);
+        var branding = new QrCardBranding(restaurant.Name, restaurant.Tagline, restaurant.ThemeColor, restaurant.LogoUrl);
+        var pdfBytes = qrPdfService.GenerateTableQrPdf(branding, cards);
 
         return File(pdfBytes, "application/pdf", $"{restaurant.Slug}-qr-cards.pdf");
     }

@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using QrMenu.Application.Feedbacks;
 using QrMenu.Application.Platform;
 using QrMenu.Application.Subscriptions;
 using QrMenu.Application.SuperAdmins;
@@ -18,6 +19,8 @@ public class SuperAdminController(
     IPlatformSettingsService platformSettingsService,
     IPlatformKeysService platformKeysService,
     IDemoResetService demoResetService,
+    IFeedbackService feedbackService,
+    ISuperAdminTwoFactorService twoFactorService,
     ILogger<SuperAdminController> logger) : ControllerBase
 {
     [HttpGet("stats")]
@@ -94,6 +97,20 @@ public class SuperAdminController(
         var result = await subscriptionService.CancelAsync(id, request, AdminEmail, ct);
         logger.LogInformation("Super admin {Email} cancelled restaurant {RestaurantId} plan", AdminEmail, id);
         return Ok(result);
+    }
+
+    // Every plan payment (Razorpay checkouts and payments recorded by hand). Super admin only.
+
+    [HttpGet("payments")]
+    public async Task<ActionResult<PaymentLogResponse>> Payments([FromQuery] string? status, [FromQuery] string? search, CancellationToken ct)
+    {
+        return Ok(await superAdminService.ListPaymentsAsync(status, search, ct));
+    }
+
+    [HttpGet("payments/gateway-log")]
+    public async Task<ActionResult<List<PaymentGatewayLogDto>>> GatewayLog([FromQuery] string orderId, CancellationToken ct)
+    {
+        return Ok(await superAdminService.GetGatewayLogAsync(orderId, ct));
     }
 
     // Plan catalog. Owners only ever see the active plans, read-only, on their "My plan" page.
@@ -195,6 +212,70 @@ public class SuperAdminController(
         logger.LogInformation("Super admin {Email} is resetting the demo data", AdminEmail);
         return Ok(await demoResetService.ResetAsync(AdminEmail, ct));
     }
+
+    // Ratings from guests and owners; published ones appear on the landing page.
+
+    [HttpGet("feedback")]
+    public async Task<ActionResult<List<FeedbackDto>>> ListFeedback([FromQuery] string? kind, CancellationToken ct)
+    {
+        return Ok(await feedbackService.ListAllAsync(kind, ct));
+    }
+
+    [HttpPut("feedback/{id:guid}/publish")]
+    public async Task<ActionResult<FeedbackDto>> PublishFeedback(Guid id, SetFeedbackPublishedRequest request, CancellationToken ct)
+    {
+        var result = await feedbackService.SetPublishedAsync(id, request.IsPublished, ct);
+        logger.LogInformation("Super admin {Email} set feedback {Id} published={Published}", AdminEmail, id, request.IsPublished);
+        return Ok(result);
+    }
+
+    [HttpDelete("feedback/{id:guid}")]
+    public async Task<IActionResult> DeleteFeedback(Guid id, CancellationToken ct)
+    {
+        await feedbackService.DeleteAsync(id, ct);
+        logger.LogInformation("Super admin {Email} deleted feedback {Id}", AdminEmail, id);
+        return NoContent();
+    }
+
+    // Two-step login for the signed-in super admin.
+
+    [HttpGet("2fa")]
+    public async Task<ActionResult<TwoFactorStatusDto>> TwoFactorStatus(CancellationToken ct)
+    {
+        return Ok(await twoFactorService.GetStatusAsync(AdminId, ct));
+    }
+
+    [HttpPost("2fa/setup")]
+    public async Task<ActionResult<TwoFactorSetupDto>> TwoFactorSetup(CancellationToken ct)
+    {
+        return Ok(await twoFactorService.StartSetupAsync(AdminId, ct));
+    }
+
+    [HttpPost("2fa/enable")]
+    public async Task<ActionResult<TwoFactorEnabledDto>> TwoFactorEnable(EnableTwoFactorRequest request, CancellationToken ct)
+    {
+        var result = await twoFactorService.EnableAsync(AdminId, request, ct);
+        logger.LogInformation("Super admin {Email} turned on two-step login", AdminEmail);
+        return Ok(result);
+    }
+
+    [HttpPost("2fa/recovery-codes")]
+    public async Task<ActionResult<TwoFactorEnabledDto>> TwoFactorRecoveryCodes(EnableTwoFactorRequest request, CancellationToken ct)
+    {
+        var result = await twoFactorService.RegenerateRecoveryCodesAsync(AdminId, request, ct);
+        logger.LogInformation("Super admin {Email} made new recovery codes", AdminEmail);
+        return Ok(result);
+    }
+
+    [HttpPost("2fa/disable")]
+    public async Task<IActionResult> TwoFactorDisable(DisableTwoFactorRequest request, CancellationToken ct)
+    {
+        await twoFactorService.DisableAsync(AdminId, request, ct);
+        logger.LogInformation("Super admin {Email} turned off two-step login", AdminEmail);
+        return NoContent();
+    }
+
+    private Guid AdminId => Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
 
     private string AdminEmail => User.FindFirst(ClaimTypes.Email)?.Value ?? "superadmin";
 }

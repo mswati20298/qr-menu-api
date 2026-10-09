@@ -34,8 +34,16 @@ public static class SuperAdminSeeder
             return;
         }
 
-        if (await db.SuperAdmins.AnyAsync(a => a.Email == email))
+        var existing = await db.SuperAdmins.FirstOrDefaultAsync(a => a.Email == email);
+        if (existing is not null)
         {
+            // Lost phone and lost recovery codes: whoever controls the server's configuration can switch it off.
+            if (config.GetValue("SuperAdmin:DisableTwoFactor", false) && existing.TwoFactorEnabled)
+            {
+                QrMenu.Infrastructure.Services.SuperAdminTwoFactorService.TurnOff(existing);
+                await db.SaveChangesAsync();
+                logger.LogWarning("Two-step login was turned off for {Email} (SuperAdmin:DisableTwoFactor). Remove that setting now.", email);
+            }
             return;
         }
 

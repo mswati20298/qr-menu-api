@@ -6,6 +6,7 @@ using QrMenu.Application.Backgrounds;
 using QrMenu.Application.Categories;
 using QrMenu.Application.Common;
 using QrMenu.Application.Common.Interfaces;
+using QrMenu.Application.Feedbacks;
 using QrMenu.Application.Invoices;
 using QrMenu.Application.Items;
 using QrMenu.Application.Kitchen;
@@ -41,6 +42,7 @@ public static class DependencyInjection
         services.Configure<RazorpaySettings>(configuration.GetSection("Razorpay"));
         services.AddSingleton<SecretProtector>();
         services.AddSingleton<IntegrationKeyStore>();
+        services.AddSingleton<PaymentGatewayLogWriter>();
         services.AddHttpClient<IPaymentGateway, RazorpayGateway>(client => client.Timeout = TimeSpan.FromSeconds(30));
 
         services.AddScoped<IPasswordHasher, BcryptPasswordHasher>();
@@ -54,6 +56,9 @@ public static class DependencyInjection
         services.AddHttpClient<IMenuScanService, GeminiMenuScanService>(client => client.Timeout = TimeSpan.FromSeconds(120));
 
         services.AddScoped<IPlatformKeysService, PlatformKeysService>();
+        services.AddScoped<IFeedbackService, FeedbackService>();
+        services.AddSingleton<TwoFactorChallenges>();
+        services.AddScoped<ISuperAdminTwoFactorService, SuperAdminTwoFactorService>();
         services.AddScoped<IDemoResetService, DemoResetService>();
         services.AddHostedService<DemoAutoResetWorker>();
 

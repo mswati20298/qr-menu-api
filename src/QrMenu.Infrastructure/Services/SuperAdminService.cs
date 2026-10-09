@@ -16,7 +16,8 @@ public class SuperAdminService(
     AppDbContext db,
     IPasswordHasher passwordHasher,
     IJwtTokenService jwtTokenService,
-    IOptions<SubscriptionSettings> subscriptionOptions) : ISuperAdminService
+    IOptions<SubscriptionSettings> subscriptionOptions,
+    TwoFactorChallenges twoFactorChallenges) : ISuperAdminService
 {
     // Hash of a random password. Checked when the email is unknown so a wrong email and a wrong
     // password take the same time (no way to tell which super admin emails exist).
@@ -41,7 +42,64 @@ public class SuperAdminService(
         }
 
         LoginAttemptTracker.Reset(email);
+
+        // Two-step login: no token yet, only a 5-minute challenge for the code step.
+        if (admin.TwoFactorEnabled)
+        {
+            return new SuperAdminAuthResponse(string.Empty, admin.Name, RequiresTwoFactor: true, ChallengeToken: twoFactorChallenges.Issue(admin.Id));
+        }
+
         return new SuperAdminAuthResponse(jwtTokenService.GenerateSuperAdminToken(admin), admin.Name);
+    }
+
+    public async Task<List<PaymentGatewayLogDto>> GetGatewayLogAsync(string gatewayOrderId, CancellationToken ct = default) =>
+        await db.PaymentGatewayLogs.AsNoTracking()
+            .Where(l => l.GatewayOrderId == gatewayOrderId)
+            .OrderBy(l => l.CreatedAt)
+            .Select(l => new PaymentGatewayLogDto(l.Kind, l.StatusCode, l.RequestBody, l.ResponseBody, l.Note, l.CreatedAt))
+            .ToListAsync(ct);
+
+    public async Task<PaymentLogResponse> ListPaymentsAsync(string? status, string? search, CancellationToken ct = default)
+    {
+        var term = search?.Trim();
+
+        // Razorpay checkouts: each one is a row from the moment the owner presses Pay.
+        var online = await db.PlanPayments.AsNoTracking()
+            .Where(p => string.IsNullOrEmpty(term) || p.Restaurant.Name.Contains(term) || p.GatewayOrderId.Contains(term)
+                || (p.GatewayPaymentId != null && p.GatewayPaymentId.Contains(term)))
+            .OrderByDescending(p => p.CreatedAt)
+            .Take(500)
+            .Select(p => new PaymentLogDto(
+                p.Id, "online", p.Status == PlanPaymentStatus.Paid ? "Paid" : "Not completed",
+                p.RestaurantId, p.Restaurant.Name, p.PlanName, p.Amount, "Razorpay",
+                p.GatewayOrderId, p.GatewayPaymentId, null, null, "owner (online)", p.CreatedAt, p.PaidAt))
+            .ToListAsync(ct);
+
+        // Recorded by hand in the panel. (Online payments also leave a PaymentRecorded event; skip those.)
+        var manual = await db.SubscriptionEvents.AsNoTracking()
+            .Where(e => e.Action == SubscriptionAction.PaymentRecorded && e.PaymentMethod != PaymentMethod.Online)
+            .Where(e => string.IsNullOrEmpty(term) || e.Restaurant.Name.Contains(term) || (e.PaymentReference != null && e.PaymentReference.Contains(term)))
+            .OrderByDescending(e => e.CreatedAt)
+            .Take(500)
+            .Select(e => new PaymentLogDto(
+                e.Id, "manual", "Paid", e.RestaurantId, e.Restaurant.Name, e.PlanName, e.Amount ?? 0,
+                e.PaymentMethod.HasValue ? e.PaymentMethod.Value.ToString() : null,
+                null, null, e.PaymentReference, e.Note, e.PerformedBy, e.CreatedAt, e.CreatedAt))
+            .ToListAsync(ct);
+
+        var all = online.Concat(manual).OrderByDescending(p => p.CreatedAt).ToList();
+        var summary = new PaymentLogSummaryDto(
+            all.Where(p => p.Status == "Paid").Sum(p => p.Amount),
+            all.Count(p => p.Status == "Paid"),
+            all.Count(p => p.Status != "Paid"));
+
+        var items = status?.ToLowerInvariant() switch
+        {
+            "paid" => all.Where(p => p.Status == "Paid"),
+            "unpaid" => all.Where(p => p.Status != "Paid"),
+            _ => all
+        };
+        return new PaymentLogResponse(summary, items.Take(500).ToList());
     }
 
     public async Task<ResetOwnerPasswordResponse> ResetOwnerPasswordAsync(Guid restaurantId, CancellationToken ct = default)

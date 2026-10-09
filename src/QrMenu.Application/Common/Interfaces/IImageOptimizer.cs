@@ -10,7 +10,10 @@ public enum ImagePurpose
     Background,
 
     /// <summary>Restaurant logo.</summary>
-    Logo
+    Logo,
+
+    /// <summary>Photo with a rating (guest or owner): shown small, so kept small.</summary>
+    Feedback
 }
 
 public record OptimizedImage(byte[] Content, string Extension, string ContentType, int Width, int Height);

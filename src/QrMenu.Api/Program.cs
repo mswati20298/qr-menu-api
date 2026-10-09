@@ -170,7 +170,18 @@ app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 app.UseCors(AngularCorsPolicy);
 
-app.UseStaticFiles();
+// Uploaded photos have random, never reused names, so browsers and Cloudflare may keep them for 30 days.
+// Set here (only on real files), not in Caddy: a header there also went on 404s, and Cloudflare kept those.
+app.UseStaticFiles(new StaticFileOptions
+{
+    OnPrepareResponse = ctx =>
+    {
+        if (ctx.Context.Request.Path.StartsWithSegments("/uploads"))
+        {
+            ctx.Context.Response.Headers.CacheControl = "public, max-age=2592000";
+        }
+    }
+});
 
 app.UseAuthentication();
 app.UseAuthorization();

@@ -40,8 +40,8 @@
 		}
 	}
 	handle /uploads/* {
+		# Cache-Control comes from the API, only on real photos (a header here also went on 404s).
 		reverse_proxy {args[0]}:8080
-		header Cache-Control "public, max-age=2592000"
 	}
 	# Swagger is off outside Development; never expose it here either.
 	handle /swagger* {

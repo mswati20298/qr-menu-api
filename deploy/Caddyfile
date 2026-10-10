@@ -21,8 +21,9 @@
 		X-Content-Type-Options "nosniff"
 		Referrer-Policy "strict-origin-when-cross-origin"
 		X-Frame-Options "SAMEORIGIN"
-		# Camera: menu photo scan. Payment: Razorpay checkout. Everything else off.
-		Permissions-Policy "camera=(self), microphone=(), geolocation=(), payment=(self \"https://checkout.razorpay.com\" \"https://api.razorpay.com\"), usb=()"
+		# Camera: menu photo scan, and Razorpay's window (card scan). Motion sensors: Razorpay's fraud checks only.
+		# Payment: Razorpay checkout. Microphone, location and USB: off.
+		Permissions-Policy "camera=(self \"https://api.razorpay.com\" \"https://checkout.razorpay.com\"), accelerometer=(self \"https://api.razorpay.com\" \"https://checkout.razorpay.com\"), gyroscope=(self \"https://api.razorpay.com\" \"https://checkout.razorpay.com\"), microphone=(), geolocation=(), payment=(self \"https://checkout.razorpay.com\" \"https://api.razorpay.com\"), usb=()"
 		-Server
 	}
 }

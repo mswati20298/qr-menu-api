@@ -15,7 +15,8 @@ public class PublicMenuService(
     AppDbContext db,
     IOptions<SubscriptionSettings> subscriptionOptions,
     TimeProvider clock,
-    ITableSessionTokens tableSessions) : IPublicMenuService
+    ITableSessionTokens tableSessions,
+    MenuCache? menuCache = null) : IPublicMenuService
 {
     public async Task<TableSessionDto> StartTableSessionAsync(string slug, StartTableSessionRequest request, CancellationToken ct = default)
     {
@@ -38,25 +39,12 @@ public class PublicMenuService(
 
     public async Task<PublicMenuResponse> GetMenuAsync(string slug, CancellationToken ct = default)
     {
-        // Split query: categories, dishes, sizes and add-ons as separate small queries. As one query the rows multiply
-        // (every dish x every size x every add-on) and a normal menu took seconds, sometimes timing out.
-        var restaurant = await db.Restaurants
-            .AsNoTracking()
-            .AsSplitQuery()
-            .Include(r => r.Categories.OrderBy(c => c.SortOrder))
-            .ThenInclude(c => c.MenuItems.OrderBy(i => i.SortOrder))
-            .ThenInclude(i => i.Variants.OrderBy(v => v.SortOrder))
-            .Include(r => r.Categories)
-            .ThenInclude(c => c.MenuItems)
-            .ThenInclude(i => i.AddOns.OrderBy(a => a.SortOrder))
-            .FirstOrDefaultAsync(r => r.Slug == slug && r.IsActive, ct)
-            ?? throw new NotFoundException("Restaurant not found.");
-
-        var backgrounds = await db.RestaurantBackgrounds
-            .Where(b => b.RestaurantId == restaurant.Id)
-            .OrderBy(b => b.SortOrder)
-            .ThenBy(b => b.CreatedAt)
-            .ToListAsync(ct);
+        var entry = menuCache is null ? await LoadMenuAsync(slug, ct) : await menuCache.GetOrLoadAsync(slug, () => LoadMenuAsync(slug, ct));
+        if (entry is null)
+        {
+            throw new NotFoundException("Restaurant not found.");
+        }
+        var (restaurant, backgrounds) = (entry.Restaurant, entry.Backgrounds);
 
         // Opening hours are Indian time; the server itself runs in UTC.
         var isOpenNow = IndianTime.IsOpen(restaurant.OpenTime, restaurant.CloseTime, clock.GetUtcNow().UtcDateTime);
@@ -71,7 +59,7 @@ public class PublicMenuService(
             restaurant.BackgroundMode.ToString(),
             backgrounds.Select(b => new PublicBackgroundDto(b.ImageUrl, b.Slots, b.IsDefault)).ToList(),
             restaurant.ThemeColor,
-            SubscriptionRules.CanTakeOrders(restaurant, subscriptionOptions.Value.GraceDays, DateTime.UtcNow),
+            SubscriptionRules.CanTakeOrders(restaurant, subscriptionOptions.Value.GraceDays, clock.GetUtcNow().UtcDateTime),
             restaurant.UpiId,
             restaurant.UpiPayeeName,
             restaurant.RequireTableQr,
@@ -87,6 +75,35 @@ public class PublicMenuService(
         )).Where(c => c.Items.Count > 0).ToList();
 
         return new PublicMenuResponse(restaurantDto, categories);
+    }
+
+    /// <summary>The menu as stored (no per-request values), or null when there is no such active restaurant.</summary>
+    private async Task<MenuCache.Entry?> LoadMenuAsync(string slug, CancellationToken ct)
+    {
+        // Split query: categories, dishes, sizes and add-ons as separate small queries. As one query the rows multiply
+        // (every dish x every size x every add-on) and a normal menu took seconds, sometimes timing out.
+        var restaurant = await db.Restaurants
+            .AsNoTracking()
+            .AsSplitQuery()
+            .Include(r => r.Categories.OrderBy(c => c.SortOrder))
+            .ThenInclude(c => c.MenuItems.OrderBy(i => i.SortOrder))
+            .ThenInclude(i => i.Variants.OrderBy(v => v.SortOrder))
+            .Include(r => r.Categories)
+            .ThenInclude(c => c.MenuItems)
+            .ThenInclude(i => i.AddOns.OrderBy(a => a.SortOrder))
+            .FirstOrDefaultAsync(r => r.Slug == slug && r.IsActive, ct);
+        if (restaurant is null)
+        {
+            return null;
+        }
+
+        var backgrounds = await db.RestaurantBackgrounds
+            .AsNoTracking()
+            .Where(b => b.RestaurantId == restaurant.Id)
+            .OrderBy(b => b.SortOrder)
+            .ThenBy(b => b.CreatedAt)
+            .ToListAsync(ct);
+        return new MenuCache.Entry(restaurant, backgrounds);
     }
 
     public async Task LogScanAsync(string slug, string? table, CancellationToken ct = default)

@@ -78,6 +78,12 @@ public class ImageOptimizer : IImageOptimizer
             return new OptimizedImage(png.ToArray(), ".png", "image/png", width, height);
         }
 
+        // WebP: about a third smaller than JPEG at the same quality. JPEG only if this Skia build cannot write WebP.
+        using var webp = image.Encode(SKEncodedImageFormat.Webp, quality);
+        if (webp is not null && webp.Size > 0)
+        {
+            return new OptimizedImage(webp.ToArray(), ".webp", "image/webp", width, height);
+        }
         using var jpeg = image.Encode(SKEncodedImageFormat.Jpeg, quality);
         return new OptimizedImage(jpeg.ToArray(), ".jpg", "image/jpeg", width, height);
     }

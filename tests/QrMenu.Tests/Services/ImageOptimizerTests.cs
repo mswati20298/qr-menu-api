@@ -56,7 +56,7 @@ public class ImageOptimizerTests
 
         result.Width.Should().Be(1920);
         result.Height.Should().Be(1280);
-        result.Extension.Should().Be(".jpg");
+        result.Extension.Should().Be(".webp");
         result.Content.Length.Should().BeLessThan(original.Length);
     }
 
@@ -76,7 +76,7 @@ public class ImageOptimizerTests
         var result = await _optimizer.OptimizeAsync(new MemoryStream(MakeImage(300, 200, SKEncodedImageFormat.Png)), ImagePurpose.Background);
 
         (result.Width, result.Height).Should().Be((300, 200));
-        result.Extension.Should().Be(".jpg"); // opaque PNG photo saved as JPEG
+        result.Extension.Should().Be(".webp"); // opaque PNG photo saved as WebP
     }
 
     [Fact]

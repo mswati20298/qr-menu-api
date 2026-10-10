@@ -35,6 +35,13 @@ public class InvoicesController(IInvoiceService invoiceService, IOrderService or
         return Ok(await invoiceService.ListAsync(RestaurantId, search, page, pageSize, ct));
     }
 
+    /// <summary>GST / sales report: every bill in the period (UTC).</summary>
+    [HttpGet("export")]
+    public async Task<ActionResult<List<InvoiceExportRowDto>>> Export([FromQuery] DateTime from, [FromQuery] DateTime to, CancellationToken ct)
+    {
+        return Ok(await invoiceService.ExportAsync(RestaurantId, from.ToUniversalTime(), to.ToUniversalTime(), ct));
+    }
+
     [HttpPost]
     public async Task<ActionResult<InvoiceDto>> Create(CreateInvoiceRequest request, CancellationToken ct)
     {

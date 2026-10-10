@@ -33,8 +33,12 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddDbContext<AppDbContext>(options =>
-            options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
+        services.AddMemoryCache();
+        services.AddSingleton<MenuCache>();
+        services.AddScoped<MenuCacheInvalidator>();
+        services.AddDbContext<AppDbContext>((sp, options) => options
+            .UseSqlServer(configuration.GetConnectionString("DefaultConnection"))
+            .AddInterceptors(sp.GetRequiredService<MenuCacheInvalidator>()));
 
         services.Configure<JwtSettings>(configuration.GetSection("Jwt"));
         services.Configure<SiteSettings>(configuration.GetSection("Site"));
@@ -59,6 +63,7 @@ public static class DependencyInjection
         services.AddScoped<IPlatformKeysService, PlatformKeysService>();
         services.AddScoped<IFeedbackService, FeedbackService>();
         services.AddScoped<IRefundService, RefundService>();
+        services.AddScoped<IAdminAuditService, AdminAuditService>();
         services.AddSingleton<TwoFactorChallenges>();
         services.AddScoped<ISuperAdminTwoFactorService, SuperAdminTwoFactorService>();
         services.AddScoped<IDemoResetService, DemoResetService>();

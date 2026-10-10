@@ -1,3 +1,4 @@
+using QrMenu.Application.Common;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using QrMenu.Application.Common.Exceptions;
@@ -219,6 +220,28 @@ public class InvoiceService(AppDbContext db, IInvoicePdfService pdfService, Time
             invoice.GstPercentage, invoice.GstAmount, invoice.Total,
             PaymentStatusOf(orders.Select(o => o.PaymentStatus).ToList()),
             orders.Select(o => o.Id).ToList());
+    }
+
+    public async Task<List<InvoiceExportRowDto>> ExportAsync(Guid restaurantId, DateTime from, DateTime to, CancellationToken ct = default)
+    {
+        ReportRange.Check(from, to);
+        var rows = await db.Invoices.AsNoTracking()
+            .Where(i => i.RestaurantId == restaurantId && i.CreatedAt >= from && i.CreatedAt < to)
+            .OrderBy(i => i.Sequence)
+            .Select(i => new
+            {
+                i.Number, i.CreatedAt, i.TableNumber, i.CustomerName, i.CustomerPhone,
+                i.Subtotal, i.ServiceChargeAmount, i.GstPercentage, i.GstAmount, i.Total,
+                Payments = i.Orders.Select(o => new { o.PaymentStatus, o.PaymentMethod }).ToList()
+            })
+            .ToListAsync(ct);
+
+        return rows.Select(r => new InvoiceExportRowDto(
+            r.Number, r.CreatedAt, r.TableNumber, r.CustomerName, r.CustomerPhone, r.Payments.Count,
+            r.Subtotal, r.ServiceChargeAmount, r.GstPercentage, r.GstAmount, r.Total,
+            PaymentStatusOf(r.Payments.Select(p => p.PaymentStatus).ToList()),
+            string.Join(", ", r.Payments.Where(p => p.PaymentMethod != null).Select(p => p.PaymentMethod!.Value.ToString()).Distinct()) is { Length: > 0 } m ? m : null))
+            .ToList();
     }
 
     private static string PaymentStatusOf(List<OrderPaymentStatus> payments)

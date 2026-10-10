@@ -14,6 +14,7 @@ namespace QrMenu.Api.Controllers;
 [Route("api/superadmin")]
 [Authorize(Policy = "SuperAdmin")]
 [ServiceFilter(typeof(QrMenu.Api.Filters.SuperAdminSessionFilter))]
+[ServiceFilter(typeof(QrMenu.Api.Filters.AdminAuditFilter))]
 public class SuperAdminController(
     ISuperAdminService superAdminService,
     ISubscriptionService subscriptionService,
@@ -24,8 +25,16 @@ public class SuperAdminController(
     IFeedbackService feedbackService,
     IRefundService refundService,
     ISuperAdminTwoFactorService twoFactorService,
+    IAdminAuditService auditService,
     ILogger<SuperAdminController> logger) : ControllerBase
 {
+    /// <summary>What super admins changed recently (newest first).</summary>
+    [HttpGet("audit")]
+    public async Task<ActionResult<List<AdminAuditLogDto>>> AuditLog([FromQuery] int take = 100, CancellationToken ct = default)
+    {
+        return Ok(await auditService.ListAsync(take, ct));
+    }
+
     [HttpGet("stats")]
     public async Task<ActionResult<SuperAdminStatsDto>> GetStats(CancellationToken ct)
     {

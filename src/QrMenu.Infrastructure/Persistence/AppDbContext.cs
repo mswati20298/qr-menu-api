@@ -26,6 +26,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<PlatformSettings> PlatformSettings => Set<PlatformSettings>();
     public DbSet<Feedback> Feedback => Set<Feedback>();
     public DbSet<PaymentGatewayLog> PaymentGatewayLogs => Set<PaymentGatewayLog>();
+    public DbSet<AdminAuditLog> AdminAuditLogs => Set<AdminAuditLog>();
     public DbSet<PlanRefund> PlanRefunds => Set<PlanRefund>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

@@ -35,6 +35,22 @@ public record InvoiceSummaryDto(
     decimal Total,
     string PaymentStatus);
 
+/// <summary>One bill as a row of the GST / sales report.</summary>
+public record InvoiceExportRowDto(
+    string Number,
+    DateTime CreatedAt,
+    string? TableNumber,
+    string? CustomerName,
+    string? CustomerPhone,
+    int OrdersCount,
+    decimal Subtotal,
+    decimal ServiceChargeAmount,
+    decimal GstPercentage,
+    decimal GstAmount,
+    decimal Total,
+    string PaymentStatus,
+    string? PaymentMethods);
+
 public record InvoicePageDto(List<InvoiceSummaryDto> Items, int Total, int Page, int PageSize);
 
 /// <summary>

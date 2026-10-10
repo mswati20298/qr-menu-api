@@ -294,9 +294,24 @@ public class OrderService(
         return ToDto(order);
     }
 
-    public async Task<List<OrderDto>> GetAllForOwnerAsync(Guid restaurantId, string? status, CancellationToken ct = default)
+    public async Task<List<OrderDto>> GetAllForOwnerAsync(
+        Guid restaurantId, string? status, DateTime? from = null, DateTime? to = null, CancellationToken ct = default)
     {
-        var query = db.Orders.Include(o => o.Items).Include(o => o.Invoice).Where(o => o.RestaurantId == restaurantId);
+        var query = db.Orders.AsNoTracking().AsSplitQuery()
+            .Include(o => o.Items).Include(o => o.Invoice)
+            .Where(o => o.RestaurantId == restaurantId);
+
+        if (from is { } start && to is { } end)
+        {
+            ReportRange.Check(start, end);
+            query = query.Where(o => o.CreatedAt >= start && o.CreatedAt < end);
+        }
+        else
+        {
+            var since = DateTime.UtcNow.AddDays(-OrderListRules.RecentDays);
+            query = query.Where(o => o.CreatedAt >= since
+                || o.Status == OrderStatus.Placed || o.Status == OrderStatus.Preparing || o.Status == OrderStatus.Served);
+        }
 
         if (!string.IsNullOrWhiteSpace(status) && Enum.TryParse<OrderStatus>(status, true, out var parsedStatus))
         {

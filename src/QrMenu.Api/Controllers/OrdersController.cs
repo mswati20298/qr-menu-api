@@ -7,9 +7,10 @@ namespace QrMenu.Api.Controllers;
 public class OrdersController(IOrderService orderService) : OwnerControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<List<OrderDto>>> GetAll([FromQuery] string? status, CancellationToken ct)
+    public async Task<ActionResult<List<OrderDto>>> GetAll(
+        [FromQuery] string? status, [FromQuery] DateTime? from, [FromQuery] DateTime? to, CancellationToken ct)
     {
-        var result = await orderService.GetAllForOwnerAsync(RestaurantId, status, ct);
+        var result = await orderService.GetAllForOwnerAsync(RestaurantId, status, from?.ToUniversalTime(), to?.ToUniversalTime(), ct);
         return Ok(result);
     }
 

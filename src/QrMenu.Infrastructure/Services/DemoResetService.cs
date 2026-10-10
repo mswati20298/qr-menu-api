@@ -19,7 +19,8 @@ public class DemoResetService(
     IFileStorageService storage,
     IWebHostEnvironment env,
     TimeProvider clock,
-    ILogger<DemoResetService> logger) : IDemoResetService
+    ILogger<DemoResetService> logger,
+    MenuCache? menuCache = null) : IDemoResetService
 {
     // Platform data that survives a reset. Everything else belongs to a restaurant and is wiped.
     private static readonly HashSet<Type> Kept = [typeof(PlatformSettings), typeof(SuperAdmin), typeof(PricingPlan)];
@@ -59,6 +60,7 @@ public class DemoResetService(
                 {
 #pragma warning disable EF1002 // Table names come from the EF model, not from input.
                     await db.Database.ExecuteSqlRawAsync($"DELETE FROM {table}", ct);
+                    menuCache?.Clear();
 #pragma warning restore EF1002
                 }
                 await transaction.CommitAsync(ct);

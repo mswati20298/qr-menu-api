@@ -1,0 +1,16 @@
+# Pull requests for outdated NuGet packages, Docker base images and GitHub Actions (security fixes come first).
+version: 2
+updates:
+  - package-ecosystem: nuget
+    directory: "/"
+    schedule: { interval: monthly }
+    open-pull-requests-limit: 5
+    groups:
+      microsoft:
+        patterns: ["Microsoft.*", "System.*"]
+  - package-ecosystem: docker
+    directory: "/"
+    schedule: { interval: monthly }
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule: { interval: monthly }

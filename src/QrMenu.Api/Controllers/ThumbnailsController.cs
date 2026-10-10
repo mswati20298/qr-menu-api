@@ -69,9 +69,18 @@ public partial class ThumbnailsController(IWebHostEnvironment env, IImageOptimiz
         }
 
         Response.Headers.CacheControl = "public, max-age=2592000";
-        return PhysicalFile(cached, cached.EndsWith(".png", StringComparison.Ordinal) ? "image/png" : "image/jpeg");
+        return PhysicalFile(cached, ContentTypeOf(cached));
     }
 
+    private static readonly string[] ThumbExtensions = [".webp", ".jpg", ".png"];
+
     private static string? Cached(string folder, string file) =>
-        new[] { ".jpg", ".png" }.Select(ext => Path.Combine(folder, file + ext)).FirstOrDefault(System.IO.File.Exists);
+        ThumbExtensions.Select(ext => Path.Combine(folder, file + ext)).FirstOrDefault(System.IO.File.Exists);
+
+    private static string ContentTypeOf(string path) => Path.GetExtension(path) switch
+    {
+        ".png" => "image/png",
+        ".webp" => "image/webp",
+        _ => "image/jpeg"
+    };
 }

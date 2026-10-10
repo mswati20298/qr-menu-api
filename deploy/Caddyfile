@@ -21,8 +21,26 @@
 		X-Content-Type-Options "nosniff"
 		Referrer-Policy "strict-origin-when-cross-origin"
 		X-Frame-Options "SAMEORIGIN"
+		# Camera: menu photo scan. Payment: Razorpay checkout. Everything else off.
+		Permissions-Policy "camera=(self), microphone=(), geolocation=(), payment=(self \"https://checkout.razorpay.com\" \"https://api.razorpay.com\"), usb=()"
 		-Server
 	}
+}
+
+# Only our own scripts run (no inline scripts), so an injected <script> or onerror= cannot steal a login token.
+# Razorpay: checkout script, its payment frame and its API. Styles allow inline: Angular adds component styles that way.
+(app_csp) {
+	header Content-Security-Policy "default-src 'self'; script-src 'self' https://*.razorpay.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https://*.razorpay.com; frame-src https://*.razorpay.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self' https://*.razorpay.com; frame-ancestors 'self'"
+}
+
+# Same policy, but the browser only reports breaks (console) and blocks nothing. Prod uses this until a real
+# Razorpay payment has been tested on demo with the enforced policy; then switch prod to "import app_csp".
+(app_csp_report_only) {
+	header Content-Security-Policy-Report-Only "default-src 'self'; script-src 'self' https://*.razorpay.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https://*.razorpay.com; frame-src https://*.razorpay.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self' https://*.razorpay.com; frame-ancestors 'self'"
+}
+
+(landing_csp) {
+	header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https:; connect-src 'self' https://app.qrenvo.com https://demo.qrenvo.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
 }
 
 # Angular app + API for one deployment. {args[0]} = the API container.
@@ -65,6 +83,7 @@
 {$ROOT_DOMAIN}, www.{$ROOT_DOMAIN} {
 	import origin_tls
 	import security_headers
+	import landing_csp
 	encode zstd gzip
 	@www host www.{$ROOT_DOMAIN}
 	redir @www https://{$ROOT_DOMAIN}{uri} permanent
@@ -76,10 +95,12 @@
 # Demo: its own API and database (QrMenuDemo).
 demo.{$ROOT_DOMAIN} {
 	import qrenvo_app api-demo
+	import app_csp
 }
 
 # Prod: the owner panel at app.<domain> and every restaurant at <name>.<domain>.
 # Caddy picks the exact demo.<domain> block above over this wildcard.
 app.{$ROOT_DOMAIN}, *.{$ROOT_DOMAIN} {
 	import qrenvo_app api-prod
+	import app_csp_report_only
 }

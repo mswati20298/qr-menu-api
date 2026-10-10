@@ -70,6 +70,7 @@ builder.Services.AddAuthorization(AuthorizationPolicies.Configure);
 
 builder.Services.AddScoped<ActiveRestaurantFilter>();
 builder.Services.AddScoped<QrMenu.Api.Filters.SuperAdminSessionFilter>();
+builder.Services.AddScoped<QrMenu.Api.Filters.AdminAuditFilter>();
 
 builder.Services.AddCors(options =>
 {
@@ -192,6 +193,25 @@ app.UseAuthorization();
 app.UseRateLimiter();
 
 app.MapControllers();
+
+// For an uptime monitor (UptimeRobot, Better Stack): 200 when the API and the database answer, 503 otherwise.
+app.MapGet("/api/health", async (AppDbContext db, CancellationToken ct) =>
+{
+    using var timeout = CancellationTokenSource.CreateLinkedTokenSource(ct);
+    timeout.CancelAfter(TimeSpan.FromSeconds(5));
+    bool dbOk;
+    try
+    {
+        dbOk = await db.Database.CanConnectAsync(timeout.Token);
+    }
+    catch (Exception)
+    {
+        dbOk = false;
+    }
+    return dbOk
+        ? Results.Json(new { status = "ok" })
+        : Results.Json(new { status = "database unavailable" }, statusCode: StatusCodes.Status503ServiceUnavailable);
+}).AllowAnonymous().RequireRateLimiting(QrMenu.Api.RateLimits.Public);
 
 // Warm-up: the first menu request after a start compiles the code paths and EF queries, which can take
 // several seconds. Do that once in the background now, so the first guest after a deploy does not wait.

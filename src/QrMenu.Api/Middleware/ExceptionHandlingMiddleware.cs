@@ -23,6 +23,18 @@ public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Exception
     private static bool IsDuplicateKey(Microsoft.EntityFrameworkCore.DbUpdateException ex) =>
         ex.InnerException is Microsoft.Data.SqlClient.SqlException { Number: 2601 or 2627 };
 
+    /// <summary>The HTTP status an exception becomes (also used by the audit log, which runs before this middleware answers).</summary>
+    public static int StatusCodeFor(Exception exception) => exception switch
+    {
+        ValidationException => StatusCodes.Status400BadRequest,
+        NotFoundException => StatusCodes.Status404NotFound,
+        ConflictException => StatusCodes.Status409Conflict,
+        UnauthorizedAppException => StatusCodes.Status401Unauthorized,
+        ForbiddenException => StatusCodes.Status403Forbidden,
+        TooManyAttemptsException => StatusCodes.Status429TooManyRequests,
+        _ => StatusCodes.Status500InternalServerError
+    };
+
     private async Task HandleAsync(HttpContext context, Exception exception)
     {
         var (statusCode, message, errors) = exception switch

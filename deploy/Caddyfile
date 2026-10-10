@@ -28,19 +28,19 @@
 }
 
 # Only our own scripts run (no inline scripts), so an injected <script> or onerror= cannot steal a login token.
-# Razorpay: checkout script, its payment frame and its API. Styles allow inline: Angular adds component styles that way.
+# Razorpay: checkout script, its payment frame and its API. Cloudflare Web Analytics: its beacon script and endpoint. Styles allow inline: Angular adds component styles that way.
 (app_csp) {
-	header Content-Security-Policy "default-src 'self'; script-src 'self' https://*.razorpay.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https://*.razorpay.com; frame-src https://*.razorpay.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self' https://*.razorpay.com; frame-ancestors 'self'"
+	header Content-Security-Policy "default-src 'self'; script-src 'self' https://*.razorpay.com https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https://*.razorpay.com https://cloudflareinsights.com; frame-src https://*.razorpay.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self' https://*.razorpay.com; frame-ancestors 'self'"
 }
 
 # Same policy, but the browser only reports breaks (console) and blocks nothing. Prod uses this until a real
 # Razorpay payment has been tested on demo with the enforced policy; then switch prod to "import app_csp".
 (app_csp_report_only) {
-	header Content-Security-Policy-Report-Only "default-src 'self'; script-src 'self' https://*.razorpay.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https://*.razorpay.com; frame-src https://*.razorpay.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self' https://*.razorpay.com; frame-ancestors 'self'"
+	header Content-Security-Policy-Report-Only "default-src 'self'; script-src 'self' https://*.razorpay.com https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https://*.razorpay.com https://cloudflareinsights.com; frame-src https://*.razorpay.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self' https://*.razorpay.com; frame-ancestors 'self'"
 }
 
 (landing_csp) {
-	header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https:; connect-src 'self' https://app.qrenvo.com https://demo.qrenvo.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+	header Content-Security-Policy "default-src 'self'; script-src 'self' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https:; connect-src 'self' https://app.qrenvo.com https://demo.qrenvo.com https://cloudflareinsights.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
 }
 
 # Angular app + API for one deployment. {args[0]} = the API container.

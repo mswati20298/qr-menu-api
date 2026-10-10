@@ -61,6 +61,11 @@ public class InvoiceService(AppDbContext db, IInvoicePdfService pdfService, Time
         }
 
         var first = orders[0];
+        var subtotal = orders.Sum(o => o.Subtotal);
+        var serviceCharge = orders.Sum(o => o.ServiceChargeAmount);
+        var gst = orders.Sum(o => o.GstAmount);
+        // The rates the orders were charged at, not today's settings (they may have changed since).
+        var (gstPercentage, serviceChargePercentage) = ChargeRates.FromAmounts(subtotal, serviceCharge, gst);
         var invoice = new Invoice
         {
             Id = Guid.NewGuid(),
@@ -68,12 +73,12 @@ public class InvoiceService(AppDbContext db, IInvoicePdfService pdfService, Time
             TableNumber = first.TableNumberSnapshot,
             CustomerName = orders.Select(o => o.CustomerName).FirstOrDefault(n => !string.IsNullOrWhiteSpace(n)),
             CustomerPhone = orders.Select(o => o.CustomerPhone).FirstOrDefault(p => !string.IsNullOrWhiteSpace(p)),
-            Subtotal = orders.Sum(o => o.Subtotal),
-            ServiceChargeAmount = orders.Sum(o => o.ServiceChargeAmount),
-            GstAmount = orders.Sum(o => o.GstAmount),
+            Subtotal = subtotal,
+            ServiceChargeAmount = serviceCharge,
+            GstAmount = gst,
             Total = orders.Sum(o => o.Total),
-            ServiceChargePercentage = restaurant.IsServiceChargeEnabled ? restaurant.ServiceChargePercentage : 0,
-            GstPercentage = restaurant.IsGstEnabled ? restaurant.GstPercentage : 0,
+            ServiceChargePercentage = serviceChargePercentage,
+            GstPercentage = gstPercentage,
             RestaurantName = restaurant.Name,
             RestaurantAddress = restaurant.Address,
             RestaurantPhone = restaurant.Phone,

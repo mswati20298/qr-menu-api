@@ -166,6 +166,9 @@ public class InvoicePdfService : IInvoicePdfService
                 var half = Percent(invoice.GstPercentage / 2);
                 Line($"CGST ({half})", cgst);
                 Line($"SGST ({half})", invoice.GstAmount - cgst);
+                // So the split matches the GST rate the restaurant set (and the guest saw): 18% = 9% + 9%.
+                col.Item().AlignRight().Text($"GST {Percent(invoice.GstPercentage)} = CGST {half} + SGST {half}")
+                    .FontSize(receipt ? 7 : 8).FontColor(Colors.Grey.Darken1);
             }
             else
             {

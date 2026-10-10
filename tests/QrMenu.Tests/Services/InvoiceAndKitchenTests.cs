@@ -88,6 +88,34 @@ public class InvoiceAndKitchenTests
     }
 
     [Fact]
+    public async Task Invoice_ShowsTheGstRateTheOrdersWereChargedAt_NotTodaysSetting()
+    {
+        var db = InMemoryDbFactory.Create();
+        var restaurant = AddRestaurant(db);
+        AddOrder(db, restaurant, "2", 200); // charged at 5%
+        await db.SaveChangesAsync();
+        restaurant.GstPercentage = 18;     // the owner changes the rate after the order
+        await db.SaveChangesAsync();
+
+        var invoice = await CreateInvoiceService(db).CreateAsync(restaurant.Id, new CreateInvoiceRequest(null, "2"));
+
+        invoice.GstAmount.Should().Be(10);
+        invoice.GstPercentage.Should().Be(5, "the % must match the GST amount on the bill");
+    }
+
+    [Theory]
+    [InlineData(50, 0, 9, 18, 0)]
+    [InlineData(333, 0, 16.65, 5, 0)]
+    [InlineData(200, 20, 11, 5, 10)]
+    [InlineData(100, 0, 0, 0, 0)]
+    public void ChargeRates_AreWorkedOutFromTheAmounts(double subtotal, double service, double gst, double gstPct, double servicePct)
+    {
+        var (g, sc) = QrMenu.Application.Common.ChargeRates.FromAmounts((decimal)subtotal, (decimal)service, (decimal)gst);
+        g.Should().Be((decimal)gstPct);
+        sc.Should().Be((decimal)servicePct);
+    }
+
+    [Fact]
     public async Task Invoices_AreNumberedPerRestaurant_AndAnOrderIsBilledOnce()
     {
         var db = InMemoryDbFactory.Create();

@@ -34,8 +34,8 @@
 	header Content-Security-Policy "default-src 'self'; script-src 'self' https://*.razorpay.com https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https://*.razorpay.com https://cloudflareinsights.com; frame-src https://*.razorpay.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self' https://*.razorpay.com; frame-ancestors 'self'"
 }
 
-# Same policy, but the browser only reports breaks (console) and blocks nothing. Prod uses this until a real
-# Razorpay payment has been tested on demo with the enforced policy; then switch prod to "import app_csp".
+# Same policy, but the browser only reports breaks (console) and blocks nothing. Use it to try a policy change
+# on a site first (swap "import app_csp" for this), then switch back.
 (app_csp_report_only) {
 	header Content-Security-Policy-Report-Only "default-src 'self'; script-src 'self' https://*.razorpay.com https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https://*.razorpay.com https://cloudflareinsights.com; frame-src https://*.razorpay.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self' https://*.razorpay.com; frame-ancestors 'self'"
 }
@@ -103,5 +103,5 @@ demo.{$ROOT_DOMAIN} {
 # Caddy picks the exact demo.<domain> block above over this wildcard.
 app.{$ROOT_DOMAIN}, *.{$ROOT_DOMAIN} {
 	import qrenvo_app api-prod
-	import app_csp_report_only
+	import app_csp
 }

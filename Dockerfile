@@ -11,7 +11,7 @@ COPY src ./src
 # ReadyToRun: compiled ahead of time, so the API answers quickly right after a deploy instead of compiling on first use.
 RUN dotnet publish src/QrMenu.Api/QrMenu.Api.csproj -c Release -o /app --no-restore -r linux-x64 --self-contained false -p:PublishReadyToRun=true
 
-FROM mcr.microsoft.com/dotnet/aspnet:8.0
+FROM mcr.microsoft.com/dotnet/aspnet:10.0
 # Fonts for QuestPDF invoices and QR cards.
 RUN apt-get update \
     && apt-get install -y --no-install-recommends fonts-dejavu-core libfontconfig1 \

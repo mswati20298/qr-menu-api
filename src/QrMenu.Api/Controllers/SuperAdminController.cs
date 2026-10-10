@@ -62,6 +62,30 @@ public class SuperAdminController(
         return Ok(result);
     }
 
+    [HttpPost("restaurants/{id:guid}/soft-delete")]
+    public async Task<ActionResult<SuperAdminRestaurantDto>> SoftDeleteRestaurant(Guid id, CancellationToken ct)
+    {
+        var result = await superAdminService.SoftDeleteRestaurantAsync(id, AdminEmail, ct);
+        logger.LogWarning("Super admin {Email} soft-deleted restaurant {RestaurantId}", AdminEmail, id);
+        return Ok(result);
+    }
+
+    [HttpPost("restaurants/{id:guid}/restore")]
+    public async Task<ActionResult<SuperAdminRestaurantDto>> RestoreRestaurant(Guid id, CancellationToken ct)
+    {
+        var result = await superAdminService.RestoreRestaurantAsync(id, ct);
+        logger.LogInformation("Super admin {Email} restored restaurant {RestaurantId}", AdminEmail, id);
+        return Ok(result);
+    }
+
+    [HttpPost("restaurants/{id:guid}/hard-delete")]
+    public async Task<IActionResult> HardDeleteRestaurant(Guid id, HardDeleteRestaurantRequest request, CancellationToken ct)
+    {
+        await superAdminService.HardDeleteRestaurantAsync(id, request.ConfirmName, ct);
+        logger.LogWarning("Super admin {Email} permanently deleted restaurant {RestaurantId}", AdminEmail, id);
+        return NoContent();
+    }
+
     [HttpPost("restaurants/{id:guid}/reset-password")]
     public async Task<ActionResult<ResetOwnerPasswordResponse>> ResetOwnerPassword(Guid id, CancellationToken ct)
     {

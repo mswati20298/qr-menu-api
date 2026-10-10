@@ -54,8 +54,10 @@ public record InvoiceExportRowDto(
 public record InvoicePageDto(List<InvoiceSummaryDto> Items, int Total, int Page, int PageSize);
 
 /// <summary>
-/// Give OrderId to bill one order, or TableNumber to bill every order at that table that is not cancelled,
-/// not billed yet and was placed in the last 24 hours.
+/// Give OrderId to bill that order together with the same guest's other unbilled orders (same table and same phone),
+/// or TableNumber to bill every order at that table that is not cancelled, not billed yet and was placed in the last
+/// 24 hours. If that guest (or table) already has a bill that is not fully paid, the orders are added to it instead of
+/// starting a second bill.
 /// </summary>
 public record CreateInvoiceRequest(Guid? OrderId, string? TableNumber);
 

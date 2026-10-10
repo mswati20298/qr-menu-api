@@ -64,7 +64,8 @@ public record SuperAdminRestaurantDto(
     string Plan,
     string PlanName,
     string PlanStatus,
-    DateTime? PlanExpiresAt);
+    DateTime? PlanExpiresAt,
+    DateTime? DeletedAt = null);
 
 public record PagedResult<T>(List<T> Items, int Total, int Page, int PageSize);
 
@@ -141,6 +142,9 @@ public record RenewalDueDto(Guid RestaurantId, string RestaurantName, string? Lo
 public record TopRestaurantDto(Guid RestaurantId, string RestaurantName, string? LogoUrl, string Plan, int OrdersLast30Days);
 
 public record SetRestaurantStatusRequest(bool IsActive);
+
+/// <summary>Permanent delete: ConfirmName must be the restaurant's name, typed by the super admin.</summary>
+public record HardDeleteRestaurantRequest(string ConfirmName);
 
 /// <summary>The temporary password is returned only once and never stored in plain text.</summary>
 public record ResetOwnerPasswordResponse(string OwnerEmail, string TemporaryPassword);

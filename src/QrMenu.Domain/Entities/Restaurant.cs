@@ -18,6 +18,10 @@ public class Restaurant
     public BackgroundMode BackgroundMode { get; set; } = BackgroundMode.Fixed;
     public string ThemeColor { get; set; } = ThemeColors.Default;
     public bool IsActive { get; set; } = true;
+
+    /// <summary>Soft delete by the super admin: hidden, owner cannot log in, menu offline; Restore brings it back.</summary>
+    public DateTime? DeletedAt { get; set; }
+    public string? DeletedBy { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public bool IsGstEnabled { get; set; } = true;

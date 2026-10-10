@@ -18,6 +18,14 @@ public interface ISuperAdminService
     Task<PagedResult<SuperAdminRestaurantDto>> ListRestaurantsAsync(string? search, string? status, string? plan, int page, int pageSize, CancellationToken ct = default);
 
     Task<SuperAdminRestaurantDto> SetRestaurantStatusAsync(Guid restaurantId, bool isActive, CancellationToken ct = default);
+
+    /// <summary>Hides the restaurant (owner logged out, menu offline). Nothing is removed; RestoreRestaurantAsync undoes it.</summary>
+    Task<SuperAdminRestaurantDto> SoftDeleteRestaurantAsync(Guid restaurantId, string deletedBy, CancellationToken ct = default);
+
+    Task<SuperAdminRestaurantDto> RestoreRestaurantAsync(Guid restaurantId, CancellationToken ct = default);
+
+    /// <summary>Removes the restaurant and all its data for good. Only after a soft delete, and only with its name typed.</summary>
+    Task HardDeleteRestaurantAsync(Guid restaurantId, string confirmName, CancellationToken ct = default);
     /// <summary>Gives the owner a new temporary password (shown once) and signs out all their logins.</summary>
     Task<ResetOwnerPasswordResponse> ResetOwnerPasswordAsync(Guid restaurantId, CancellationToken ct = default);
 

@@ -108,6 +108,11 @@ public class AuthService(
 
         LoginAttemptTracker.Reset(lockKey);
 
+        if (user.Restaurant.DeletedAt is not null)
+        {
+            throw new ForbiddenException("This restaurant account was closed. Please contact support.", "restaurant_suspended");
+        }
+
         if (!user.Restaurant.IsActive)
         {
             throw new ForbiddenException("This restaurant account is suspended. Please contact support.", "restaurant_suspended");

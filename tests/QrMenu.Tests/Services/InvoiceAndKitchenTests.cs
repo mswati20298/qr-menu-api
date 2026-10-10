@@ -103,6 +103,81 @@ public class InvoiceAndKitchenTests
         invoice.GstPercentage.Should().Be(5, "the % must match the GST amount on the bill");
     }
 
+    private static Order GuestOrder(AppDbContext db, Restaurant restaurant, string table, string? phone, decimal subtotal)
+    {
+        var order = AddOrder(db, restaurant, table, subtotal);
+        order.CustomerPhone = phone;
+        return order;
+    }
+
+    [Fact]
+    public async Task OneGuest_OneBill_EvenWhenTheyOrderAgainAfterBilling()
+    {
+        var db = InMemoryDbFactory.Create();
+        var restaurant = AddRestaurant(db);
+        var first = GuestOrder(db, restaurant, "2", "9876543210", 100);
+        var second = GuestOrder(db, restaurant, "2", "9876543210", 200);
+        var otherGuest = GuestOrder(db, restaurant, "2", "9123456789", 300);
+        await db.SaveChangesAsync();
+        var service = CreateInvoiceService(db);
+
+        // Billing one order takes the same guest's other unbilled order too, not the other guest's.
+        var bill = await service.CreateAsync(restaurant.Id, new CreateInvoiceRequest(first.Id, null));
+        bill.OrderIds.Should().BeEquivalentTo([first.Id, second.Id]);
+        bill.Subtotal.Should().Be(300);
+
+        // The guest orders again after the bill was made: it joins the same, unpaid bill.
+        var third = GuestOrder(db, restaurant, "2", "9876543210", 50);
+        await db.SaveChangesAsync();
+        var again = await service.CreateAsync(restaurant.Id, new CreateInvoiceRequest(third.Id, null));
+        again.Number.Should().Be(bill.Number);
+        again.OrderIds.Should().HaveCount(3);
+        again.Subtotal.Should().Be(350);
+        again.GstAmount.Should().Be(17.5m);
+        again.Total.Should().Be(367.5m);
+
+        // The other guest at the same table gets their own bill.
+        var theirs = await service.CreateAsync(restaurant.Id, new CreateInvoiceRequest(otherGuest.Id, null));
+        theirs.Number.Should().NotBe(bill.Number);
+    }
+
+    [Fact]
+    public async Task AfterTheBillIsPaid_ANewOrderStartsANewBill()
+    {
+        var db = InMemoryDbFactory.Create();
+        var restaurant = AddRestaurant(db);
+        var first = GuestOrder(db, restaurant, "4", "9876543210", 100);
+        await db.SaveChangesAsync();
+        var service = CreateInvoiceService(db);
+        var bill = await service.CreateAsync(restaurant.Id, new CreateInvoiceRequest(first.Id, null));
+        await service.MarkPaidAsync(restaurant.Id, bill.Id, new MarkInvoicePaidRequest("Cash", null));
+
+        var later = GuestOrder(db, restaurant, "4", "9876543210", 80);
+        await db.SaveChangesAsync();
+        var next = await service.CreateAsync(restaurant.Id, new CreateInvoiceRequest(later.Id, null));
+
+        next.Number.Should().NotBe(bill.Number);
+        next.OrderIds.Should().ContainSingle();
+    }
+
+    [Fact]
+    public async Task TableBill_AddsNewOrdersToTheTablesOpenBill()
+    {
+        var db = InMemoryDbFactory.Create();
+        var restaurant = AddRestaurant(db);
+        GuestOrder(db, restaurant, "7", null, 100);
+        await db.SaveChangesAsync();
+        var service = CreateInvoiceService(db);
+        var bill = await service.CreateAsync(restaurant.Id, new CreateInvoiceRequest(null, "7"));
+
+        GuestOrder(db, restaurant, "7", null, 60);
+        await db.SaveChangesAsync();
+        var again = await service.CreateAsync(restaurant.Id, new CreateInvoiceRequest(null, "7"));
+
+        again.Number.Should().Be(bill.Number);
+        again.Subtotal.Should().Be(160);
+    }
+
     [Theory]
     [InlineData(50, 0, 9, 18, 0)]
     [InlineData(333, 0, 16.65, 5, 0)]

@@ -184,17 +184,18 @@ public class SuperAdminService(
         var now = DateTime.UtcNow;
         var since = now.AddDays(-30);
 
-        var total = await db.Restaurants.CountAsync(ct);
-        var active = await db.Restaurants.CountAsync(r => r.IsActive, ct);
-        var recent = await db.Restaurants.CountAsync(r => r.CreatedAt >= since, ct);
+        var live = db.Restaurants.Where(r => r.DeletedAt == null);
+        var total = await live.CountAsync(ct);
+        var active = await live.CountAsync(r => r.IsActive, ct);
+        var recent = await live.CountAsync(r => r.CreatedAt >= since, ct);
         var orders = await db.Orders.CountAsync(ct);
         var recentOrders = await db.Orders.CountAsync(o => o.CreatedAt >= since, ct);
 
-        var trial = await FilterByPlan(db.Restaurants, "trial", now).CountAsync(ct);
-        var paid = await FilterByPlan(db.Restaurants, "paid", now).CountAsync(ct);
-        var expiring = await FilterByPlan(db.Restaurants, "expiring", now).CountAsync(ct);
-        var grace = await FilterByPlan(db.Restaurants, "grace", now).CountAsync(ct);
-        var stopped = await FilterByPlan(db.Restaurants, "stopped", now).CountAsync(ct);
+        var trial = await FilterByPlan(live, "trial", now).CountAsync(ct);
+        var paid = await FilterByPlan(live, "paid", now).CountAsync(ct);
+        var expiring = await FilterByPlan(live, "expiring", now).CountAsync(ct);
+        var grace = await FilterByPlan(live, "grace", now).CountAsync(ct);
+        var stopped = await FilterByPlan(live, "stopped", now).CountAsync(ct);
 
         // --- Money and activity, counted in Indian calendar days ---
         var today = IndianTime.DateOf(now);
@@ -298,13 +299,21 @@ public class SuperAdminService(
                 || db.Users.Any(u => u.RestaurantId == r.Id && (u.Email.Contains(term) || u.Name.Contains(term))));
         }
 
-        if (status == "active")
+        if (status == "deleted")
         {
-            query = query.Where(r => r.IsActive);
+            query = query.Where(r => r.DeletedAt != null);
         }
-        else if (status == "suspended")
+        else
         {
-            query = query.Where(r => !r.IsActive);
+            query = query.Where(r => r.DeletedAt == null);
+            if (status == "active")
+            {
+                query = query.Where(r => r.IsActive);
+            }
+            else if (status == "suspended")
+            {
+                query = query.Where(r => !r.IsActive);
+            }
         }
 
         query = FilterByPlan(query, plan, DateTime.UtcNow);
@@ -321,11 +330,68 @@ public class SuperAdminService(
     {
         var restaurant = await db.Restaurants.FirstOrDefaultAsync(r => r.Id == restaurantId, ct)
             ?? throw new NotFoundException("Restaurant not found.");
+        if (restaurant.DeletedAt is not null)
+        {
+            throw new ConflictException("This restaurant is deleted. Restore it first.");
+        }
 
         restaurant.IsActive = isActive;
         await db.SaveChangesAsync(ct);
 
         return await Project(db.Restaurants.AsNoTracking().Where(r => r.Id == restaurantId)).FirstAsync(ct);
+    }
+
+    public async Task<SuperAdminRestaurantDto> SoftDeleteRestaurantAsync(Guid restaurantId, string deletedBy, CancellationToken ct = default)
+    {
+        var restaurant = await db.Restaurants.FirstOrDefaultAsync(r => r.Id == restaurantId, ct)
+            ?? throw new NotFoundException("Restaurant not found.");
+        if (restaurant.DeletedAt is null)
+        {
+            restaurant.DeletedAt = DateTime.UtcNow;
+            restaurant.DeletedBy = deletedBy;
+            // Same effect as a suspension: owner and kitchen are signed out, the menu goes offline.
+            restaurant.IsActive = false;
+            await db.SaveChangesAsync(ct);
+        }
+        return await Project(db.Restaurants.AsNoTracking().Where(r => r.Id == restaurantId)).FirstAsync(ct);
+    }
+
+    public async Task<SuperAdminRestaurantDto> RestoreRestaurantAsync(Guid restaurantId, CancellationToken ct = default)
+    {
+        var restaurant = await db.Restaurants.FirstOrDefaultAsync(r => r.Id == restaurantId, ct)
+            ?? throw new NotFoundException("Restaurant not found.");
+        if (restaurant.DeletedAt is not null)
+        {
+            restaurant.DeletedAt = null;
+            restaurant.DeletedBy = null;
+            restaurant.IsActive = true;
+            await db.SaveChangesAsync(ct);
+        }
+        return await Project(db.Restaurants.AsNoTracking().Where(r => r.Id == restaurantId)).FirstAsync(ct);
+    }
+
+    public async Task HardDeleteRestaurantAsync(Guid restaurantId, string confirmName, CancellationToken ct = default)
+    {
+        var restaurant = await db.Restaurants.FirstOrDefaultAsync(r => r.Id == restaurantId, ct)
+            ?? throw new NotFoundException("Restaurant not found.");
+        if (restaurant.DeletedAt is null)
+        {
+            throw new ConflictException("Delete it first (soft delete). It can be removed for good only after that.");
+        }
+        if (!string.Equals(confirmName?.Trim(), restaurant.Name.Trim(), StringComparison.OrdinalIgnoreCase))
+        {
+            throw new ConflictException("The name you typed does not match the restaurant's name.");
+        }
+
+        // Menu, orders, bills, tables, users, payments, refunds and reviews go with it (cascade in the database).
+        // A big restaurant has a lot to remove: allow more than the default 30 s, and finish even if the browser
+        // goes away, so a delete is never cut off half way.
+        db.Restaurants.Remove(restaurant);
+        if (db.Database.IsRelational())
+        {
+            db.Database.SetCommandTimeout(TimeSpan.FromMinutes(2));
+        }
+        await db.SaveChangesAsync(CancellationToken.None);
     }
 
     /// <summary>Same rules as SubscriptionRules.GetStatus, written so SQL Server can run them.</summary>
@@ -370,6 +436,7 @@ public class SuperAdminService(
             r.Plan.ToString(),
             SubscriptionRules.DisplayName(r.Plan, r.PlanName),
             SubscriptionRules.GetStatus(r.Plan, r.PlanExpiresAt, r.PlanCancelledAt, graceDays, now),
-            r.PlanExpiresAt));
+            r.PlanExpiresAt,
+            r.DeletedAt));
     }
 }

@@ -40,6 +40,22 @@ public class InvoiceService(AppDbContext db, IInvoicePdfService pdfService, Time
             }
 
             orders = [order];
+            if (order.TableNumberSnapshot is { } orderTable)
+            {
+                // Same guest = same table and same phone (or both without a phone): one bill for all their orders.
+                var since = Now - TableWindow;
+                var phone = order.CustomerPhone;
+                var more = await db.Orders.Include(o => o.Items)
+                    .Where(o => o.RestaurantId == restaurantId
+                        && o.Id != order.Id
+                        && o.TableNumberSnapshot == orderTable
+                        && o.CustomerPhone == phone
+                        && o.InvoiceId == null
+                        && o.Status != OrderStatus.Cancelled
+                        && o.CreatedAt >= since)
+                    .ToListAsync(ct);
+                orders = [.. orders.Concat(more).OrderBy(o => o.CreatedAt)];
+            }
         }
         else
         {
@@ -58,6 +74,22 @@ public class InvoiceService(AppDbContext db, IInvoicePdfService pdfService, Time
             {
                 throw new ConflictException($"Table {table} has no unbilled orders from the last 24 hours.");
             }
+        }
+
+        // A bill of this guest that is not paid yet: add these orders to it instead of starting a second bill.
+        var open = await FindOpenBillAsync(restaurantId, orders[0].TableNumberSnapshot,
+            request.OrderId.HasValue ? orders[0].CustomerPhone : null, anyPhone: !request.OrderId.HasValue, ct);
+        if (open is not null)
+        {
+            foreach (var order in orders)
+            {
+                order.InvoiceId = open.Id;
+                order.UpdatedAt = Now;
+                open.Orders.Add(order);
+            }
+            Recalculate(open);
+            await db.SaveChangesAsync(ct);
+            return ToDto(open);
         }
 
         var first = orders[0];
@@ -116,6 +148,39 @@ public class InvoiceService(AppDbContext db, IInvoicePdfService pdfService, Time
 
         invoice.Orders = orders;
         return ToDto(invoice);
+    }
+
+    /// <summary>
+    /// The newest bill of the last 24 hours at this table that is not fully paid, for the same phone (null = no phone),
+    /// or for anyone at the table when anyPhone. Takeaway orders (no table) never join a bill.
+    /// </summary>
+    private async Task<Invoice?> FindOpenBillAsync(Guid restaurantId, string? table, string? phone, bool anyPhone, CancellationToken ct)
+    {
+        if (table is null)
+        {
+            return null;
+        }
+        var since = Now - TableWindow;
+        var candidates = db.Invoices.Include(i => i.Orders).ThenInclude(o => o.Items)
+            .Where(i => i.RestaurantId == restaurantId && i.TableNumber == table && i.CreatedAt >= since
+                && i.Orders.Any(o => o.PaymentStatus != OrderPaymentStatus.Paid));
+        if (!anyPhone)
+        {
+            candidates = candidates.Where(i => i.CustomerPhone == phone);
+        }
+        return await candidates.OrderByDescending(i => i.Sequence).FirstOrDefaultAsync(ct);
+    }
+
+    /// <summary>Totals and rates from all orders on the bill (after orders were added to it).</summary>
+    private static void Recalculate(Invoice invoice)
+    {
+        invoice.Subtotal = invoice.Orders.Sum(o => o.Subtotal);
+        invoice.ServiceChargeAmount = invoice.Orders.Sum(o => o.ServiceChargeAmount);
+        invoice.GstAmount = invoice.Orders.Sum(o => o.GstAmount);
+        invoice.Total = invoice.Orders.Sum(o => o.Total);
+        (invoice.GstPercentage, invoice.ServiceChargePercentage) =
+            ChargeRates.FromAmounts(invoice.Subtotal, invoice.ServiceChargeAmount, invoice.GstAmount);
+        invoice.CustomerName ??= invoice.Orders.Select(o => o.CustomerName).FirstOrDefault(n => !string.IsNullOrWhiteSpace(n));
     }
 
     public async Task<InvoiceDto> GetAsync(Guid restaurantId, Guid invoiceId, CancellationToken ct = default)
